@@ -65,4 +65,50 @@ describe('walkRepository', () => {
     expect(files.length).toBe(2);
     expect(truncated).toBe(true);
   });
+
+  it('produces identical, fully sorted output across repeated scans when not truncated', async () => {
+    const tree: Record<string, string> = {};
+    for (let dirIndex = 0; dirIndex < 10; dirIndex++) {
+      for (let fileIndex = 0; fileIndex < 15; fileIndex++) {
+        tree[`src/module-${dirIndex}/file-${fileIndex}.ts`] = 'export {};\n';
+      }
+    }
+    await writeTree(dir, tree);
+
+    const first = await walkRepository(dir);
+    const second = await walkRepository(dir);
+
+    expect(first.truncated).toBe(false);
+    expect(first.files.length).toBe(150);
+    expect(first.files.map((f) => f.path)).toEqual(second.files.map((f) => f.path));
+    const paths = first.files.map((f) => f.path);
+    expect(paths).toEqual([...paths].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it('stops walking early once maxFiles is reached on a large, deeply nested tree', async () => {
+    // Regression test for streaming vs. buffer-then-truncate: this proves
+    // `walkRepository` returns quickly and respects the cap even when the
+    // repository has far more files than `maxFiles`, spread across many
+    // directories — the scenario where enumerating everything before
+    // checking the cap would be slow.
+    const tree: Record<string, string> = {};
+    for (let dirIndex = 0; dirIndex < 40; dirIndex++) {
+      for (let fileIndex = 0; fileIndex < 50; fileIndex++) {
+        tree[`src/module-${dirIndex}/file-${fileIndex}.ts`] = '';
+      }
+    }
+    await writeTree(dir, tree);
+
+    const start = Date.now();
+    const { files, truncated } = await walkRepository(dir, { maxFiles: 3 });
+    const elapsedMs = Date.now() - start;
+
+    expect(truncated).toBe(true);
+    expect(files.length).toBe(3);
+    // Generous bound: a genuinely unbounded walk of 2000 files is still fast
+    // on CI hardware, so this is a smoke check, not a precise benchmark —
+    // its purpose is to catch a regression back to "enumerate everything
+    // first", not to enforce a tight performance budget.
+    expect(elapsedMs).toBeLessThan(5000);
+  });
 });

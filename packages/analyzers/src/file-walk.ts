@@ -44,19 +44,35 @@ async function loadGitignore(root: string): Promise<string[]> {
 }
 
 /**
- * Walks the repository deterministically (sorted by path), skipping
- * unsafe/irrelevant directories and respecting `.gitignore`. Symlinks are
- * never followed, which also satisfies the requirement to never traverse
- * outside the repository root through a symlink. Results are capped by
- * `maxFiles` so large repositories stay responsive; `truncated` signals when
- * the cap was hit.
+ * Walks the repository, skipping unsafe/irrelevant directories and
+ * respecting `.gitignore`. Symlinks are never followed, which also
+ * satisfies the requirement to never traverse outside the repository root
+ * through a symlink.
+ *
+ * Uses `fast-glob`'s streaming API (rather than collecting the whole match
+ * set into an array first) so that a scan capped by `maxFiles` on a very
+ * large repository actually stops walking the filesystem once the cap is
+ * reached, instead of enumerating every entry before the cap is ever
+ * checked. `truncated` signals when that happened.
+ *
+ * Determinism trade-off: when a scan is *not* truncated (the common case —
+ * the repository has fewer than `maxFiles` matching files), the result is
+ * collected in full and sorted, so it is exactly as deterministic as
+ * before: two scans of an unchanged repository produce identical output.
+ * When a scan *is* truncated, the specific set of included files depends on
+ * filesystem enumeration order rather than being guaranteed to be the
+ * lexicographically-first `maxFiles` paths — the truncated result is still
+ * internally sorted for readability, but which files made the cut can vary
+ * by filesystem. Callers already treat a truncated scan as incomplete
+ * (`recall`'s CLI reports it and exits with the "analysis incomplete" exit
+ * code), so this is considered an acceptable trade for bounding the actual
+ * filesystem work on huge repositories. See docs/architecture.md.
  */
 export async function walkRepository(
   root: string,
   options: FileWalkOptions = {},
 ): Promise<FileWalkResult> {
   const maxFiles = options.maxFiles ?? DEFAULT_MAX_FILES;
-  const maxFileSizeBytes = options.maxFileSizeBytes ?? DEFAULT_MAX_FILE_SIZE_BYTES;
   const ignoredDirs = new Set([
     ...DEFAULT_IGNORED_DIRECTORIES,
     ...(options.extraIgnoredDirectories ?? []),
@@ -67,7 +83,10 @@ export async function walkRepository(
 
   const ignorePatterns = [...ignoredDirs].map((dir) => `**/${dir}/**`);
 
-  const entries = await fg('**/*', {
+  const matchedEntries: string[] = [];
+  let truncated = false;
+
+  const stream = fg.stream('**/*', {
     cwd: root,
     dot: true,
     onlyFiles: true,
@@ -76,17 +95,20 @@ export async function walkRepository(
     stats: false,
   });
 
-  entries.sort((a, b) => a.localeCompare(b));
-
-  const files: WalkedFile[] = [];
-  let truncated = false;
-
-  for (const entry of entries) {
+  for await (const chunk of stream) {
+    const entry = String(chunk);
     if (ig.ignores(entry)) continue;
-    if (files.length >= maxFiles) {
+    matchedEntries.push(entry);
+    if (matchedEntries.length >= maxFiles) {
       truncated = true;
       break;
     }
+  }
+
+  matchedEntries.sort((a, b) => a.localeCompare(b));
+
+  const files: WalkedFile[] = [];
+  for (const entry of matchedEntries) {
     try {
       const absolutePath = join(root, entry);
       const info = await stat(absolutePath);
@@ -96,10 +118,6 @@ export async function walkRepository(
         sizeBytes: info.size,
         extension: extname(entry),
       });
-      if (info.size > maxFileSizeBytes) {
-        // Recorded with metadata only; callers must not read contents of
-        // files flagged this large.
-      }
     } catch {
       // File may have been removed between listing and stat; skip safely.
       continue;

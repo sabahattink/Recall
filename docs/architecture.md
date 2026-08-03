@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes how Recall itself is built: package boundaries, the internal data model, and notable engineering decisions. For the format Recall *produces* in a target repository's `.recall/` directory, see [memory-format.md](memory-format.md).
+This document describes how Recall itself is built: package boundaries, the internal data model, and notable engineering decisions. For the format Recall _produces_ in a target repository's `.recall/` directory, see [memory-format.md](memory-format.md).
 
 ## Package graph
 
@@ -52,11 +52,11 @@ Every finding that isn't a plain structural fact carries an `Evidence[]` array (
 
 ## Performance
 
-- File discovery (`packages/analyzers/src/file-walk.ts`) uses `fast-glob` with `followSymbolicLinks: false` and always excludes `node_modules`, `.git`, `.next`, `dist`, `build`, `coverage`, `.turbo`, `.cache`, `out`, and `vendor`, in addition to respecting `.gitignore` via the `ignore` package.
-- Results are capped by `--max-files` (default 20,000); hitting the cap sets a `truncated` flag that propagates to the CLI's exit code (`5`, analysis incomplete) rather than silently under-reporting.
+- File discovery (`packages/analyzers/src/file-walk.ts`) uses `fast-glob`'s streaming API (`fg.stream`, not the array-returning `fg()`) with `followSymbolicLinks: false`, and always excludes `node_modules`, `.git`, `.next`, `dist`, `build`, `coverage`, `.turbo`, `.cache`, `out`, and `vendor`, in addition to respecting `.gitignore` via the `ignore` package.
+- Results are capped by `--max-files` (default 20,000). Because discovery streams entries instead of collecting them into an array first, the cap is checked as each entry arrives and the walk stops as soon as it's hit — a scan of a repository with millions of files and `--max-files 100` does not enumerate the other 999,900 first. Hitting the cap sets a `truncated` flag that propagates to the CLI's exit code (`5`, analysis incomplete) rather than silently under-reporting.
 - File contents are only read where needed (import-graph extraction, convention detection) and are size-limited (default 2 MB) and binary-detected before being decoded as text.
-- Ordering is deterministic (paths are sorted) so two scans of an unchanged repository produce byte-identical snapshots aside from the `generatedAt` timestamp.
+- Ordering is deterministic (paths are sorted) so two scans of an unchanged repository produce byte-identical snapshots aside from the `generatedAt` timestamp — **when the scan is not truncated**. When it is truncated, the result is still internally sorted, but _which_ files made the cut depends on filesystem enumeration order rather than being guaranteed to be the lexicographically-first `maxFiles` paths. A truncated scan is already flagged as incomplete (exit code `5`), so this narrower guarantee only applies to a case callers are already told not to treat as exhaustive.
 
 ## AI-provider architecture
 
-See [provider-interface.md](provider-interface.md). In short: `packages/core` defines the `RecallInferenceProvider` interface and ships only a `NoopInferenceProvider`, which every command uses by default. No command's *correctness* depends on a provider being configured.
+See [provider-interface.md](provider-interface.md). In short: `packages/core` defines the `RecallInferenceProvider` interface and ships only a `NoopInferenceProvider`, which every command uses by default. No command's _correctness_ depends on a provider being configured.
