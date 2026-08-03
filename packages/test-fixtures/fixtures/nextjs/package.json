@@ -1,0 +1,21 @@
+{
+  "name": "nextjs-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A representative Next.js project used as a Recall test fixture.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/react": "^18.3.12"
+  }
+}

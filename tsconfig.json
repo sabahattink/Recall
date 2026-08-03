@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/schemas" },
+    { "path": "./packages/git" },
+    { "path": "./packages/analyzers" },
+    { "path": "./packages/memory" },
+    { "path": "./packages/core" },
+    { "path": "./packages/test-fixtures" },
+    { "path": "./apps/cli" }
+  ]
+}

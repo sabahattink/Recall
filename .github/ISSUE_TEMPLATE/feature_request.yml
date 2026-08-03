@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an idea or enhancement for Recall
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that Recall doesn't support today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work? Include example command output if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fit with Recall's principles
+      description: Recall is local-first, deterministic-by-default, and provider-independent (see README). Please confirm your proposal is compatible.
+      options:
+        - label: This does not require a mandatory account, cloud database, or AI provider to work
+        - label: This does not require Recall to execute or evaluate the analyzed repository's source code

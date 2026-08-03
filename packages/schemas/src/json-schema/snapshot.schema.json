@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://recall-ai.dev/schema/snapshot.schema.json",
+  "title": "Recall Repository Snapshot",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "repository",
+    "git",
+    "ecosystem",
+    "workspaces",
+    "files",
+    "entryPoints",
+    "dependencies",
+    "internalEdges",
+    "frameworks",
+    "conventions",
+    "risks",
+    "testing",
+    "ci",
+    "docker",
+    "serviceIntegrations",
+    "generatedFiles",
+    "ignoredDirectories",
+    "generatedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "repository": {
+      "type": "object",
+      "required": ["name", "root", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "root": { "type": "string" },
+        "description": { "type": ["string", "null"] }
+      }
+    },
+    "git": {
+      "type": ["object", "null"],
+      "properties": {
+        "isRepository": { "const": true },
+        "branch": { "type": ["string", "null"] },
+        "commit": { "type": ["string", "null"] },
+        "isDirty": { "type": "boolean" },
+        "remoteUrl": { "type": ["string", "null"] },
+        "defaultBranch": { "type": ["string", "null"] },
+        "changedFiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ecosystem": {
+      "type": "object",
+      "properties": {
+        "packageManager": { "enum": ["pnpm", "npm", "yarn", "unknown"] },
+        "packageManagerVersion": { "type": ["string", "null"] },
+        "nodeVersionRange": { "type": ["string", "null"] },
+        "isMonorepo": { "type": "boolean" },
+        "workspaceGlobs": { "type": "array", "items": { "type": "string" } },
+        "hasTypescript": { "type": "boolean" },
+        "hasLockfile": { "type": "boolean" },
+        "lockfilePath": { "type": ["string", "null"] }
+      }
+    },
+    "workspaces": { "type": "array" },
+    "files": { "type": "array" },
+    "entryPoints": { "type": "array" },
+    "dependencies": { "type": "array" },
+    "internalEdges": { "type": "array" },
+    "frameworks": { "type": "array" },
+    "conventions": { "type": "array" },
+    "risks": { "type": "array" },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "frameworks": { "type": "array", "items": { "type": "string" } },
+        "testFiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "properties": {
+        "detected": { "type": "boolean" },
+        "providers": { "type": "array", "items": { "type": "string" } },
+        "configFiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "docker": {
+      "type": "object",
+      "properties": {
+        "detected": { "type": "boolean" },
+        "files": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "serviceIntegrations": { "type": "array" },
+    "generatedFiles": { "type": "array", "items": { "type": "string" } },
+    "ignoredDirectories": { "type": "array", "items": { "type": "string" } },
+    "generatedAt": { "type": "string", "format": "date-time" }
+  }
+}

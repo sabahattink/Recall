@@ -1,0 +1,130 @@
+import { writeTree, type FileTree } from '../write-tree.js';
+
+export function nestJsTree(): FileTree {
+  return {
+    'package.json': JSON.stringify(
+      {
+        name: 'nestjs-fixture',
+        version: '1.0.0',
+        private: true,
+        description: 'A representative NestJS project used as a Recall test fixture.',
+        scripts: {
+          build: 'nest build',
+          start: 'nest start',
+          'start:dev': 'nest start --watch',
+          test: 'jest',
+        },
+        dependencies: {
+          '@nestjs/common': '^10.4.0',
+          '@nestjs/core': '^10.4.0',
+          '@nestjs/platform-express': '^10.4.0',
+          '@nestjs/typeorm': '^10.0.2',
+          typeorm: '^0.3.20',
+          pg: '^8.13.0',
+          'reflect-metadata': '^0.2.2',
+          rxjs: '^7.8.1',
+        },
+        devDependencies: {
+          '@nestjs/cli': '^10.4.0',
+          '@nestjs/testing': '^10.4.0',
+          jest: '^29.7.0',
+          typescript: '^5.7.2',
+        },
+      },
+      null,
+      2,
+    ),
+    'nest-cli.json': JSON.stringify(
+      { collection: '@nestjs/schematics', sourceRoot: 'src' },
+      null,
+      2,
+    ),
+    'tsconfig.json': JSON.stringify(
+      {
+        compilerOptions: {
+          module: 'commonjs',
+          target: 'ES2021',
+          paths: { '@app/*': ['src/*'] },
+        },
+      },
+      null,
+      2,
+    ),
+    '.gitignore': 'node_modules/\ndist/\n.env\n',
+    'src/main.ts': [
+      "import { NestFactory } from '@nestjs/core';",
+      "import { AppModule } from './app.module';",
+      '',
+      'async function bootstrap() {',
+      '  const app = await NestFactory.create(AppModule);',
+      '  await app.listen(3000);',
+      '}',
+      'bootstrap();',
+      '',
+    ].join('\n'),
+    'src/app.module.ts': [
+      "import { Module } from '@nestjs/common';",
+      "import { UsersModule } from './users/users.module';",
+      '',
+      '@Module({',
+      '  imports: [UsersModule],',
+      '})',
+      'export class AppModule {}',
+      '',
+    ].join('\n'),
+    'src/users/users.module.ts': [
+      "import { Module } from '@nestjs/common';",
+      "import { UsersController } from './users.controller';",
+      "import { UsersService } from './users.service';",
+      '',
+      '@Module({',
+      '  controllers: [UsersController],',
+      '  providers: [UsersService],',
+      '  exports: [UsersService],',
+      '})',
+      'export class UsersModule {}',
+      '',
+    ].join('\n'),
+    'src/users/users.controller.ts': [
+      "import { Controller, Get, Param } from '@nestjs/common';",
+      "import { UsersService } from './users.service';",
+      '',
+      "@Controller('users')",
+      'export class UsersController {',
+      '  constructor(private readonly usersService: UsersService) {}',
+      '',
+      "  @Get(':id')",
+      "  findOne(@Param('id') id: string) {",
+      '    return this.usersService.findOne(id);',
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
+    'src/users/users.service.ts': [
+      "import { Injectable } from '@nestjs/common';",
+      '',
+      '@Injectable()',
+      'export class UsersService {',
+      '  findOne(id: string) {',
+      "    return { id, name: 'Ada Lovelace' };",
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
+    'src/users/users.service.spec.ts': [
+      "import { UsersService } from './users.service';",
+      '',
+      "describe('UsersService', () => {",
+      "  it('returns a user by id', () => {",
+      '    const service = new UsersService();',
+      "    expect(service.findOne('1')).toEqual({ id: '1', name: 'Ada Lovelace' });",
+      '  });',
+      '});',
+      '',
+    ].join('\n'),
+  };
+}
+
+export async function buildNestJsFixture(root: string): Promise<void> {
+  await writeTree(root, nestJsTree());
+}

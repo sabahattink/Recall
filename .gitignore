@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+pnpm-debug.log*
+npm-debug.log*
+.vscode/*
+!.vscode/extensions.json
+.recall/cache/
+
+# Trying the CLI locally against the bundled fixtures should never create a diff.
+packages/test-fixtures/fixtures/*/.recall/

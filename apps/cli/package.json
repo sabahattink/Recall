@@ -1,0 +1,34 @@
+{
+  "name": "@recall-ai/cli",
+  "version": "0.1.0",
+  "description": "Recall: Git remembers code. Recall remembers why. A local-first CLI that maintains structured, tool-agnostic project memory for AI coding agents.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "recall": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@recall-ai/core": "workspace:*",
+    "@recall-ai/memory": "workspace:*",
+    "@recall-ai/schemas": "workspace:*",
+    "cac": "^6.7.14"
+  },
+  "devDependencies": {
+    "@recall-ai/test-fixtures": "workspace:*",
+    "execa": "^9.5.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.env
+
+# Recall (local memory cache; safe to regenerate)
+.recall/cache/

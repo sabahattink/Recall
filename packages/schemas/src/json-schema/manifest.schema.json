@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://recall-ai.dev/schema/manifest.schema.json",
+  "title": "Recall Manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "toolVersion",
+    "repository",
+    "generatedAt",
+    "updatedAt",
+    "snapshot",
+    "files"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "toolVersion": { "type": "string" },
+    "repository": {
+      "type": "object",
+      "required": ["name", "root", "defaultBranch"],
+      "properties": {
+        "name": { "type": "string" },
+        "root": { "type": "string" },
+        "defaultBranch": { "type": ["string", "null"] }
+      }
+    },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "snapshot": {
+      "type": "object",
+      "required": ["commit", "branch", "path"],
+      "properties": {
+        "commit": { "type": ["string", "null"] },
+        "branch": { "type": ["string", "null"] },
+        "path": { "type": "string" }
+      }
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "architecture",
+        "conventions",
+        "decisions",
+        "features",
+        "glossary",
+        "risks",
+        "technicalDebt"
+      ],
+      "properties": {
+        "architecture": { "type": "string" },
+        "conventions": { "type": "string" },
+        "decisions": { "type": "string" },
+        "features": { "type": "string" },
+        "glossary": { "type": "string" },
+        "risks": { "type": "string" },
+        "technicalDebt": { "type": "string" }
+      }
+    }
+  }
+}

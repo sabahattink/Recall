@@ -1,0 +1,18 @@
+{
+  "name": "simple-node-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A minimal generic Node.js project used as a Recall test fixture.",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@recall-ai/analyzers",
+  "version": "0.1.0",
+  "description": "Deterministic repository analysis: scanning, framework detection, and risk rules.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@recall-ai/schemas": "workspace:*",
+    "fast-glob": "^3.3.2",
+    "ignore": "^6.0.2",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@recall-ai/test-fixtures": "workspace:*",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
