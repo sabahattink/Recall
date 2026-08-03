@@ -5,6 +5,10 @@
   "description": "Recall: Git remembers code. Recall remembers why.",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sabahattink/Recall.git"
+  },
   "engines": {
     "node": ">=22"
   },

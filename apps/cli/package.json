@@ -4,6 +4,12 @@
   "description": "Recall: Git remembers code. Recall remembers why. A local-first CLI that maintains structured, tool-agnostic project memory for AI coding agents.",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sabahattink/Recall.git",
+    "directory": "apps/cli"
+  },
+  "bugs": "https://github.com/sabahattink/Recall/issues",
   "bin": {
     "recall": "./dist/index.js"
   },

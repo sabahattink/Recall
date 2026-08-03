@@ -7,8 +7,8 @@ Thanks for your interest in contributing. Recall is a local-first, deterministic
 Requirements: Node.js 22+, pnpm 10+.
 
 ```bash
-git clone https://github.com/recall-ai/recall.git
-cd recall
+git clone https://github.com/sabahattink/Recall.git
+cd Recall
 pnpm install
 pnpm build
 pnpm test

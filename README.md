@@ -12,9 +12,11 @@ Recall addresses this by turning repository analysis into a deterministic, versi
 
 ## Demo
 
+After [installing from source](#installation) and linking the `recall` command:
+
 ```bash
 $ cd my-project
-$ pnpm dlx @recall-ai/cli init
+$ recall init
 Initialized Recall memory at /path/to/my-project/.recall
   Wrote: architecture.md, conventions.md, decisions.md, features.md, glossary.md, risks.md, technical-debt.md
   Added .recall/cache/ to .gitignore
@@ -33,20 +35,37 @@ $ recall context --stdout --task "Add Paddle webhook verification"
 
 ## Installation
 
-Recall requires Node.js 22+. No account, API key, or network access is required.
+> **Alpha status:** Recall is not yet published to any package registry. `@recall-ai/cli` does not exist on npm, and `@recall-ai` is a **planned, unconfirmed** npm scope — it may change before the first published release. Install from source until a release is published; see [docs/roadmap.md](docs/roadmap.md#release-status) for what's left before that happens.
+
+Recall requires Node.js 22+ and [pnpm](https://pnpm.io) 10+. No account, API key, or network access is required to run it.
+
+### From source (current alpha)
 
 ```bash
-# Run without installing
-pnpm dlx @recall-ai/cli init
+git clone https://github.com/sabahattink/Recall.git
+cd Recall
+pnpm install
+pnpm build
 
-# Or install into a project
-pnpm add -D @recall-ai/cli
-npx recall init
+# Run directly:
+node apps/cli/dist/index.js init
 
-# Or install globally
-npm install -g @recall-ai/cli
+# Or link a local `recall` command onto your PATH:
+cd apps/cli && pnpm link --global
 recall init
 ```
+
+### From a package registry (planned, not yet available)
+
+Once published, Recall is intended to be installable the way most Node CLIs are — for example:
+
+```bash
+# NOT YET PUBLISHED — shown for the intended future shape only.
+pnpm dlx @recall-ai/cli init
+npm install -g @recall-ai/cli
+```
+
+Do not expect these commands to work yet.
 
 ## Quick start
 
@@ -83,6 +102,7 @@ Every Markdown file wraps Recall's generated content in explicit markers:
 
 ```markdown
 <!-- recall:generated:start -->
+
 ...content Recall regenerates on every `recall update`...
 <!-- recall:generated:end -->
 
@@ -93,15 +113,15 @@ Anything you write here is yours. Recall never touches it.
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `recall init` | Create or refresh `.recall/` for the current repository |
-| `recall scan` | Run deterministic analysis and save a snapshot |
-| `recall update` | Compare against the last snapshot and refresh memory (supports `--check` for CI) |
-| `recall status` | Show initialization, staleness, and memory health |
-| `recall explain <path>` | Explain a file/directory's role using deterministic evidence |
-| `recall context [--task "..."]` | Generate compact, agent-ready context |
-| `recall doctor` | Validate the runtime, Git, and memory state |
+| Command                         | Purpose                                                                          |
+| ------------------------------- | -------------------------------------------------------------------------------- |
+| `recall init`                   | Create or refresh `.recall/` for the current repository                          |
+| `recall scan`                   | Run deterministic analysis and save a snapshot                                   |
+| `recall update`                 | Compare against the last snapshot and refresh memory (supports `--check` for CI) |
+| `recall status`                 | Show initialization, staleness, and memory health                                |
+| `recall explain <path>`         | Explain a file/directory's role using deterministic evidence                     |
+| `recall context [--task "..."]` | Generate compact, agent-ready context                                            |
+| `recall doctor`                 | Validate the runtime, Git, and memory state                                      |
 
 Global options: `--path <dir>`, `--json`, `--quiet`, `--verbose`, `--no-color`. See [docs/cli-reference.md](docs/cli-reference.md) for the full reference, including every command's flags and exit codes.
 
