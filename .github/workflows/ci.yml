@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # This working branch is the repository's current default branch (no
+    # `main` exists yet — see docs/roadmap.md). Add "main" back here once the
+    # repository is renamed for a stable release; both are listed so CI
+    # keeps working through that transition either way.
+    branches: [main, claude/recall-cli-build-nymjvl]
   pull_request:
-    branches: [main]
+    branches: [main, claude/recall-cli-build-nymjvl]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -12,8 +16,12 @@ concurrency:
 
 jobs:
   build:
-    name: Lint, typecheck, test, build
-    runs-on: ubuntu-latest
+    name: Lint, typecheck, test, build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +59,5 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Verify CLI against a fixture
-        run: |
-          node apps/cli/dist/index.js init --path packages/test-fixtures/fixtures/simple-node --dry-run
-          node apps/cli/dist/index.js --version
+      - name: Verify the compiled CLI end-to-end against a copied fixture
+        run: node scripts/ci-verify.mjs

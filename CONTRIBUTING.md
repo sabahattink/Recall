@@ -41,6 +41,15 @@ pnpm build
 node apps/cli/dist/index.js init --path packages/test-fixtures/fixtures/simple-node
 ```
 
+To run the same end-to-end verification CI runs (copies a fixture to a temp
+directory, runs `init`/`status`/`context`/`doctor`/`update`, and checks that
+human-authored Markdown and source files are untouched):
+
+```bash
+pnpm build
+pnpm verify:cli
+```
+
 ## Making changes
 
 1. Open an issue first for anything larger than a small fix, so design direction can be agreed on before implementation.
