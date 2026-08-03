@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { readSnapshot } from '@recall-ai/memory';
 import type { Confidence, Evidence, FileRecord, InternalDependencyEdge } from '@recall-ai/schemas';
 import { InvalidStateError, InvalidUsageError } from '../errors.js';
-import { recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import { resolveRepositoryRoot } from '../paths.js';
 
 export interface ExplainResult {
   path: string;
@@ -75,7 +75,7 @@ const RESPONSIBILITY_PATTERNS: Array<{ test: RegExp; describe: (name: string) =>
 
 export async function runExplain(inputPath: string, targetPath: string): Promise<ExplainResult> {
   const root = await resolveRepositoryRoot(inputPath);
-  const { snapshot, error } = await readSnapshot(recallDirFor(root));
+  const { snapshot, error } = await readSnapshot(root);
   if (!snapshot) {
     throw new InvalidStateError(
       error

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { atomicWriteFile, generateContext, readSnapshot } from '@recall-ai/memory';
 import { InvalidStateError } from '../errors.js';
-import { recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import { assertRecallDirNotSymlink, recallDirFor, resolveRepositoryRoot } from '../paths.js';
 
 export interface ContextCommandOptions {
   path: string;
@@ -19,8 +19,9 @@ export interface ContextCommandResult {
 
 export async function runContext(options: ContextCommandOptions): Promise<ContextCommandResult> {
   const root = await resolveRepositoryRoot(options.path);
+  await assertRecallDirNotSymlink(root);
   const recallDir = recallDirFor(root);
-  const { snapshot, error } = await readSnapshot(recallDir);
+  const { snapshot, error } = await readSnapshot(root);
 
   if (!snapshot) {
     throw new InvalidStateError(
@@ -38,7 +39,7 @@ export async function runContext(options: ContextCommandOptions): Promise<Contex
   let outputPath: string | null = null;
   if (!options.stdout) {
     outputPath = join(recallDir, 'context.md');
-    await atomicWriteFile(outputPath, content);
+    await atomicWriteFile(outputPath, content, { allowedRoot: root });
   }
 
   return { content, estimatedTokens, truncated, outputPath };

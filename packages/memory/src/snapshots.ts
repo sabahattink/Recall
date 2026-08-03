@@ -4,20 +4,21 @@ import {
   snapshotJsonSchema,
   type RepositorySnapshot,
 } from '@recall-ai/schemas';
-import { atomicWriteFile, backupIfExists, readFileIfExists } from './safe-fs.js';
+import { atomicWriteFile, backupIfExists, readFileIfExists, RECALL_DIR_NAME } from './safe-fs.js';
 
 export const SNAPSHOT_RELATIVE_PATH = 'snapshots/latest.json';
 
-export async function writeSnapshot(
-  recallDir: string,
-  snapshot: RepositorySnapshot,
-): Promise<void> {
+export async function writeSnapshot(root: string, snapshot: RepositorySnapshot): Promise<void> {
+  const recallDir = join(root, RECALL_DIR_NAME);
   const snapshotPath = join(recallDir, SNAPSHOT_RELATIVE_PATH);
-  await backupIfExists(recallDir, snapshotPath);
-  await atomicWriteFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`);
+  await backupIfExists(root, snapshotPath);
+  await atomicWriteFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, {
+    allowedRoot: root,
+  });
   await atomicWriteFile(
     join(recallDir, 'schema', 'snapshot.schema.json'),
     `${JSON.stringify(snapshotJsonSchema, null, 2)}\n`,
+    { allowedRoot: root },
   );
 }
 
@@ -26,7 +27,8 @@ export interface SnapshotReadResult {
   error: string | null;
 }
 
-export async function readSnapshot(recallDir: string): Promise<SnapshotReadResult> {
+export async function readSnapshot(root: string): Promise<SnapshotReadResult> {
+  const recallDir = join(root, RECALL_DIR_NAME);
   const raw = await readFileIfExists(join(recallDir, SNAPSHOT_RELATIVE_PATH));
   if (raw === null) return { snapshot: null, error: null };
   let parsed: unknown;

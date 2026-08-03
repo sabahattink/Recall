@@ -15,7 +15,7 @@ import {
 import { GitAdapter } from '@recall-ai/git';
 import type { RepositorySnapshot } from '@recall-ai/schemas';
 import { InvalidStateError } from '../errors.js';
-import { recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import { assertRecallDirNotSymlink, resolveRepositoryRoot } from '../paths.js';
 import { runScan } from '../scan-runner.js';
 
 export interface UpdateOptions {
@@ -40,11 +40,11 @@ export interface UpdateResult {
 
 export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
   const root = await resolveRepositoryRoot(options.path);
-  const recallDir = recallDirFor(root);
+  await assertRecallDirNotSymlink(root);
 
   const [{ manifest }, { snapshot: previousSnapshot, error: snapshotError }] = await Promise.all([
-    readManifest(recallDir),
-    readSnapshot(recallDir),
+    readManifest(root),
+    readSnapshot(root),
   ]);
 
   if (!manifest || !previousSnapshot) {
@@ -71,7 +71,7 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
     changeReport,
   });
 
-  const memoryFileUpdates = await computeMemoryFileUpdates(recallDir, currentSnapshot);
+  const memoryFileUpdates = await computeMemoryFileUpdates(root, currentSnapshot);
 
   let applied = false;
   if (!options.dryRun && !options.check) {
@@ -85,9 +85,9 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
       snapshotPath: 'snapshots/latest.json',
       existing: manifest,
     });
-    await writeManifest(recallDir, nextManifest);
-    await writeSnapshot(recallDir, currentSnapshot);
-    await applyMemoryFileUpdates(recallDir, memoryFileUpdates);
+    await writeManifest(root, nextManifest);
+    await writeSnapshot(root, currentSnapshot);
+    await applyMemoryFileUpdates(root, memoryFileUpdates);
     applied = true;
   }
 

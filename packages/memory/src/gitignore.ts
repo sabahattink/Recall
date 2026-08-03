@@ -27,7 +27,7 @@ export async function ensureRecallCacheIgnored(root: string): Promise<GitignoreU
       ? `${MARKER_COMMENT}\n${IGNORE_ENTRY}\n`
       : `${existing.replace(/\n?$/, '\n')}\n${MARKER_COMMENT}\n${IGNORE_ENTRY}\n`;
 
-  await atomicWriteFile(path, nextContent);
+  await atomicWriteFile(path, nextContent, { allowedRoot: root });
   return { changed: true, path };
 }
 

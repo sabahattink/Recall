@@ -1,8 +1,9 @@
-import { access, stat } from 'node:fs/promises';
+import { access, lstat, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { InvalidUsageError } from './errors.js';
+import { RECALL_DIR_NAME } from '@recall-ai/memory';
+import { InvalidStateError, InvalidUsageError } from './errors.js';
 
-export const RECALL_DIR_NAME = '.recall';
+export { RECALL_DIR_NAME };
 
 export async function resolveRepositoryRoot(inputPath: string): Promise<string> {
   const root = resolve(inputPath);
@@ -33,5 +34,30 @@ export async function recallDirExists(root: string): Promise<boolean> {
     return stats.isDirectory();
   } catch {
     return false;
+  }
+}
+
+/** True if `.recall` exists and is itself a symlink, which Recall refuses to write through. */
+export async function recallDirIsSymlink(root: string): Promise<boolean> {
+  try {
+    const stats = await lstat(recallDirFor(root));
+    return stats.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fails fast, with a clear error, when `.recall` exists but is a symlink.
+ * The lower-level write path (`atomicWriteFile`'s `allowedRoot` option)
+ * would also reject this, but checking here first turns it into a clean
+ * `InvalidStateError` (exit code 3) instead of a lower-level filesystem
+ * error surfacing from deep inside a write.
+ */
+export async function assertRecallDirNotSymlink(root: string): Promise<void> {
+  if (await recallDirIsSymlink(root)) {
+    throw new InvalidStateError(
+      `${recallDirFor(root)} exists but is a symlink. Recall refuses to read or write through a symlinked .recall directory — replace it with a real directory (or remove it) and re-run.`,
+    );
   }
 }

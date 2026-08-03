@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   buildSimpleNodeFixture,
@@ -62,5 +62,24 @@ describe('runDoctor', () => {
     expect(result.checks.some((c) => c.id === 'markers-risks.md' && c.status === 'fail')).toBe(
       true,
     );
+  });
+
+  it('fails cleanly and stops early when .recall is a symlink', async () => {
+    const outsideDir = await createTempDir('recall-outside-');
+    try {
+      await mkdir(outsideDir, { recursive: true });
+      await symlink(outsideDir, join(dir, '.recall'));
+
+      const result = await runDoctor(dir);
+      expect(result.overallStatus).toBe('fail');
+      expect(
+        result.checks.some((c) => c.id === 'recall-dir-not-symlink' && c.status === 'fail'),
+      ).toBe(true);
+      // Should stop before attempting any read/write through the symlink.
+      expect(result.checks.some((c) => c.id === 'manifest-valid')).toBe(false);
+      expect(result.checks.some((c) => c.id === 'write-permission')).toBe(false);
+    } finally {
+      await removeTempDir(outsideDir);
+    }
   });
 });

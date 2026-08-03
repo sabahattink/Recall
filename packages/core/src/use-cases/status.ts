@@ -58,7 +58,7 @@ export async function runStatus(inputPath: string): Promise<StatusResult> {
 
   const recallDir = recallDirFor(root);
   const [{ manifest, error: manifestError }, { snapshot, error: snapshotError }] =
-    await Promise.all([readManifest(recallDir), readSnapshot(recallDir)]);
+    await Promise.all([readManifest(root), readSnapshot(root)]);
 
   const malformedFiles: MalformedFile[] = [];
   if (manifestError) malformedFiles.push({ path: 'manifest.json', reason: manifestError });

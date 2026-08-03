@@ -11,7 +11,12 @@ import {
   validateMarkers,
 } from '@recall-ai/memory';
 import { GitAdapter, isGitInstalled } from '@recall-ai/git';
-import { recallDirExists, recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import {
+  recallDirExists,
+  recallDirFor,
+  recallDirIsSymlink,
+  resolveRepositoryRoot,
+} from '../paths.js';
 
 export type DoctorStatus = 'pass' | 'warn' | 'fail';
 
@@ -50,10 +55,19 @@ export async function runDoctor(inputPath: string): Promise<DoctorResult> {
   }
 
   const recallDir = recallDirFor(root);
-  const permissionCheck = await checkWritePermission(recallDir);
+
+  const symlinkCheck = await checkRecallDirNotSymlink(root);
+  checks.push(symlinkCheck);
+  if (symlinkCheck.status === 'fail') {
+    // Every check below either reads through `.recall` or writes into it;
+    // neither is safe to attempt once it's confirmed to be a symlink.
+    return finalize(root, checks);
+  }
+
+  const permissionCheck = await checkWritePermission(root);
   checks.push(permissionCheck);
 
-  const { manifest, error: manifestError } = await readManifest(recallDir);
+  const { manifest, error: manifestError } = await readManifest(root);
   checks.push({
     id: 'manifest-valid',
     label: 'Manifest validity',
@@ -61,7 +75,7 @@ export async function runDoctor(inputPath: string): Promise<DoctorResult> {
     detail: manifestError ?? (manifest ? undefined : 'manifest.json is missing'),
   });
 
-  const { snapshot, error: snapshotError } = await readSnapshot(recallDir);
+  const { snapshot, error: snapshotError } = await readSnapshot(root);
   checks.push({
     id: 'snapshot-valid',
     label: 'Snapshot validity',
@@ -141,10 +155,22 @@ async function checkRepositoryAccess(root: string): Promise<DoctorCheck> {
   }
 }
 
-async function checkWritePermission(recallDir: string): Promise<DoctorCheck> {
-  const probePath = join(recallDir, '.doctor-write-probe');
+async function checkRecallDirNotSymlink(root: string): Promise<DoctorCheck> {
+  const isSymlink = await recallDirIsSymlink(root);
+  return isSymlink
+    ? {
+        id: 'recall-dir-not-symlink',
+        label: '.recall is not a symlink',
+        status: 'fail',
+        detail: `${recallDirFor(root)} exists but is a symlink; Recall refuses to read or write through it.`,
+      }
+    : { id: 'recall-dir-not-symlink', label: '.recall is not a symlink', status: 'pass' };
+}
+
+async function checkWritePermission(root: string): Promise<DoctorCheck> {
+  const probePath = join(recallDirFor(root), '.doctor-write-probe');
   try {
-    await atomicWriteFile(probePath, 'probe');
+    await atomicWriteFile(probePath, 'probe', { allowedRoot: root });
     await removeIfExists(probePath);
     return { id: 'write-permission', label: 'Write permission for .recall', status: 'pass' };
   } catch (error) {

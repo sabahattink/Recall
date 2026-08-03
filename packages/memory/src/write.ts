@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import type { RepositorySnapshot } from '@recall-ai/schemas';
 import type { ManifestFiles } from '@recall-ai/schemas';
 import { upsertGeneratedSection } from './markers.js';
-import { readFileIfExists, atomicWriteFile, backupIfExists } from './safe-fs.js';
+import { readFileIfExists, atomicWriteFile, backupIfExists, RECALL_DIR_NAME } from './safe-fs.js';
 import { architectureTemplate, generateArchitectureBody } from './markdown/architecture.js';
 import { conventionsTemplate, generateConventionsBody } from './markdown/conventions.js';
 import { decisionsTemplate, generateDecisionsBody } from './markdown/decisions.js';
@@ -46,9 +46,10 @@ export interface MemoryFileUpdate {
 }
 
 export async function computeMemoryFileUpdates(
-  recallDir: string,
+  root: string,
   snapshot: RepositorySnapshot,
 ): Promise<MemoryFileUpdate[]> {
+  const recallDir = join(root, RECALL_DIR_NAME);
   const updates: MemoryFileUpdate[] = [];
   for (const key of Object.keys(GENERATORS) as MemoryFileKey[]) {
     const fileName = MEMORY_FILE_NAMES[key];
@@ -66,14 +67,14 @@ export async function computeMemoryFileUpdates(
 }
 
 export async function applyMemoryFileUpdates(
-  recallDir: string,
+  root: string,
   updates: MemoryFileUpdate[],
 ): Promise<void> {
   for (const update of updates) {
     if (!update.changed) continue;
     if (update.existingContent !== null) {
-      await backupIfExists(recallDir, update.path);
+      await backupIfExists(root, update.path);
     }
-    await atomicWriteFile(update.path, update.nextContent);
+    await atomicWriteFile(update.path, update.nextContent, { allowedRoot: root });
   }
 }

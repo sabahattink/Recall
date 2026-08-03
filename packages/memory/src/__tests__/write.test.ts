@@ -4,22 +4,25 @@ import { readFile } from 'node:fs/promises';
 import { createTempDir, removeTempDir } from '@recall-ai/test-fixtures';
 import { applyMemoryFileUpdates, computeMemoryFileUpdates } from '../write.js';
 import { GENERATED_END, GENERATED_START } from '../markers.js';
+import { atomicWriteFile, RECALL_DIR_NAME } from '../safe-fs.js';
 import { makeSnapshot } from './test-helpers.js';
 
 describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
+  let root: string;
   let recallDir: string;
 
   beforeEach(async () => {
-    recallDir = await createTempDir();
+    root = await createTempDir();
+    recallDir = join(root, RECALL_DIR_NAME);
   });
 
   afterEach(async () => {
-    await removeTempDir(recallDir);
+    await removeTempDir(root);
   });
 
   it('creates all seven memory files on first run', async () => {
     const snapshot = makeSnapshot();
-    const updates = await computeMemoryFileUpdates(recallDir, snapshot);
+    const updates = await computeMemoryFileUpdates(root, snapshot);
     expect(updates.map((u) => u.fileName).sort()).toEqual(
       [
         'architecture.md',
@@ -33,7 +36,7 @@ describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
     );
     expect(updates.every((u) => u.changed)).toBe(true);
 
-    await applyMemoryFileUpdates(recallDir, updates);
+    await applyMemoryFileUpdates(root, updates);
     const architecture = await readFile(join(recallDir, 'architecture.md'), 'utf8');
     expect(architecture).toContain(GENERATED_START);
     expect(architecture).toContain(GENERATED_END);
@@ -54,8 +57,8 @@ describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
         },
       ],
     });
-    const firstUpdates = await computeMemoryFileUpdates(recallDir, snapshot);
-    await applyMemoryFileUpdates(recallDir, firstUpdates);
+    const firstUpdates = await computeMemoryFileUpdates(root, snapshot);
+    await applyMemoryFileUpdates(root, firstUpdates);
 
     const architecturePath = join(recallDir, 'architecture.md');
     const original = await readFile(architecturePath, 'utf8');
@@ -63,8 +66,7 @@ describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
       '## Notes',
       '## Notes\n\nThis service intentionally depends on the legacy billing package for tax calculation.',
     );
-    const { atomicWriteFile } = await import('../safe-fs.js');
-    await atomicWriteFile(architecturePath, withHumanNote);
+    await atomicWriteFile(architecturePath, withHumanNote, { allowedRoot: root });
 
     const updatedSnapshot = makeSnapshot({
       workspaces: [
@@ -80,8 +82,8 @@ describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
         },
       ],
     });
-    const secondUpdates = await computeMemoryFileUpdates(recallDir, updatedSnapshot);
-    await applyMemoryFileUpdates(recallDir, secondUpdates);
+    const secondUpdates = await computeMemoryFileUpdates(root, updatedSnapshot);
+    await applyMemoryFileUpdates(root, secondUpdates);
 
     const final = await readFile(architecturePath, 'utf8');
     expect(final).toContain(
@@ -91,10 +93,10 @@ describe('computeMemoryFileUpdates / applyMemoryFileUpdates', () => {
 
   it('does not rewrite a file when the generated content has not changed', async () => {
     const snapshot = makeSnapshot();
-    const firstUpdates = await computeMemoryFileUpdates(recallDir, snapshot);
-    await applyMemoryFileUpdates(recallDir, firstUpdates);
+    const firstUpdates = await computeMemoryFileUpdates(root, snapshot);
+    await applyMemoryFileUpdates(root, firstUpdates);
 
-    const secondUpdates = await computeMemoryFileUpdates(recallDir, snapshot);
+    const secondUpdates = await computeMemoryFileUpdates(root, snapshot);
     expect(secondUpdates.every((u) => !u.changed)).toBe(true);
   });
 });

@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createTempDir, removeTempDir } from '@recall-ai/test-fixtures';
 import { buildManifest, readManifest, writeManifest } from '../manifest.js';
+import { RECALL_DIR_NAME } from '../safe-fs.js';
 
 describe('buildManifest', () => {
   it('produces a manifest matching the documented example shape', () => {
@@ -54,14 +55,14 @@ describe('buildManifest', () => {
 });
 
 describe('readManifest / writeManifest', () => {
-  let recallDir: string;
+  let root: string;
 
   beforeEach(async () => {
-    recallDir = await createTempDir();
+    root = await createTempDir();
   });
 
   afterEach(async () => {
-    await removeTempDir(recallDir);
+    await removeTempDir(root);
   });
 
   it('round-trips a manifest through disk', async () => {
@@ -75,32 +76,34 @@ describe('readManifest / writeManifest', () => {
       snapshotPath: 'snapshots/latest.json',
     });
 
-    await writeManifest(recallDir, manifest);
-    const { manifest: read, error } = await readManifest(recallDir);
+    await writeManifest(root, manifest);
+    const { manifest: read, error } = await readManifest(root);
     expect(error).toBeNull();
     expect(read).toEqual(manifest);
   });
 
   it('returns null with no error when no manifest exists yet', async () => {
-    const { manifest, error } = await readManifest(recallDir);
+    const { manifest, error } = await readManifest(root);
     expect(manifest).toBeNull();
     expect(error).toBeNull();
   });
 
   it('reports an error for malformed JSON', async () => {
-    await writeFile(join(recallDir, 'manifest.json'), '{ not valid json', 'utf8');
-    const { manifest, error } = await readManifest(recallDir);
+    await mkdir(join(root, RECALL_DIR_NAME), { recursive: true });
+    await writeFile(join(root, RECALL_DIR_NAME, 'manifest.json'), '{ not valid json', 'utf8');
+    const { manifest, error } = await readManifest(root);
     expect(manifest).toBeNull();
     expect(error).toContain('not valid JSON');
   });
 
   it('reports an error for a manifest missing required fields', async () => {
+    await mkdir(join(root, RECALL_DIR_NAME), { recursive: true });
     await writeFile(
-      join(recallDir, 'manifest.json'),
+      join(root, RECALL_DIR_NAME, 'manifest.json'),
       JSON.stringify({ schemaVersion: '1.0.0' }),
       'utf8',
     );
-    const { manifest, error } = await readManifest(recallDir);
+    const { manifest, error } = await readManifest(root);
     expect(manifest).toBeNull();
     expect(error).not.toBeNull();
   });

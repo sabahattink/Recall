@@ -5,7 +5,7 @@ import {
   manifestJsonSchema,
   type Manifest,
 } from '@recall-ai/schemas';
-import { atomicWriteFile, backupIfExists, readFileIfExists } from './safe-fs.js';
+import { atomicWriteFile, backupIfExists, readFileIfExists, RECALL_DIR_NAME } from './safe-fs.js';
 
 export interface BuildManifestInput {
   toolVersion: string;
@@ -54,7 +54,8 @@ export interface ManifestReadResult {
   error: string | null;
 }
 
-export async function readManifest(recallDir: string): Promise<ManifestReadResult> {
+export async function readManifest(root: string): Promise<ManifestReadResult> {
+  const recallDir = join(root, RECALL_DIR_NAME);
   const raw = await readFileIfExists(join(recallDir, 'manifest.json'));
   if (raw === null) return { manifest: null, error: null };
   let parsed: unknown;
@@ -70,12 +71,16 @@ export async function readManifest(recallDir: string): Promise<ManifestReadResul
   return { manifest: result.data, error: null };
 }
 
-export async function writeManifest(recallDir: string, manifest: Manifest): Promise<void> {
+export async function writeManifest(root: string, manifest: Manifest): Promise<void> {
+  const recallDir = join(root, RECALL_DIR_NAME);
   const manifestPath = join(recallDir, 'manifest.json');
-  await backupIfExists(recallDir, manifestPath);
-  await atomicWriteFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  await backupIfExists(root, manifestPath);
+  await atomicWriteFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, {
+    allowedRoot: root,
+  });
   await atomicWriteFile(
     join(recallDir, 'schema', 'manifest.schema.json'),
     `${JSON.stringify(manifestJsonSchema, null, 2)}\n`,
+    { allowedRoot: root },
   );
 }

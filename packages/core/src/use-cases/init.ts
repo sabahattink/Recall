@@ -9,7 +9,7 @@ import {
   type MemoryFileUpdate,
 } from '@recall-ai/memory';
 import type { RepositorySnapshot } from '@recall-ai/schemas';
-import { recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import { assertRecallDirNotSymlink, recallDirFor, resolveRepositoryRoot } from '../paths.js';
 import { runScan } from '../scan-runner.js';
 
 export interface InitOptions {
@@ -33,9 +33,10 @@ export interface InitResult {
 
 export async function runInit(options: InitOptions): Promise<InitResult> {
   const root = await resolveRepositoryRoot(options.path);
+  await assertRecallDirNotSymlink(root);
   const recallDir = recallDirFor(root);
 
-  const { manifest: existingManifest } = await readManifest(recallDir);
+  const { manifest: existingManifest } = await readManifest(root);
   const wasAlreadyInitialized = existingManifest !== null;
 
   // Ensure .gitignore is updated *before* scanning, so the persisted snapshot
@@ -60,12 +61,12 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     existing: options.force ? null : existingManifest,
   });
 
-  const memoryFileUpdates = await computeMemoryFileUpdates(recallDir, snapshot);
+  const memoryFileUpdates = await computeMemoryFileUpdates(root, snapshot);
 
   if (!options.dryRun) {
-    await writeManifest(recallDir, manifest);
-    await writeSnapshot(recallDir, snapshot);
-    await applyMemoryFileUpdates(recallDir, memoryFileUpdates);
+    await writeManifest(root, manifest);
+    await writeSnapshot(root, snapshot);
+    await applyMemoryFileUpdates(root, memoryFileUpdates);
   }
 
   return {

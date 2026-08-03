@@ -23,6 +23,10 @@ export async function runScanCommand(options: ScanOptions): Promise<ScanResult> 
 
   let outputPath: string | null = null;
   if (options.output) {
+    // `--output` is an explicit, user-supplied destination and is
+    // intentionally exempt from repository-root containment (see
+    // `atomicWriteFile`'s `allowedRoot` option); it still refuses to write
+    // through an existing symlink at the destination itself.
     outputPath = resolve(options.output);
     await atomicWriteFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   }
