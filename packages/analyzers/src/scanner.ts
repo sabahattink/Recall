@@ -1,4 +1,4 @@
-import { basename } from 'node:path';
+import { basename, join } from 'node:path';
 import type { GitMetadata, RepositorySnapshot } from '@recall-ai/schemas';
 import { walkRepository } from './file-walk.js';
 import { detectEcosystem } from './package-manager.js';
@@ -36,7 +36,7 @@ export interface ScanResult {
 
 export async function scanRepository(root: string, options: ScanOptions = {}): Promise<ScanResult> {
   const rootPackageJson = await readJsonIfExists<{ name?: string; description?: string }>(
-    `${root}/package.json`,
+    join(root, 'package.json'),
   );
 
   const [{ files: walkedFiles, truncated }, ecosystem] = await Promise.all([

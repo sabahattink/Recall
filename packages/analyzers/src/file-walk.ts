@@ -2,7 +2,7 @@ import fg from 'fast-glob';
 import type { Ignore } from 'ignore';
 import { readFile, stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { extname, relative } from 'node:path';
+import { extname, join, relative } from 'node:path';
 
 // `ignore` ships a CJS default export shaped as a callable factory function.
 // TypeScript's NodeNext interop cannot resolve that shape as a default import
@@ -36,7 +36,7 @@ export interface FileWalkResult {
 
 async function loadGitignore(root: string): Promise<string[]> {
   try {
-    const contents = await readFile(`${root}/.gitignore`, 'utf8');
+    const contents = await readFile(join(root, '.gitignore'), 'utf8');
     return contents.split('\n');
   } catch {
     return [];
@@ -88,10 +88,11 @@ export async function walkRepository(
       break;
     }
     try {
-      const info = await stat(`${root}/${entry}`);
+      const absolutePath = join(root, entry);
+      const info = await stat(absolutePath);
       if (!info.isFile()) continue;
       files.push({
-        path: relative(root, `${root}/${entry}`).split('\\').join('/'),
+        path: relative(root, absolutePath).split('\\').join('/'),
         sizeBytes: info.size,
         extension: extname(entry),
       });

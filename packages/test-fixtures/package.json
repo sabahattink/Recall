@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rm -rf dist *.tsbuildinfo",
+    "clean": "node ../../scripts/clean-package.mjs",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
