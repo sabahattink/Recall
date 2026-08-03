@@ -206,12 +206,10 @@ function detectErrorHandlingConvention(files: WalkedFile[]): ConventionFinding[]
       category: 'error-handling',
       description: `Custom error/exception types are organized into dedicated files (${errorFiles.length} found).`,
       confidence: 'medium',
-      evidence: errorFiles
-        .slice(0, 5)
-        .map((f) => ({
-          path: f.path,
-          reason: 'file name indicates a custom error/exception type',
-        })),
+      evidence: errorFiles.slice(0, 5).map((f) => ({
+        path: f.path,
+        reason: 'file name indicates a custom error/exception type',
+      })),
     },
   ];
 }

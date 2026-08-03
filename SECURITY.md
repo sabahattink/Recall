@@ -21,7 +21,7 @@ Recall is a local static-analysis tool, not a security scanner. `recall scan`/`r
 - **No network access required.** Recall's core commands never make outbound network calls.
 - **Read-only analysis.** Recall does not execute, import, or evaluate any file in the repository it analyzes; it only reads file metadata and text content (with size limits and binary-file detection) to produce its snapshot.
 - **Restricted writes.** Recall only ever writes to `.recall/`, `.gitignore`, and an explicit output path the user provides via a CLI flag.
-- **No secret exposure.** `.env`-style files are detected as a risk finding (their *path* is reported), but their contents are never read into generated output or printed to the terminal.
+- **No secret exposure.** `.env`-style files are detected as a risk finding (their _path_ is reported), but their contents are never read into generated output or printed to the terminal.
 - **Path safety.** All writes are checked against path traversal, and symlinked files are not written through or followed outside the repository root.
 
 If you find a case where Recall violates any of the above, please treat it as a security bug and report it as described above.

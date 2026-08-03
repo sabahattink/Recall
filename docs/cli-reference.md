@@ -4,13 +4,13 @@
 
 These apply to every command:
 
-| Flag | Description |
-| --- | --- |
-| `--path <dir>` | Repository path to operate on (default: `.`) |
-| `--json` | Emit machine-readable JSON on stdout instead of human-readable text |
-| `--quiet` | Suppress non-essential output (warnings and errors still print to stderr) |
-| `--verbose` | Print stack traces on failure |
-| `--no-color` | Disable colored output |
+| Flag           | Description                                                               |
+| -------------- | ------------------------------------------------------------------------- |
+| `--path <dir>` | Repository path to operate on (default: `.`)                              |
+| `--json`       | Emit machine-readable JSON on stdout instead of human-readable text       |
+| `--quiet`      | Suppress non-essential output (warnings and errors still print to stderr) |
+| `--verbose`    | Print stack traces on failure                                             |
+| `--no-color`   | Disable colored output                                                    |
 
 `recall --help`, `recall --version`, and `recall <command> --help` are always available.
 
@@ -22,14 +22,14 @@ These apply to every command:
 - No progress/status line is printed in non-interactive (non-TTY) environments, in `--json` mode, or with `--quiet`.
 - `Ctrl+C` (`SIGINT`) prints `Cancelled.` and exits with code `130`.
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | Success |
-| `1` | Unexpected failure |
-| `2` | Invalid usage (bad arguments, missing path) |
-| `3` | Invalid Recall state (not initialized, corrupted manifest/snapshot) |
-| `4` | Stale memory (`recall update --check`, or a stale `recall status`) |
-| `5` | Analysis incomplete (a scan hit `--max-files` and was truncated) |
+| Exit code | Meaning                                                             |
+| --------- | ------------------------------------------------------------------- |
+| `0`       | Success                                                             |
+| `1`       | Unexpected failure                                                  |
+| `2`       | Invalid usage (bad arguments, missing path)                         |
+| `3`       | Invalid Recall state (not initialized, corrupted manifest/snapshot) |
+| `4`       | Stale memory (`recall update --check`, or a stale `recall status`)  |
+| `5`       | Analysis incomplete (a scan hit `--max-files` and was truncated)    |
 
 ## `recall init`
 

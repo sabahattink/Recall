@@ -1,6 +1,6 @@
 name: Bug report
 description: Report a problem with Recall
-labels: ["bug"]
+labels: ['bug']
 body:
   - type: textarea
     id: description
@@ -32,7 +32,7 @@ body:
   - type: textarea
     id: doctor
     attributes:
-      label: `recall doctor --verbose` output
+      label: '`recall doctor --verbose` output'
       description: If Recall is initialized, please paste the output.
       render: shell
 

@@ -67,16 +67,16 @@ The schema is also published as a standalone JSON Schema at `.recall/schema/mani
 
 The full, normalized `RepositorySnapshot` produced by the most recent `recall init`/`recall scan`/`recall update`. Its shape is defined by `packages/schemas/src/repository.ts` and published as JSON Schema at `.recall/schema/snapshot.schema.json`. Key fields:
 
-| Field | Description |
-| --- | --- |
-| `repository`, `git`, `ecosystem` | Repository name/root, current Git branch/commit/dirty state, package manager and monorepo status |
-| `workspaces` | Discovered workspace packages, their kind (`app`/`package`/`service`/`library`/`root`), and internal `dependsOn` |
-| `files` | Every scanned file with its owning workspace and kind (`source`/`test`/`config`/`documentation`/`generated`/`other`) |
-| `entryPoints` | Detected `bin`/`main`/`script`/`framework-convention` entry points, each with evidence |
-| `dependencies`, `internalEdges` | Declared dependencies and internal (workspace- and import-level) dependency edges |
-| `frameworks`, `conventions`, `risks` | Evidence-backed findings, each with a `confidence` or `severity` and an `evidence` array |
+| Field                                            | Description                                                                                                                           |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `repository`, `git`, `ecosystem`                 | Repository name/root, current Git branch/commit/dirty state, package manager and monorepo status                                      |
+| `workspaces`                                     | Discovered workspace packages, their kind (`app`/`package`/`service`/`library`/`root`), and internal `dependsOn`                      |
+| `files`                                          | Every scanned file with its owning workspace and kind (`source`/`test`/`config`/`documentation`/`generated`/`other`)                  |
+| `entryPoints`                                    | Detected `bin`/`main`/`script`/`framework-convention` entry points, each with evidence                                                |
+| `dependencies`, `internalEdges`                  | Declared dependencies and internal (workspace- and import-level) dependency edges                                                     |
+| `frameworks`, `conventions`, `risks`             | Evidence-backed findings, each with a `confidence` or `severity` and an `evidence` array                                              |
 | `testing`, `ci`, `docker`, `serviceIntegrations` | Detected test frameworks/files, CI configuration, Docker configuration, and service integrations (database/queue/cache/auth/external) |
-| `generatedFiles`, `ignoredDirectories` | Files classified as generated, and the directories Recall never scans |
+| `generatedFiles`, `ignoredDirectories`           | Files classified as generated, and the directories Recall never scans                                                                 |
 
 ## Generated-section markers
 
@@ -84,6 +84,7 @@ Every Markdown memory file wraps Recall-authored content in an explicit marker p
 
 ```markdown
 <!-- recall:generated:start -->
+
 ...content Recall regenerates on every `recall update`...
 <!-- recall:generated:end -->
 ```
@@ -97,15 +98,15 @@ Rules Recall follows, enforced by `packages/memory/src/markers.ts`:
 
 ## The seven memory files
 
-| File | Content | Notes |
-| --- | --- | --- |
-| `architecture.md` | Detected apps/packages/layers, entry points, internal dependency direction, infrastructure boundaries | Separates a "Detected facts" section from an "Inferred structure" section |
-| `conventions.md` | File/directory naming, import aliases, test naming, linting/formatting, package scripts, error-handling patterns | Only includes conventions with supporting evidence |
-| `decisions.md` | Human-editable ADR log | Recall never fabricates decisions; it may list evidence-backed **unconfirmed candidates** (e.g. "appears to use PostgreSQL"), clearly labeled as such |
-| `features.md` | Features backed by strong structural evidence: controllers, routes, modules, job processors, event handlers, feature directories | Every entry includes evidence paths |
-| `glossary.md` | Recurring domain terms extracted from identifiers and directory names | Definitions are left as "unresolved" — Recall does not invent meanings |
-| `risks.md` | Evidence-based risk findings (missing tests, circular dependencies, large files, committed `.env` files, missing lockfile, unpinned Docker images, etc.) | Not a security scanner — see [SECURITY.md](../SECURITY.md) |
-| `technical-debt.md` | A subset of risk findings that represent accumulated debt (large files, deep coupling, duplicate dependency versions, missing tests/lockfile, circular dependencies) | Each entry includes severity and evidence |
+| File                | Content                                                                                                                                                              | Notes                                                                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `architecture.md`   | Detected apps/packages/layers, entry points, internal dependency direction, infrastructure boundaries                                                                | Separates a "Detected facts" section from an "Inferred structure" section                                                                             |
+| `conventions.md`    | File/directory naming, import aliases, test naming, linting/formatting, package scripts, error-handling patterns                                                     | Only includes conventions with supporting evidence                                                                                                    |
+| `decisions.md`      | Human-editable ADR log                                                                                                                                               | Recall never fabricates decisions; it may list evidence-backed **unconfirmed candidates** (e.g. "appears to use PostgreSQL"), clearly labeled as such |
+| `features.md`       | Features backed by strong structural evidence: controllers, routes, modules, job processors, event handlers, feature directories                                     | Every entry includes evidence paths                                                                                                                   |
+| `glossary.md`       | Recurring domain terms extracted from identifiers and directory names                                                                                                | Definitions are left as "unresolved" — Recall does not invent meanings                                                                                |
+| `risks.md`          | Evidence-based risk findings (missing tests, circular dependencies, large files, committed `.env` files, missing lockfile, unpinned Docker images, etc.)             | Not a security scanner — see [SECURITY.md](../SECURITY.md)                                                                                            |
+| `technical-debt.md` | A subset of risk findings that represent accumulated debt (large files, deep coupling, duplicate dependency versions, missing tests/lockfile, circular dependencies) | Each entry includes severity and evidence                                                                                                             |
 
 ## `context.md`
 

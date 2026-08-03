@@ -247,12 +247,10 @@ function detectSuspiciousGeneratedFileTracking(context: RiskContext): RiskFindin
       category: 'suspicious-generated-file-tracking',
       severity: 'low',
       description: `${suspicious.length} file(s) inside typically generated directories (dist/, build/, coverage/, .next/, out/) are tracked by Git.`,
-      evidence: suspicious
-        .slice(0, 10)
-        .map((path) => ({
-          path,
-          reason: 'tracked by git despite living in a conventionally generated directory',
-        })),
+      evidence: suspicious.slice(0, 10).map((path) => ({
+        path,
+        reason: 'tracked by git despite living in a conventionally generated directory',
+      })),
     },
   ];
 }

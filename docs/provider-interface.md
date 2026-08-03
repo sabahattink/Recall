@@ -1,6 +1,6 @@
 # Provider interface
 
-Recall's core commands never require an AI provider. Every command — `init`, `scan`, `update`, `status`, `explain`, `context`, `doctor` — produces complete, correct output using only deterministic, evidence-based analysis. The provider interface exists so that *optional*, clearly-labeled AI-assisted enrichment can be layered on top later, without ever becoming a requirement to run Recall.
+Recall's core commands never require an AI provider. Every command — `init`, `scan`, `update`, `status`, `explain`, `context`, `doctor` — produces complete, correct output using only deterministic, evidence-based analysis. The provider interface exists so that _optional_, clearly-labeled AI-assisted enrichment can be layered on top later, without ever becoming a requirement to run Recall.
 
 ## The interface
 
