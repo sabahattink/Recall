@@ -2,7 +2,10 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    # See the matching comment in ci.yml: this repository has no `main`
+    # branch yet, so its actual current default branch is listed here too.
+    # Drop the second entry once the repository is renamed for release.
+    branches: [main, claude/recall-cli-build-nymjvl]
 
 concurrency:
   group: release-${{ github.ref }}

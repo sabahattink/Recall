@@ -2,6 +2,18 @@
 
 This document tracks what is deliberately out of scope for the current release and what's planned next. It is not a commitment to a timeline.
 
+## Release status
+
+Recall is currently pre-release (targeting `v0.1.0-alpha.1`) and has not been published to any package registry — `@recall-ai/cli` does not exist on npm yet, and the `@recall-ai` scope is a planned name, not a confirmed/reserved one. Install from source (see [README.md](../README.md#installation)) until a release is published.
+
+The repository also does not have a `main` branch yet; its actual current default branch is `claude/recall-cli-build-nymjvl`, and `.github/workflows/ci.yml`, `release.yml`, and `.changeset/config.json` all reference it explicitly alongside `main` so automation keeps working through the eventual rename. Before cutting a real release, a maintainer should:
+
+1. Rename (or create) a permanent default branch — conventionally `main`.
+2. Drop the temporary branch name from the `push`/`pull_request` triggers in both workflow files, leaving only `main`.
+3. Update `.changeset/config.json`'s `baseBranch` to `main`.
+4. Confirm (or acquire) the `@recall-ai` npm scope before publishing, or update the package name throughout if a different scope is used.
+5. Set the `RECALL_RELEASES_ENABLED` repository variable and configure an `NPM_TOKEN` secret before `release.yml` can publish anything (see that workflow's comments).
+
 ## Current release (MVP)
 
 Supported: TypeScript/JavaScript repositories, pnpm/npm/Yarn projects, monorepos, Git repositories, NestJS, Next.js, and generic Node.js projects. All seven commands (`init`, `scan`, `update`, `status`, `explain`, `context`, `doctor`) are implemented and tested against fixtures for each supported project shape.
