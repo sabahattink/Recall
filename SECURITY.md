@@ -8,7 +8,7 @@ Please include:
 
 - A description of the vulnerability and its potential impact.
 - Steps to reproduce it, ideally against a minimal repository.
-- The version of `@recall-ai/cli` and the Node.js version you are using.
+- The version of `recall-context` and the Node.js version you are using.
 
 We aim to acknowledge reports within a reasonable timeframe and to work with reporters on a coordinated disclosure.
 

@@ -7,8 +7,8 @@ export const CLI_VERSION = packageJson.version;
 
 /**
  * The executable command name, always `recall` regardless of the npm
- * package name (`@recall-ai/cli`). Do not derive this from `packageJson.name`
- * — splitting on `/` would make it track the package scope instead of the
- * actual `bin` entry the CLI is installed as.
+ * package name (`recall-context`). Do not derive this from
+ * `packageJson.name` — the two are allowed to diverge, and the actual
+ * `bin` entry is the source of truth for what users type.
  */
 export const CLI_NAME = 'recall';

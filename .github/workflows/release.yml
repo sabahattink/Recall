@@ -11,6 +11,9 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  # Required for npm provenance (apps/cli/package.json's publishConfig.provenance)
+  # when publishing from GitHub Actions.
+  id-token: write
 
 jobs:
   release:

@@ -41,6 +41,25 @@ importers:
 
   apps/cli:
     dependencies:
+      cac:
+        specifier: ^6.7.14
+        version: 6.7.14
+      execa:
+        specifier: ^9.5.2
+        version: 9.6.1
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.3
+      ignore:
+        specifier: ^6.0.2
+        version: 6.0.2
+      yaml:
+        specifier: ^2.6.1
+        version: 2.9.0
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
       '@recall-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -50,16 +69,12 @@ importers:
       '@recall-ai/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
-      cac:
-        specifier: ^6.7.14
-        version: 6.7.14
-    devDependencies:
       '@recall-ai/test-fixtures':
         specifier: workspace:*
         version: link:../../packages/test-fixtures
-      execa:
-        specifier: ^9.5.2
-        version: 9.6.1
+      '@vercel/ncc':
+        specifier: ^0.44.1
+        version: 0.44.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -714,6 +729,10 @@ packages:
   '@typescript-eslint/visitor-keys@8.66.0':
     resolution: {integrity: sha512-dkKR8q+lKciskj1Y3vthHktl+3cMLWGyVUP23bRiPZ5O9BRT++4EqDDV+TVeIKBL1VXVEqrJlz8MYbcnvJcAlg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@vercel/ncc@0.44.1':
+    resolution: {integrity: sha512-cUjIE5P2YY1n+Kt9rFIazMMpGoPn1Fic04rOmTkElMkiDP5oszGfERMpo2shVkFKDL7rVppdM2pqJKC59shQWQ==}
+    hasBin: true
 
   '@vitest/expect@2.1.9':
     resolution: {integrity: sha512-UJCIkTBenHeKT1TTlKMJWy1laZewsRIzYighyYiJKZreqtdxSos/S1t+ktRMQWu2CKqaarrkeszJx1cgC5tGZw==}
@@ -2072,6 +2091,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.66.0
       eslint-visitor-keys: 5.0.1
+
+  '@vercel/ncc@0.44.1': {}
 
   '@vitest/expect@2.1.9':
     dependencies:

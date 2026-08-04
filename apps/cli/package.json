@@ -1,39 +1,68 @@
 {
-  "name": "@recall-ai/cli",
+  "name": "recall-context",
   "version": "0.1.0",
-  "description": "Recall: Git remembers code. Recall remembers why. A local-first CLI that maintains structured, tool-agnostic project memory for AI coding agents.",
+  "description": "Persistent, evidence-backed codebase context for AI coding agents.",
   "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/sabahattink/Recall#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/sabahattink/Recall.git",
     "directory": "apps/cli"
   },
   "bugs": "https://github.com/sabahattink/Recall/issues",
+  "keywords": [
+    "cli",
+    "ai",
+    "ai-agent",
+    "coding-agent",
+    "claude",
+    "claude-code",
+    "codex",
+    "copilot",
+    "context",
+    "repository-context",
+    "developer-tools"
+  ],
   "bin": {
     "recall": "./dist/index.js"
   },
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -b",
     "clean": "node ../../scripts/clean-package.mjs",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bundle": "node scripts/bundle.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "prepack": "node scripts/prepack.mjs",
+    "postpack": "node scripts/postpack.mjs"
   },
   "dependencies": {
+    "cac": "^6.7.14",
+    "execa": "^9.5.2",
+    "fast-glob": "^3.3.2",
+    "ignore": "^6.0.2",
+    "yaml": "^2.6.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
     "@recall-ai/core": "workspace:*",
     "@recall-ai/memory": "workspace:*",
     "@recall-ai/schemas": "workspace:*",
-    "cac": "^6.7.14"
-  },
-  "devDependencies": {
     "@recall-ai/test-fixtures": "workspace:*",
-    "execa": "^9.5.2",
+    "@vercel/ncc": "^0.44.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }
