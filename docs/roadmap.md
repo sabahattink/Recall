@@ -4,12 +4,12 @@ This document tracks what is deliberately out of scope for the current release a
 
 ## Release status
 
-Recall is currently pre-release (targeting `v0.1.0-alpha.1`) and has not been published to any package registry — `@recall-ai/cli` does not exist on npm yet, and the `@recall-ai` scope is a planned name, not a confirmed/reserved one. Install from source (see [README.md](../README.md#installation)) until a release is published.
+Recall is currently pre-release and has not been published to any package registry yet. The publishable CLI package is `recall-context` (confirmed available on the npm registry; unscoped, so no npm org/scope is needed). It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` needs nothing beyond what's declared in its own `dependencies`. Install from source or a packed tarball (see [README.md](../README.md#installation)) until a real release is published.
 
 The repository has completed its permanent migration to `main` as the default branch: `.github/workflows/ci.yml`, `release.yml`, and `.changeset/config.json` all target `main` only. Before cutting a real release, a maintainer should:
 
-1. Confirm (or acquire) the `@recall-ai` npm scope before publishing, or update the package name throughout if a different scope is used.
-2. Set the `RECALL_RELEASES_ENABLED` repository variable and configure an `NPM_TOKEN` secret before `release.yml` can publish anything (see that workflow's comments).
+1. Set the `RECALL_RELEASES_ENABLED` repository variable and configure an `NPM_TOKEN` secret before `release.yml` can publish anything (see that workflow's comments). `apps/cli/package.json`'s `publishConfig` already requests provenance; `release.yml` needs `permissions.id-token: write` for that to take effect when publishing from GitHub Actions.
+2. Decide and apply the actual first published version (see the version recommendation below) — nothing bumps or tags automatically.
 
 ## Current release (MVP)
 
