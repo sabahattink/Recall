@@ -49,6 +49,14 @@ describe('runDoctor', () => {
     expect(freshness?.status).toBe('pass');
   });
 
+  it('reports the runtime-version check as PASS on Node 22+ and states the Node 22+ requirement', async () => {
+    const result = await runDoctor(dir);
+    const runtimeCheck = result.checks.find((c) => c.id === 'runtime-version');
+    expect(runtimeCheck?.status).toBe('pass');
+    expect(runtimeCheck?.detail).toContain('Node.js 22+');
+    expect(runtimeCheck?.detail).not.toContain('18+');
+  });
+
   it('detects a corrupted manifest as a parse failure', async () => {
     await runInit({ path: dir, toolVersion: '0.1.0' });
     await writeFile(join(dir, '.recall', 'manifest.json'), '{ not valid json', 'utf8');

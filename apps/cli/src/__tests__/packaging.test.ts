@@ -124,4 +124,15 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     expect(doctor.exitCode).toBe(0);
     expect(doctor.stdout).toContain('[PASS] Memory freshness');
   }, 60_000);
+
+  it('reports a consistent Node.js 22+ requirement across package metadata and doctor output', async () => {
+    expect((publishedManifest.engines as Record<string, string>).node).toBe('>=22');
+
+    const doctor = await recallBin('doctor', '--path', fixtureDir);
+    const runtimeLine = doctor.stdout
+      .split('\n')
+      .find((line) => line.includes('Node.js runtime version'));
+    expect(runtimeLine).toContain('Node.js 22+');
+    expect(runtimeLine).not.toContain('18+');
+  });
 });

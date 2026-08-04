@@ -33,7 +33,7 @@ export interface DoctorResult {
   overallStatus: DoctorStatus;
 }
 
-const MINIMUM_SUPPORTED_NODE_MAJOR = 18;
+const MINIMUM_SUPPORTED_NODE_MAJOR = 22;
 
 export async function runDoctor(inputPath: string): Promise<DoctorResult> {
   const root = await resolveRepositoryRoot(inputPath);
@@ -125,7 +125,7 @@ function checkRuntimeVersion(): DoctorCheck {
     id: 'runtime-version',
     label: 'Node.js runtime version',
     status: major >= MINIMUM_SUPPORTED_NODE_MAJOR ? 'pass' : 'fail',
-    detail: `Running Node.js ${process.versions.node} (Recall targets Node.js ${MINIMUM_SUPPORTED_NODE_MAJOR}+, recommended 22+).`,
+    detail: `Running Node.js ${process.versions.node} (Recall requires Node.js ${MINIMUM_SUPPORTED_NODE_MAJOR}+).`,
   };
 }
 
