@@ -6,10 +6,13 @@ import {
   readSnapshot,
   validateMarkers,
   computeStaleness,
+  diffSnapshots,
+  type ChangeReport,
 } from '@recall-ai/memory';
 import type { Manifest } from '@recall-ai/schemas';
 import { GitAdapter } from '@recall-ai/git';
 import { recallDirExists, recallDirFor, resolveRepositoryRoot } from '../paths.js';
+import { runScan } from '../scan-runner.js';
 
 export type OverallStatus = 'ok' | 'stale' | 'not-initialized' | 'error';
 
@@ -85,47 +88,66 @@ export async function runStatus(inputPath: string): Promise<StatusResult> {
   const currentBranch = await git.currentBranch();
 
   let changedFilesSinceSnapshot: string[] = [];
+  let changeReport: ChangeReport | null = null;
   const snapshotCommit = manifest?.snapshot.commit ?? null;
-  if (snapshotCommit && currentCommit && snapshotCommit !== currentCommit) {
-    try {
-      const diff = await git.diffNameStatus(snapshotCommit, currentCommit);
-      changedFilesSinceSnapshot = diff.map((d) => d.path);
-    } catch {
-      changedFilesSinceSnapshot = [];
+
+  if (currentCommit !== null) {
+    // Git-tracked repository: cheap path using `git diff`/working-tree status
+    // instead of a full re-scan.
+    if (snapshotCommit && snapshotCommit !== currentCommit) {
+      try {
+        const diff = await git.diffNameStatus(snapshotCommit, currentCommit);
+        changedFilesSinceSnapshot = diff.map((d) => d.path);
+      } catch {
+        changedFilesSinceSnapshot = [];
+      }
     }
+    // Recall's own edits (.recall/** and the .gitignore line it manages) are
+    // expected to be untracked or modified immediately after init/update;
+    // they are not evidence that the *source* repository has drifted from
+    // the snapshot (which was itself taken after those edits were made), so
+    // they are excluded here.
+    const uncommitted = (await git.changedFiles()).filter(
+      (path) => !path.startsWith('.recall/') && path !== '.gitignore',
+    );
+    changedFilesSinceSnapshot = [...new Set([...changedFilesSinceSnapshot, ...uncommitted])].sort();
+    if (changedFilesSinceSnapshot.length > 0) {
+      changeReport = {
+        filesAdded: [],
+        filesRemoved: [],
+        filesChanged: changedFilesSinceSnapshot,
+        packagesAdded: [],
+        packagesRemoved: [],
+        dependencyChanges: [],
+        scriptChanges: [],
+        frameworkChanges: [],
+        architectureRelevantChanges: [],
+        possibleNewFeatures: [],
+        possibleRemovedFeatures: [],
+        risksIntroduced: [],
+        risksResolved: [],
+        hasChanges: true,
+      };
+    }
+  } else if (snapshot) {
+    // Non-Git repository: there is no commit history to diff against, so
+    // freshness can't depend on a commit SHA at all. Re-scan and compare
+    // deterministically against the persisted snapshot instead — the same
+    // mechanism `recall update` already uses.
+    const { snapshot: rescanned } = await runScan(root, {});
+    changeReport = diffSnapshots(snapshot, rescanned);
+    changedFilesSinceSnapshot = [
+      ...changeReport.filesAdded,
+      ...changeReport.filesRemoved,
+      ...changeReport.filesChanged,
+    ].sort();
   }
-  // Recall's own edits (.recall/** and the .gitignore line it manages) are
-  // expected to be untracked or modified immediately after init/update; they
-  // are not evidence that the *source* repository has drifted from the
-  // snapshot (which was itself taken after those edits were made), so they
-  // are excluded here.
-  const uncommitted = (await git.changedFiles()).filter(
-    (path) => !path.startsWith('.recall/') && path !== '.gitignore',
-  );
-  changedFilesSinceSnapshot = [...new Set([...changedFilesSinceSnapshot, ...uncommitted])].sort();
 
   const staleness = computeStaleness({
+    snapshotExists: snapshot !== null,
     snapshotCommit,
     currentCommit,
-    changeReport:
-      changedFilesSinceSnapshot.length > 0
-        ? {
-            filesAdded: [],
-            filesRemoved: [],
-            filesChanged: changedFilesSinceSnapshot,
-            packagesAdded: [],
-            packagesRemoved: [],
-            dependencyChanges: [],
-            scriptChanges: [],
-            frameworkChanges: [],
-            architectureRelevantChanges: [],
-            possibleNewFeatures: [],
-            possibleRemovedFeatures: [],
-            risksIntroduced: [],
-            risksResolved: [],
-            hasChanges: true,
-          }
-        : null,
+    changeReport,
   });
 
   const detectedProjectType = snapshot

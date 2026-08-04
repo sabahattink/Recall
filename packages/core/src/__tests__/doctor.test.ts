@@ -42,6 +42,13 @@ describe('runDoctor', () => {
     expect(result.checks.some((c) => c.id === 'snapshot-valid' && c.status === 'pass')).toBe(true);
   });
 
+  it('reports memory freshness as PASS (not WARN) immediately after a clean init', async () => {
+    await runInit({ path: dir, toolVersion: '0.1.0' });
+    const result = await runDoctor(dir);
+    const freshness = result.checks.find((c) => c.id === 'memory-freshness');
+    expect(freshness?.status).toBe('pass');
+  });
+
   it('detects a corrupted manifest as a parse failure', async () => {
     await runInit({ path: dir, toolVersion: '0.1.0' });
     await writeFile(join(dir, '.recall', 'manifest.json'), '{ not valid json', 'utf8');
@@ -82,5 +89,25 @@ describe('runDoctor', () => {
     } finally {
       await removeTempDir(outsideDir);
     }
+  });
+});
+
+describe('runDoctor (non-Git repository)', () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = await createTempDir();
+    await buildSimpleNodeFixture(dir);
+  });
+
+  afterEach(async () => {
+    await removeTempDir(dir);
+  });
+
+  it('reports memory freshness as PASS immediately after a clean init with no commit available', async () => {
+    await runInit({ path: dir, toolVersion: '0.1.0' });
+    const result = await runDoctor(dir);
+    const freshness = result.checks.find((c) => c.id === 'memory-freshness');
+    expect(freshness?.status).toBe('pass');
   });
 });

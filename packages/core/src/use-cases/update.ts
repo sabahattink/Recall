@@ -66,6 +66,7 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
 
   const changeReport = diffSnapshots(previousSnapshot, currentSnapshot);
   const staleness = computeStaleness({
+    snapshotExists: true,
     snapshotCommit: manifest.snapshot.commit,
     currentCommit: currentSnapshot.git?.commit ?? null,
     changeReport,

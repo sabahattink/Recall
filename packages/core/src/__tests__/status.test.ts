@@ -52,3 +52,39 @@ describe('runStatus', () => {
     expect(status.stale).toBe(true);
   });
 });
+
+describe('runStatus (non-Git repository)', () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = await createTempDir();
+    await buildSimpleNodeFixture(dir);
+    // Deliberately no initGitRepo/commitAll: a non-Git repository has no
+    // commit to key freshness off of, which is exactly the case that must
+    // not be conflated with "no snapshot was ever recorded".
+  });
+
+  afterEach(async () => {
+    await removeTempDir(dir);
+  });
+
+  it('reports ok immediately after a clean init, with no commit available', async () => {
+    await runInit({ path: dir, toolVersion: '0.1.0' });
+    const status = await runStatus(dir);
+    expect(status.currentCommit).toBeNull();
+    expect(status.lastSnapshotCommit).toBeNull();
+    expect(status.initialized).toBe(true);
+    expect(status.overallStatus).toBe('ok');
+    expect(status.stale).toBe(false);
+  });
+
+  it('reports stale after a source file changes', async () => {
+    await runInit({ path: dir, toolVersion: '0.1.0' });
+    await writeFile(join(dir, 'src/index.js'), 'module.exports = { changed: true };\n', 'utf8');
+
+    const status = await runStatus(dir);
+    expect(status.overallStatus).toBe('stale');
+    expect(status.stale).toBe(true);
+    expect(status.staleReasons.join(' ')).toMatch(/differ from the last snapshot/);
+  });
+});

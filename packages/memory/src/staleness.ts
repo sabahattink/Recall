@@ -1,6 +1,14 @@
 import type { ChangeReport } from './diff.js';
 
 export interface StalenessInput {
+  /**
+   * Whether a snapshot has actually been persisted (`snapshots/latest.json`
+   * exists and parses). Tracked separately from `snapshotCommit` because a
+   * snapshot taken in a non-Git repository legitimately has no commit at
+   * all — treating a null commit as "no snapshot" would wrongly mark every
+   * non-Git repository stale immediately after a successful init.
+   */
+  snapshotExists: boolean;
   snapshotCommit: string | null;
   currentCommit: string | null;
   changeReport: ChangeReport | null;
@@ -14,9 +22,13 @@ export interface StalenessResult {
 export function computeStaleness(input: StalenessInput): StalenessResult {
   const reasons: string[] = [];
 
-  if (input.snapshotCommit === null) {
+  if (!input.snapshotExists) {
     reasons.push('no snapshot has been recorded yet');
-  } else if (input.currentCommit !== null && input.snapshotCommit !== input.currentCommit) {
+  } else if (
+    input.snapshotCommit !== null &&
+    input.currentCommit !== null &&
+    input.snapshotCommit !== input.currentCommit
+  ) {
     reasons.push(
       `repository is at commit ${input.currentCommit} but the last snapshot was taken at ${input.snapshotCommit}`,
     );

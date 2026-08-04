@@ -94,6 +94,7 @@ export async function runDoctor(inputPath: string): Promise<DoctorResult> {
     const git = new GitAdapter(root);
     const currentCommit = await git.currentCommit();
     const staleness = computeStaleness({
+      snapshotExists: true,
       snapshotCommit: manifest.snapshot.commit,
       currentCommit,
       changeReport: null,

@@ -110,8 +110,11 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     expect(init.exitCode).toBe(0);
     expect(existsSync(join(fixtureDir, '.recall', 'manifest.json'))).toBe(true);
 
+    // A clean init must leave Recall in a valid, non-stale state: `status`
+    // reports ok and `doctor` reports memory freshness as PASS, not WARN.
     const status = await recallBin('status', '--path', fixtureDir);
     expect(status.exitCode).toBe(0);
+    expect(status.stdout).toContain('Status: ok');
 
     const context = await recallBin('context', '--path', fixtureDir, '--stdout');
     expect(context.exitCode).toBe(0);
@@ -119,5 +122,6 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
 
     const doctor = await recallBin('doctor', '--path', fixtureDir);
     expect(doctor.exitCode).toBe(0);
+    expect(doctor.stdout).toContain('[PASS] Memory freshness');
   }, 60_000);
 });
