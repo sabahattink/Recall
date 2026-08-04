@@ -2,13 +2,9 @@ name: CI
 
 on:
   push:
-    # This working branch is the repository's current default branch (no
-    # `main` exists yet — see docs/roadmap.md). Add "main" back here once the
-    # repository is renamed for a stable release; both are listed so CI
-    # keeps working through that transition either way.
-    branches: [main, claude/recall-cli-build-nymjvl]
+    branches: [main]
   pull_request:
-    branches: [main, claude/recall-cli-build-nymjvl]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
