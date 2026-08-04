@@ -15,6 +15,7 @@ import {
   DEFAULT_MAX_FILES,
   DEFAULT_MAX_FILE_SIZE_BYTES,
 } from './constants.js';
+import { collectTruncated } from './file-walk-internal.js';
 
 export interface WalkedFile {
   /** Path relative to the repository root, using forward slashes. */
@@ -83,9 +84,6 @@ export async function walkRepository(
 
   const ignorePatterns = [...ignoredDirs].map((dir) => `**/${dir}/**`);
 
-  const matchedEntries: string[] = [];
-  let truncated = false;
-
   const stream = fg.stream('**/*', {
     cwd: root,
     dot: true,
@@ -95,15 +93,17 @@ export async function walkRepository(
     stats: false,
   });
 
-  for await (const chunk of stream) {
-    const entry = String(chunk);
-    if (ig.ignores(entry)) continue;
-    matchedEntries.push(entry);
-    if (matchedEntries.length >= maxFiles) {
-      truncated = true;
-      break;
+  async function* stringEntries(): AsyncGenerator<string> {
+    for await (const chunk of stream) {
+      yield String(chunk);
     }
   }
+
+  const { matchedEntries, truncated } = await collectTruncated(
+    stringEntries(),
+    (entry) => ig.ignores(entry),
+    maxFiles,
+  );
 
   matchedEntries.sort((a, b) => a.localeCompare(b));
 
