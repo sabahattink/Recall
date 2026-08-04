@@ -35,7 +35,7 @@ function parseOptionalInt(value: string | number | undefined, flag: string): num
 }
 
 export function createCli() {
-  const cli = cac(CLI_NAME.split('/').pop());
+  const cli = cac(CLI_NAME);
 
   cli
     .option('--path <path>', 'Repository path to operate on', { default: '.' })

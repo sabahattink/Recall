@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdir, readdir, symlink } from 'node:fs/promises';
+import { mkdir, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   buildSimpleNodeFixture,
   commitAll,
+  createDirLink,
   createTempDir,
   initGitRepo,
   removeTempDir,
@@ -37,7 +38,7 @@ describe('symlink attack resistance (integration)', () => {
   });
 
   it('refuses to init through a pre-planted symlinked .recall directory', async () => {
-    await symlink(outsideDir, join(repoDir, '.recall'));
+    await createDirLink(outsideDir, join(repoDir, '.recall'));
 
     await expect(runInit({ path: repoDir, toolVersion: '0.1.0' })).rejects.toThrow(
       InvalidStateError,
@@ -54,7 +55,7 @@ describe('symlink attack resistance (integration)', () => {
     // directory for a symlink between commands.
     const { rm } = await import('node:fs/promises');
     await rm(join(repoDir, '.recall'), { recursive: true, force: true });
-    await symlink(outsideDir, join(repoDir, '.recall'));
+    await createDirLink(outsideDir, join(repoDir, '.recall'));
 
     await expect(runUpdate({ path: repoDir, toolVersion: '0.1.0' })).rejects.toThrow(
       InvalidStateError,
@@ -66,7 +67,7 @@ describe('symlink attack resistance (integration)', () => {
 
   it('refuses to init through a symlink planted one level below an existing .recall', async () => {
     await mkdir(join(repoDir, '.recall'), { recursive: true });
-    await symlink(outsideDir, join(repoDir, '.recall', 'snapshots'));
+    await createDirLink(outsideDir, join(repoDir, '.recall', 'snapshots'));
 
     await expect(runInit({ path: repoDir, toolVersion: '0.1.0' })).rejects.toThrow();
 

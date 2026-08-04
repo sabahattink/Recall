@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   buildSimpleNodeFixture,
   commitAll,
+  createDirLink,
   createTempDir,
   initGitRepo,
   removeTempDir,
@@ -68,7 +69,7 @@ describe('runDoctor', () => {
     const outsideDir = await createTempDir('recall-outside-');
     try {
       await mkdir(outsideDir, { recursive: true });
-      await symlink(outsideDir, join(dir, '.recall'));
+      await createDirLink(outsideDir, join(dir, '.recall'));
 
       const result = await runDoctor(dir);
       expect(result.overallStatus).toBe('fail');

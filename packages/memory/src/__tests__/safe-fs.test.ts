@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
-import { createTempDir, removeTempDir } from '@recall-ai/test-fixtures';
+import {
+  canCreateFileSymlinks,
+  createDirLink,
+  createTempDir,
+  removeTempDir,
+} from '@recall-ai/test-fixtures';
 import {
   assertWithinRoot,
   atomicWriteFile,
@@ -10,6 +15,12 @@ import {
   RECALL_DIR_NAME,
   SymlinkWriteError,
 } from '../safe-fs.js';
+
+// Probed once at collection time so the OS-capability-dependent test below
+// can be skipped with a clear, self-explanatory name instead of silently
+// passing. The security guarantee it would exercise is still verified on
+// every OS by the mocked-lstat unit test in symlink-rejection.test.ts.
+const fileSymlinksSupported = await canCreateFileSymlinks();
 
 describe('assertWithinRoot', () => {
   it('allows a path inside the root', () => {
@@ -43,14 +54,17 @@ describe('atomicWriteFile', () => {
     expect(contents).toBe('hello world');
   });
 
-  it('refuses to write through an existing symlink', async () => {
-    const realFile = join(dir, 'real.md');
-    await atomicWriteFile(realFile, 'real');
-    const linkPath = join(dir, 'link.md');
-    await symlink(realFile, linkPath);
+  it.skipIf(!fileSymlinksSupported)(
+    'refuses to write through an existing symlink (skipped: this OS account cannot create file symlinks)',
+    async () => {
+      const realFile = join(dir, 'real.md');
+      await atomicWriteFile(realFile, 'real');
+      const linkPath = join(dir, 'link.md');
+      await symlink(realFile, linkPath);
 
-    await expect(atomicWriteFile(linkPath, 'malicious')).rejects.toThrow(/symlink/);
-  });
+      await expect(atomicWriteFile(linkPath, 'malicious')).rejects.toThrow(/symlink/);
+    },
+  );
 });
 
 describe('atomicWriteFile with allowedRoot (repository-root containment)', () => {
@@ -74,8 +88,9 @@ describe('atomicWriteFile with allowedRoot (repository-root containment)', () =>
   });
 
   it('rejects a symlinked .recall directory', async () => {
-    // .recall itself is a symlink pointing outside the repository root.
-    await symlink(outsideDir, join(root, RECALL_DIR_NAME));
+    // .recall itself is a symlink (or, on Windows, a directory junction)
+    // pointing outside the repository root.
+    await createDirLink(outsideDir, join(root, RECALL_DIR_NAME));
 
     const target = join(root, RECALL_DIR_NAME, 'manifest.json');
     await expect(atomicWriteFile(target, '{}', { allowedRoot: root })).rejects.toThrow(
@@ -88,8 +103,8 @@ describe('atomicWriteFile with allowedRoot (repository-root containment)', () =>
 
   it('rejects a symlink planted deeper in the parent chain (not just .recall itself)', async () => {
     await mkdir(join(root, RECALL_DIR_NAME), { recursive: true });
-    // `.recall/snapshots` is a symlink, `.recall` itself is a real directory.
-    await symlink(outsideDir, join(root, RECALL_DIR_NAME, 'snapshots'));
+    // `.recall/snapshots` is a symlink/junction, `.recall` itself is a real directory.
+    await createDirLink(outsideDir, join(root, RECALL_DIR_NAME, 'snapshots'));
 
     const target = join(root, RECALL_DIR_NAME, 'snapshots', 'latest.json');
     await expect(atomicWriteFile(target, '{}', { allowedRoot: root })).rejects.toThrow(
@@ -167,8 +182,8 @@ describe('backupIfExists', () => {
     try {
       await mkdir(join(dir, RECALL_DIR_NAME), { recursive: true });
       await writeFile(join(dir, RECALL_DIR_NAME, 'architecture.md'), 'v1', 'utf8');
-      // Replace .recall's backups directory with a symlink after the fact.
-      await symlink(outsideDir, join(dir, RECALL_DIR_NAME, 'backups'));
+      // Replace .recall's backups directory with a symlink/junction after the fact.
+      await createDirLink(outsideDir, join(dir, RECALL_DIR_NAME, 'backups'));
 
       await expect(
         backupIfExists(dir, join(dir, RECALL_DIR_NAME, 'architecture.md')),

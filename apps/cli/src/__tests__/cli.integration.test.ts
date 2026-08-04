@@ -63,6 +63,13 @@ describe('recall CLI (in-process)', () => {
     expect(result.stdout).toContain('recall');
   });
 
+  it('recall --help advertises the `recall` command name, not the `cli` package-name segment', async () => {
+    const result = await run('--help');
+    expect(result.stdout).toContain('Usage:');
+    expect(result.stdout).toContain('$ recall <command>');
+    expect(result.stdout).not.toContain('$ cli <command>');
+  });
+
   it('recall init creates the .recall directory and exits 0', async () => {
     const result = await run('init', '--path', dir);
     expect(result.exitCode ?? 0).toBe(0);
