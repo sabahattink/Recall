@@ -5,11 +5,12 @@
   "description": "Recall product website and documentation.",
   "type": "module",
   "scripts": {
+    "postinstall": "fumadocs-mdx",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "fumadocs-mdx && tsc --noEmit",
     "test": "vitest run",
     "clean": "node ../../scripts/clean-package.mjs"
   },
