@@ -1,6 +1,8 @@
 # Examples
 
-This directory doesn't duplicate example projects — representative fixture projects (a generic Node.js project, a NestJS project, a Next.js project, and a pnpm monorepo) already live under [`packages/test-fixtures/fixtures/`](../packages/test-fixtures/fixtures) and are used by Recall's own test suite, so they're guaranteed to stay in sync with what Recall actually detects.
+- [`generated-context.md`](generated-context.md) — a representative `recall context --stdout` output, annotated and filled in for a fictional NestJS project. Read this first if you want to see the shape of what Recall generates without running it.
+
+This directory doesn't duplicate example projects beyond that — representative fixture projects (a generic Node.js project, a NestJS project, a Next.js project, and a pnpm monorepo) already live under [`packages/test-fixtures/fixtures/`](../packages/test-fixtures/fixtures) and are used by Recall's own test suite, so they're guaranteed to stay in sync with what Recall actually detects.
 
 Try Recall against any of them after building:
 
