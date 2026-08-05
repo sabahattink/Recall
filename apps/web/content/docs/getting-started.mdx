@@ -1,0 +1,48 @@
+---
+title: Getting started
+description: Initialize Recall in a repository and generate your first context.
+---
+
+## 1. Initialize Recall
+
+Run this from the root of the repository you want Recall to analyze:
+
+```bash
+npx recall-context init
+```
+
+This analyzes the repository and creates a `.recall/` directory containing a manifest, a
+deterministic snapshot, and several generated Markdown files.
+
+## 2. Generate context
+
+```bash
+npx recall-context context --stdout
+```
+
+Paste or pipe the output into your coding agent.
+
+## 3. Focus context on a task (optional)
+
+```bash
+recall context --task "Fix password reset controller" --stdout
+```
+
+Recall ranks the files most relevant to the task using local, explainable signals — filename and
+symbol matches, workspace locality, and import-graph proximity — and shows the reason for each
+ranked file.
+
+## 4. Keep memory current
+
+```bash
+recall status
+```
+
+`recall status` reports whether `.recall/` reflects the current state of the repository. Run
+`recall update` to refresh it after making changes.
+
+## Next steps
+
+- [Installation](/docs/installation) — installing once vs. `npx`
+- [Commands](/docs/commands) — every command, flag, and exit code
+- [How it works](/docs/how-it-works) — what Recall actually does under the hood

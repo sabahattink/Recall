@@ -1,0 +1,22 @@
+---
+title: Commands
+description: Every Recall command, in brief.
+---
+
+```bash
+recall init                                  # analyze the repository and create .recall/
+recall scan                                   # re-run deterministic analysis, save a snapshot
+recall update                                 # refresh memory from the current repository state
+recall status                                 # check whether memory is initialized and up to date
+recall explain <path>                         # explain a file or directory's role
+recall context                                # generate compact, agent-ready context
+recall context --task "Add password reset"    # focus that context on a specific task
+recall doctor                                 # validate the environment and memory state
+```
+
+Each command exits with a specific, documented exit code so it composes cleanly in scripts and CI
+(for example, `recall update --check` exits non-zero when memory is stale).
+
+For the full flag and exit-code reference, see
+[`docs/cli-reference.md`](https://github.com/sabahattink/Recall/blob/main/docs/cli-reference.md)
+in the repository.
