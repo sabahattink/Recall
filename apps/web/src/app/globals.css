@@ -20,6 +20,7 @@
   --card-foreground: 0 0% 9%;
   --accent: 217 91% 45%;
   --accent-foreground: 0 0% 100%;
+  --success: 142 71% 35%;
   --code-background: 0 0% 96%;
   --ring: 217 91% 45%;
   color-scheme: light;
@@ -35,6 +36,7 @@
   --card-foreground: 0 0% 96%;
   --accent: 217 91% 60%;
   --accent-foreground: 0 0% 9%;
+  --success: 142 71% 55%;
   --code-background: 0 0% 12%;
   --ring: 217 91% 60%;
   color-scheme: dark;
@@ -50,6 +52,7 @@
   --color-card-foreground: hsl(var(--card-foreground));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-success: hsl(var(--success));
   --color-code-background: hsl(var(--code-background));
   --color-ring: hsl(var(--ring));
 
