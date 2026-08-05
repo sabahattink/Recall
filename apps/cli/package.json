@@ -1,6 +1,6 @@
 {
   "name": "recall-context",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "Persistent, evidence-backed codebase context for AI coding agents.",
   "license": "MIT",
   "type": "module",
@@ -35,8 +35,7 @@
     "node": ">=22"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -b",

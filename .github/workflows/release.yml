@@ -11,8 +11,11 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  # Required for npm provenance (apps/cli/package.json's publishConfig.provenance)
-  # when publishing from GitHub Actions.
+  # Required for npm provenance, requested explicitly below via
+  # NPM_CONFIG_PROVENANCE rather than a hard-coded publishConfig.provenance
+  # in apps/cli/package.json — that field previously broke every local
+  # `npm publish` (it has no OIDC identity to attest with outside CI), so
+  # provenance is opt-in per-environment instead.
   id-token: write
 
 jobs:
@@ -59,3 +62,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Explicit, CI-only opt-in for npm provenance (see the permissions
+          # block above). Local/manual `npm publish` does not set this, so
+          # it never requires `--provenance=false` to succeed outside CI.
+          NPM_CONFIG_PROVENANCE: true

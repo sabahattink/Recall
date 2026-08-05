@@ -34,7 +34,7 @@ A versioned pointer to the current snapshot and memory files.
 {
   "$schema": "./schema/manifest.schema.json",
   "schemaVersion": "1.0.0",
-  "toolVersion": "0.1.0",
+  "toolVersion": "0.2.0-alpha.1",
   "repository": {
     "name": "example",
     "root": ".",

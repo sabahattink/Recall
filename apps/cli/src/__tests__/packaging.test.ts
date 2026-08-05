@@ -135,4 +135,50 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     expect(runtimeLine).toContain('Node.js 22+');
     expect(runtimeLine).not.toContain('18+');
   });
+
+  describe('release verification (exact-version assertions)', () => {
+    // Hard-coded to the version this release is expected to carry, not read
+    // from package.json — the whole point of these tests is to fail loudly
+    // if the on-disk version and the intended release version ever diverge.
+    const EXPECTED_VERSION = '0.2.0-alpha.1';
+
+    it('apps/cli/package.json version is exact', () => {
+      const localManifest = JSON.parse(
+        readFileSync(join(cliRoot, 'package.json'), 'utf8'),
+      ) as Record<string, unknown>;
+      expect(localManifest.version).toBe(EXPECTED_VERSION);
+    });
+
+    it('the packed manifest version is exact', () => {
+      expect(publishedManifest.version).toBe(EXPECTED_VERSION);
+    });
+
+    it('the tarball filename is exact', () => {
+      expect(tarballPath.endsWith(`recall-context-${EXPECTED_VERSION}.tgz`)).toBe(true);
+    });
+
+    it('the installed CLI reports the exact version string', async () => {
+      const result = await recallBin('--version');
+      expect(result.stdout.trim()).toContain(`recall/${EXPECTED_VERSION}`);
+    });
+
+    it('the publishable manifest has no provenance=true left in publishConfig', () => {
+      const publishConfig = publishedManifest.publishConfig as Record<string, unknown> | undefined;
+      expect(publishConfig?.provenance).not.toBe(true);
+    });
+
+    it('the bin target resolves to a real, executable file inside the tarball', () => {
+      const bin = publishedManifest.bin as Record<string, string>;
+      const binTarget = join(consumerDir, 'node_modules', 'recall-context', bin.recall as string);
+      expect(existsSync(binTarget)).toBe(true);
+      expect(packedFiles).toContain(bin.recall);
+    });
+
+    it('dist/index.js begins with the canonical shebang, byte-for-byte', () => {
+      const distEntry = join(consumerDir, 'node_modules', 'recall-context', 'dist', 'index.js');
+      const bytes = readFileSync(distEntry);
+      const canonical = Buffer.from('#!/usr/bin/env node\n', 'utf8');
+      expect(bytes.subarray(0, canonical.length).equals(canonical)).toBe(true);
+    });
+  });
 });
