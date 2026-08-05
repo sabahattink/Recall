@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+
+/*
+ * Semantic design tokens. Every component consumes these — never a raw
+ * hex/rgb value — so light/dark/system theming and future palette
+ * adjustments happen in exactly one place.
+ *
+ * Dark is the default look when a visitor has no saved preference (matches
+ * the developer-tool aesthetic this product targets); `next-themes` still
+ * fully supports explicit light/dark/system selection via the `.dark`
+ * class and `color-scheme`.
+ */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+  --border: 0 0% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --accent: 217 91% 45%;
+  --accent-foreground: 0 0% 100%;
+  --code-background: 0 0% 96%;
+  --ring: 217 91% 45%;
+  color-scheme: light;
+}
+
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 96%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 63%;
+  --border: 0 0% 20%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 96%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 0 0% 9%;
+  --code-background: 0 0% 12%;
+  --ring: 217 91% 60%;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsl(var(--border));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-code-background: hsl(var(--code-background));
+  --color-ring: hsl(var(--ring));
+
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Visible keyboard focus everywhere, regardless of pointer-vs-keyboard
+     heuristics — a developer tool's audience relies on the keyboard. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

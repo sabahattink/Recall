@@ -24,3 +24,8 @@ apps/cli/LICENSE
 apps/cli/.bundle-tmp/
 apps/cli/.prepack-package.json.bak
 *.tgz
+
+# apps/web (Next.js)
+apps/web/.next/
+apps/web/.source/
+apps/web/next-env.d.ts
