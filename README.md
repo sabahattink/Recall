@@ -120,6 +120,7 @@ A 20–30 second terminal recording is planned but not yet produced — see [doc
 - [Memory format](docs/memory-format.md) — the on-disk `.recall/` format
 - [Architecture](docs/architecture.md) — how the monorepo is structured
 - [Roadmap](docs/roadmap.md) — what's in scope, deferred, and planned
+- [Changelog](CHANGELOG.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [npm package](https://www.npmjs.com/package/recall-context)
