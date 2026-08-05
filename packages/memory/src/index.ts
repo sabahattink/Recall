@@ -8,4 +8,5 @@ export * from './gitignore.js';
 export * from './diff.js';
 export * from './staleness.js';
 export * from './token-estimate.js';
+export * from './task-ranking.js';
 export * from './context.js';

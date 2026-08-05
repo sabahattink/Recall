@@ -1,4 +1,15 @@
-import type { RepositorySnapshot } from '@recall-ai/schemas';
+import type { FileRecord, RepositorySnapshot } from '@recall-ai/schemas';
+
+export function makeFile(overrides: Partial<FileRecord> & { path: string }): FileRecord {
+  const extension = overrides.extension ?? `.${overrides.path.split('.').pop()}`;
+  return {
+    workspace: null,
+    kind: 'source',
+    sizeBytes: 100,
+    extension,
+    ...overrides,
+  };
+}
 
 export function makeSnapshot(overrides: Partial<RepositorySnapshot> = {}): RepositorySnapshot {
   return {
