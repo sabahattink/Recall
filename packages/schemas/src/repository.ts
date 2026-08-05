@@ -55,6 +55,16 @@ export const FileRecordSchema = z.object({
   kind: FileKindSchema,
   sizeBytes: z.number().int().nonnegative(),
   extension: z.string(),
+  /**
+   * Top-level exported function/class/interface/type/const/enum names,
+   * extracted via the same regex pass already used for import-graph
+   * construction (no extra file reads). Bounded and best-effort — absent or
+   * empty is normal for non-source files and for snapshots produced before
+   * this field existed. Used by task-focused ranking so a file can be
+   * recommended purely because it exports a symbol matching the task,
+   * without re-reading source at ranking time.
+   */
+  exportedSymbols: z.array(z.string()).optional(),
 });
 export type FileRecord = z.infer<typeof FileRecordSchema>;
 
@@ -72,6 +82,18 @@ export const EntryPointSchema = z.object({
   workspace: z.string().nullable(),
   kind: EntryPointKindSchema,
   evidence: z.array(EvidenceSchema),
+  /**
+   * The source-file counterpart of `path`, when `path` itself points into a
+   * generated/build output directory (e.g. `apps/cli/dist/index.js`) and a
+   * corresponding source file (e.g. `apps/cli/src/index.ts`) was found among
+   * the scanned files. `path` always remains the real runtime entry — this
+   * is additional information for callers (like task-focused context) that
+   * should never recommend a built file as something an agent should read.
+   * Optional and absent for entry points that already point at source, or
+   * for which no source counterpart could be resolved, and always absent on
+   * snapshots produced before this field existed.
+   */
+  sourcePath: z.string().nullable().optional(),
 });
 export type EntryPoint = z.infer<typeof EntryPointSchema>;
 
@@ -86,10 +108,21 @@ export const DependencyRecordSchema = z.object({
 });
 export type DependencyRecord = z.infer<typeof DependencyRecordSchema>;
 
+/**
+ * Which package.json dependency bucket (or, for an `import`-kind edge,
+ * whether the importing file is test-only) an internal edge was derived
+ * from. Optional and absent on snapshots produced before this field
+ * existed — callers should treat a missing value as unknown rather than
+ * assuming "runtime".
+ */
+export const DependencyEdgeTypeSchema = z.enum(['runtime', 'development', 'optional', 'peer']);
+export type DependencyEdgeType = z.infer<typeof DependencyEdgeTypeSchema>;
+
 export const InternalDependencyEdgeSchema = z.object({
   from: z.string(),
   to: z.string(),
   kind: z.enum(['workspace', 'import']),
+  dependencyType: DependencyEdgeTypeSchema.optional(),
   evidence: z.array(EvidenceSchema),
 });
 export type InternalDependencyEdge = z.infer<typeof InternalDependencyEdgeSchema>;
@@ -112,6 +145,32 @@ export const FrameworkDetectionSchema = z.object({
   evidence: z.array(EvidenceSchema),
 });
 export type FrameworkDetection = z.infer<typeof FrameworkDetectionSchema>;
+
+/**
+ * "CLI" and "library" describe how the repository is *consumed*, not a
+ * framework — a project can be an Express API and also be a CLI. This is
+ * deliberately a separate axis from FrameworkNameSchema, not a replacement
+ * for it.
+ */
+export const ProjectApplicationTypeSchema = z.enum([
+  'cli',
+  'library',
+  'web-app',
+  'api-service',
+  'unknown',
+]);
+export type ProjectApplicationType = z.infer<typeof ProjectApplicationTypeSchema>;
+
+export const ProjectRepositoryTypeSchema = z.enum(['single-package', 'monorepo']);
+export type ProjectRepositoryType = z.infer<typeof ProjectRepositoryTypeSchema>;
+
+export const ProjectProfileSchema = z.object({
+  language: z.enum(['TypeScript', 'JavaScript']),
+  applicationType: ProjectApplicationTypeSchema,
+  repositoryType: ProjectRepositoryTypeSchema,
+  frameworks: z.array(FrameworkNameSchema),
+});
+export type ProjectProfile = z.infer<typeof ProjectProfileSchema>;
 
 export const ConventionCategorySchema = z.enum([
   'file-naming',
@@ -211,5 +270,7 @@ export const RepositorySnapshotSchema = z.object({
   generatedFiles: z.array(z.string()),
   ignoredDirectories: z.array(z.string()),
   generatedAt: z.string(),
+  /** Absent on snapshots produced before this field existed; see ProjectProfileSchema. */
+  projectProfile: ProjectProfileSchema.optional(),
 });
 export type RepositorySnapshot = z.infer<typeof RepositorySnapshotSchema>;

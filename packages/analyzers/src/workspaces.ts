@@ -12,6 +12,7 @@ interface WorkspacePackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
 }
 
 export interface DiscoveredWorkspace {
@@ -82,6 +83,7 @@ export async function discoverWorkspaces(
       ...workspace.packageJson.dependencies,
       ...workspace.packageJson.devDependencies,
       ...workspace.packageJson.peerDependencies,
+      ...workspace.packageJson.optionalDependencies,
     };
     workspace.info.dependsOn = Object.keys(allDeps)
       .filter((dep) => names.has(dep) && dep !== workspace.info.name)

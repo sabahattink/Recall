@@ -168,5 +168,14 @@ export const snapshotJsonSchema = {
     generatedFiles: { type: 'array', items: { type: 'string' } },
     ignoredDirectories: { type: 'array', items: { type: 'string' } },
     generatedAt: { type: 'string', format: 'date-time' },
+    projectProfile: {
+      type: 'object',
+      properties: {
+        language: { enum: ['TypeScript', 'JavaScript'] },
+        applicationType: { enum: ['cli', 'library', 'web-app', 'api-service', 'unknown'] },
+        repositoryType: { enum: ['single-package', 'monorepo'] },
+        frameworks: { type: 'array' },
+      },
+    },
   },
 } as const;

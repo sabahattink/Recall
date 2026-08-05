@@ -5,6 +5,8 @@ export * from './package-manager.js';
 export * from './workspaces.js';
 export * from './frameworks.js';
 export * from './entry-points.js';
+export * from './entry-point-sources.js';
+export * from './project-profile.js';
 export * from './dependencies.js';
 export * from './import-graph.js';
 export * from './conventions.js';

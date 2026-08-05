@@ -5,6 +5,8 @@ import { detectEcosystem } from './package-manager.js';
 import { discoverWorkspaces } from './workspaces.js';
 import { detectFrameworks } from './frameworks.js';
 import { detectEntryPoints } from './entry-points.js';
+import { resolveEntryPointSources } from './entry-point-sources.js';
+import { detectProjectProfile } from './project-profile.js';
 import { collectDependencies } from './dependencies.js';
 import { buildImportGraph } from './import-graph.js';
 import { detectConventions } from './conventions.js';
@@ -52,9 +54,22 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
   const workspaces = await discoverWorkspaces(root, ecosystem.workspaceGlobs);
   const files = classifyFiles(walkedFiles, workspaces);
   const frameworks = await detectFrameworks(root, workspaces);
-  const entryPoints = await detectEntryPoints(workspaces, frameworks);
+  const rawEntryPoints = await detectEntryPoints(workspaces, frameworks);
+  const entryPoints = resolveEntryPointSources(rawEntryPoints, files);
+  const projectProfile = detectProjectProfile(ecosystem, entryPoints, frameworks);
   const dependencies = collectDependencies(workspaces);
-  const internalEdges = await buildImportGraph(root, walkedFiles, workspaces);
+  const { edges: internalEdges, symbolsByPath } = await buildImportGraph(
+    root,
+    walkedFiles,
+    workspaces,
+  );
+  const filesWithSymbols =
+    symbolsByPath.size === 0
+      ? files
+      : files.map((file) => {
+          const exportedSymbols = symbolsByPath.get(file.path);
+          return exportedSymbols ? { ...file, exportedSymbols } : file;
+        });
   const conventions = await detectConventions(root, walkedFiles, workspaces);
   const ci = detectCi(walkedFiles);
   const docker = detectDocker(walkedFiles);
@@ -75,7 +90,7 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
     gitTrackedFiles: options.gitTrackedFiles ?? null,
   });
 
-  const generatedFiles = files.filter((f) => f.kind === 'generated').map((f) => f.path);
+  const generatedFiles = filesWithSymbols.filter((f) => f.kind === 'generated').map((f) => f.path);
 
   const snapshot: RepositorySnapshot = {
     schemaVersion: '1.0.0',
@@ -87,7 +102,7 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
     git: options.gitMetadata ?? null,
     ecosystem,
     workspaces: workspaces.map((w) => w.info),
-    files,
+    files: filesWithSymbols,
     entryPoints,
     dependencies,
     internalEdges,
@@ -101,6 +116,7 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
     generatedFiles,
     ignoredDirectories: [...DEFAULT_IGNORED_DIRECTORIES],
     generatedAt: new Date().toISOString(),
+    projectProfile,
   };
 
   return { snapshot, truncated };
