@@ -1,0 +1,41 @@
+{
+  "name": "recall-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recall product website and documentation.",
+  "type": "module",
+  "scripts": {
+    "postinstall": "fumadocs-mdx",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src",
+    "typecheck": "fumadocs-mdx && tsc --noEmit",
+    "test": "vitest run",
+    "clean": "node ../../scripts/clean-package.mjs"
+  },
+  "dependencies": {
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "fumadocs-core": "16.14.0",
+    "fumadocs-mdx": "15.2.2",
+    "fumadocs-ui": "16.14.0",
+    "lucide-react": "1.28.0",
+    "next": "16.3.0",
+    "next-themes": "0.4.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/mdx": "2.0.14",
+    "@types/node": "^22.10.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "postcss": "8.5.25",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

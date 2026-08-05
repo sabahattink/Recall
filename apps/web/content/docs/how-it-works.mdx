@@ -1,0 +1,46 @@
+---
+title: How it works
+description: What Recall generates and how task-focused ranking works.
+---
+
+## What it generates
+
+```
+.recall/
+├── manifest.json       # pointer to the current snapshot + memory files
+├── architecture.md      # detected apps/packages/layers, entry points, dependency direction
+├── conventions.md       # naming, aliases, linting/formatting, scripts
+├── decisions.md         # human-editable decision log
+├── features.md          # features backed by structural evidence (controllers, routes, jobs...)
+├── glossary.md          # recurring domain terms extracted from identifiers
+├── risks.md              # evidence-based risk findings (missing tests, circular deps, etc.)
+├── technical-debt.md    # measurable debt findings with evidence and severity
+└── snapshots/
+    └── latest.json       # the deterministic scan result everything above is derived from
+```
+
+Every generated file wraps Recall's content in markers; anything written outside them is
+preserved and survives every `recall update`.
+
+## Task-focused ranking
+
+`recall context --task "<description>"` ranks which files an agent should read first for that
+task, using deterministic, local, and explainable signals only — no embeddings, no AI provider,
+no network access:
+
+- filename, path, and exported-symbol matches against the task description
+- workspace name matches
+- bounded import-graph proximity (direct and reverse neighbors)
+- test/production counterpart linking
+- term specificity, so a task term that matches nearly every file in the repository is weighted
+  down relative to a rare, specific term
+
+Every ranked file carries a human-readable reason, available in full via `--json`.
+
+## Safety
+
+- Local-first: everything runs on your machine, in your repository.
+- No telemetry.
+- Does not execute, import, or evaluate your project's source code or scripts.
+- Managed writes are restricted to `.recall/`, `.gitignore`, and any output path explicitly
+  passed on the command line.
