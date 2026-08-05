@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { atomicWriteFile, generateContext, readSnapshot } from '@recall-ai/memory';
+import { atomicWriteFile, generateContext, readSnapshot, type RankedFile } from '@recall-ai/memory';
 import { InvalidStateError } from '../errors.js';
 import { assertRecallDirNotSymlink, recallDirFor, resolveRepositoryRoot } from '../paths.js';
 
@@ -15,6 +15,8 @@ export interface ContextCommandResult {
   estimatedTokens: number;
   truncated: boolean;
   outputPath: string | null;
+  task: string | null;
+  rankedFiles: RankedFile[];
 }
 
 export async function runContext(options: ContextCommandOptions): Promise<ContextCommandResult> {
@@ -31,7 +33,7 @@ export async function runContext(options: ContextCommandOptions): Promise<Contex
     );
   }
 
-  const { content, estimatedTokens, truncated } = generateContext(snapshot, {
+  const { content, estimatedTokens, truncated, task, rankedFiles } = generateContext(snapshot, {
     task: options.task,
     maxTokens: options.maxTokens,
   });
@@ -42,5 +44,5 @@ export async function runContext(options: ContextCommandOptions): Promise<Contex
     await atomicWriteFile(outputPath, content, { allowedRoot: root });
   }
 
-  return { content, estimatedTokens, truncated, outputPath };
+  return { content, estimatedTokens, truncated, outputPath, task, rankedFiles };
 }

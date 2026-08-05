@@ -33,6 +33,13 @@ export async function contextCommand(
       truncated: result.truncated,
       outputPath: result.outputPath,
       content: result.content,
+      // Additive fields (see docs/cli-reference.md "Task ranking" section
+      // for why these were added onto the existing --json contract instead
+      // of behind a new flag): task is null and rankedFiles is empty for a
+      // non-task context, so existing consumers reading only the fields
+      // above see no change in shape.
+      task: result.task,
+      rankedFiles: result.rankedFiles,
     });
     return ExitCode.Success;
   }

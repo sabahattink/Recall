@@ -1,6 +1,7 @@
 import type { GitMetadata, RepositorySnapshot } from '@recall-ai/schemas';
 import { estimateTokens } from './token-estimate.js';
 import { bulletList } from './markdown/template.js';
+import { rankFilesForTask, type RankedFile, type RankingReason } from './task-ranking.js';
 
 export interface ContextOptions {
   task?: string;
@@ -11,70 +12,83 @@ export interface ContextResult {
   content: string;
   estimatedTokens: number;
   truncated: boolean;
+  /** The task text this context was generated for, or null for the default (non-task) context. */
+  task: string | null;
+  /**
+   * Full ranking output (path, score, reasons) for every file that scored
+   * above zero, in ranked order — not just the ones shown in the Markdown
+   * list. Empty when no task was given. This is what `--json` output
+   * exposes for explainability; the Markdown itself never shows raw scores.
+   */
+  rankedFiles: RankedFile[];
 }
 
-const STOP_WORDS = new Set([
-  'the',
-  'a',
-  'an',
-  'and',
-  'or',
-  'to',
-  'of',
-  'for',
-  'in',
-  'on',
-  'with',
-  'is',
-  'are',
-  'add',
-  'implement',
-  'create',
-  'fix',
-  'update',
-  'this',
-  'that',
-]);
+/** Default number of files shown under "Files an agent should read first" — kept in the 8-12 range the sprint calls for. */
+const DEFAULT_TASK_FILE_LIMIT = 10;
 
-function extractKeywords(task: string): string[] {
-  return [
-    ...new Set(
-      task
-        .toLowerCase()
-        .split(/[^a-z0-9]+/)
-        .filter((w) => w.length > 2 && !STOP_WORDS.has(w)),
-    ),
-  ];
+const GENERATED_PATH_PATTERN = /(^|\/)(dist|build|coverage|\.next|out)\//;
+
+/** The single most-explanatory reason, rendered as one short, honest sentence — never raw weights/scores. */
+function describeReason(reason: RankingReason): string {
+  switch (reason.kind) {
+    case 'filename-term':
+      return `Filename matches the task (${reason.evidence}).`;
+    case 'symbol-term':
+      return `Exports a symbol matching the task (${reason.evidence}).`;
+    case 'path-term':
+      return `Path matches the task (${reason.evidence}).`;
+    case 'workspace-match':
+      return `Owning workspace matches the task (${reason.evidence}).`;
+    case 'import-neighbor':
+      return `Directly imported by a highly-ranked file (${reason.evidence}).`;
+    case 'reverse-import-neighbor':
+      return `Imports a highly-ranked file (${reason.evidence}).`;
+    case 'test-counterpart':
+      return `Test/production counterpart of a highly-ranked file (${reason.evidence}).`;
+    case 'entry-point':
+      return `Repository entry point (${reason.evidence}).`;
+    case 'config-relevance':
+      return `Configuration relevant to this task (${reason.evidence}).`;
+    default:
+      return reason.evidence;
+  }
 }
 
-function pathMatchesKeywords(path: string, keywords: string[]): boolean {
-  const lowerPath = path.toLowerCase();
-  return keywords.some((keyword) => lowerPath.includes(keyword));
+function describeRankedFile(file: RankedFile): string {
+  const topReason = file.reasons[0];
+  const description = topReason ? describeReason(topReason) : 'Matches the task.';
+  return `\`${file.path}\`\n  - ${description}`;
 }
 
 /**
  * Generates compact, agent-ready context for the repository, optionally
  * focused on a task. When `maxTokens` is set, list-based sections are
- * shrunk through a fixed sequence of caps (20 → 10 → 5 → 3 → 1 items) until
- * the estimate fits; this keeps truncation deterministic for the same
- * snapshot and options rather than depending on iteration order or timing.
+ * shrunk through a fixed sequence of caps (20 → 10 → 5 → 3 → 1) until the
+ * estimate fits; this keeps truncation deterministic for the same snapshot
+ * and options rather than depending on iteration order or timing.
  */
 export function generateContext(
   snapshot: RepositorySnapshot,
   options: ContextOptions = {},
 ): ContextResult {
-  const keywords = options.task ? extractKeywords(options.task) : [];
+  const ranking = options.task ? rankFilesForTask({ task: options.task, snapshot }) : null;
   const caps = [20, 10, 5, 3, 1];
 
   let content = '';
   let truncated = false;
 
   for (let i = 0; i < caps.length; i++) {
-    content = renderContext(snapshot, options, keywords, caps[i] as number);
+    content = renderContext(snapshot, options, ranking?.files ?? null, caps[i] as number);
     const tokens = estimateTokens(content);
     if (!options.maxTokens || tokens <= options.maxTokens) {
       if (i > 0) truncated = true;
-      return { content, estimatedTokens: tokens, truncated };
+      return {
+        content,
+        estimatedTokens: tokens,
+        truncated,
+        task: options.task ?? null,
+        rankedFiles: ranking?.files ?? [],
+      };
     }
   }
 
@@ -84,13 +98,19 @@ export function generateContext(
     content.length > maxChars
       ? `${content.slice(0, maxChars)}\n\n_[truncated to fit --max-tokens]_\n`
       : content;
-  return { content: finalContent, estimatedTokens: estimateTokens(finalContent), truncated: true };
+  return {
+    content: finalContent,
+    estimatedTokens: estimateTokens(finalContent),
+    truncated: true,
+    task: options.task ?? null,
+    rankedFiles: ranking?.files ?? [],
+  };
 }
 
 function renderContext(
   snapshot: RepositorySnapshot,
   options: ContextOptions,
-  keywords: string[],
+  rankedFiles: RankedFile[] | null,
   cap: number,
 ): string {
   const sections: string[] = [];
@@ -101,8 +121,11 @@ function renderContext(
   }
 
   sections.push('\n## 1. Project summary\n');
+  const profileLine = snapshot.projectProfile
+    ? `\n- Profile: ${formatProjectProfileInline(snapshot.projectProfile)}`
+    : '';
   sections.push(
-    `- Repository: ${snapshot.repository.name}\n- Package manager: ${snapshot.ecosystem.packageManager}${snapshot.ecosystem.isMonorepo ? ' (monorepo)' : ''}\n- Primary frameworks: ${[...new Set(snapshot.frameworks.map((f) => f.name))].join(', ') || 'none detected'}`,
+    `- Repository: ${snapshot.repository.name}\n- Package manager: ${snapshot.ecosystem.packageManager}${snapshot.ecosystem.isMonorepo ? ' (monorepo)' : ''}\n- Primary frameworks: ${[...new Set(snapshot.frameworks.map((f) => f.name))].join(', ') || 'none detected'}${profileLine}`,
   );
 
   sections.push('\n## 2. Repository layout\n');
@@ -113,8 +136,19 @@ function renderContext(
   );
 
   sections.push('\n## 3. Architecture\n');
-  const workspaceEdges = snapshot.internalEdges.filter((e) => e.kind === 'workspace').slice(0, cap);
-  sections.push(bulletList(workspaceEdges.map((e) => `\`${e.from}\` → \`${e.to}\``)));
+  const runtimeEdges = snapshot.internalEdges
+    .filter((e) => e.kind === 'workspace' && e.dependencyType !== 'development')
+    .slice(0, cap);
+  sections.push(bulletList(runtimeEdges.map((e) => `\`${e.from}\` → \`${e.to}\``)));
+  const devEdges = snapshot.internalEdges.filter(
+    (e) => e.kind === 'workspace' && e.dependencyType === 'development',
+  );
+  if (devEdges.length > 0) {
+    sections.push('\n### Development-only workspace dependencies\n');
+    sections.push(
+      bulletList(devEdges.slice(0, cap).map((e) => `\`${e.from}\` → \`${e.to}\` (dev)`)),
+    );
+  }
 
   sections.push('\n## 4. Important conventions\n');
   sections.push(bulletList(snapshot.conventions.slice(0, cap).map((c) => c.description)));
@@ -158,9 +192,8 @@ function renderContext(
     ),
   );
 
-  const filesToRead = rankFilesForTask(snapshot, keywords, cap);
   sections.push('\n## 10. Files an agent should read first\n');
-  sections.push(bulletList(filesToRead));
+  sections.push(filesToReadSection(snapshot, rankedFiles, Math.min(cap, DEFAULT_TASK_FILE_LIMIT)));
 
   sections.push('\n## 11. Files and directories an agent should avoid modifying\n');
   sections.push(
@@ -176,18 +209,42 @@ function renderContext(
   return sections.join('\n');
 }
 
-function rankFilesForTask(snapshot: RepositorySnapshot, keywords: string[], cap: number): string[] {
-  const sourceFiles = snapshot.files.filter((f) => f.kind === 'source');
-  if (keywords.length === 0) {
-    return snapshot.entryPoints.slice(0, cap).map((e) => e.path);
+function filesToReadSection(
+  snapshot: RepositorySnapshot,
+  rankedFiles: RankedFile[] | null,
+  limit: number,
+): string {
+  if (rankedFiles !== null) {
+    if (rankedFiles.length === 0) return '_None detected._';
+    const shown = rankedFiles.slice(0, limit);
+    return shown.map((f, i) => `${i + 1}. ${describeRankedFile(f)}`).join('\n');
   }
-  const matches = sourceFiles
-    .filter((f) => pathMatchesKeywords(f.path, keywords))
-    .map((f) => f.path);
-  if (matches.length === 0) {
-    return snapshot.entryPoints.slice(0, cap).map((e) => e.path);
-  }
-  return matches.slice(0, cap);
+
+  // No task given: fall back to entry points, always resolved to their
+  // source counterpart when one exists, and never a generated/build path —
+  // an agent should never be told to "read" build output.
+  const readable = snapshot.entryPoints
+    .map((e) => e.sourcePath ?? e.path)
+    .filter((path) => !GENERATED_PATH_PATTERN.test(path));
+  const unique = [...new Set(readable)].slice(0, limit);
+  return bulletList(unique);
+}
+
+function formatProjectProfileInline(
+  profile: NonNullable<RepositorySnapshot['projectProfile']>,
+): string {
+  const parts: string[] = [profile.language];
+  const label: Record<string, string | null> = {
+    cli: 'CLI',
+    'web-app': 'web app',
+    'api-service': 'API service',
+    library: 'library',
+    unknown: null,
+  };
+  const applicationLabel = label[profile.applicationType];
+  if (applicationLabel) parts.push(applicationLabel);
+  if (profile.repositoryType === 'monorepo') parts.push('monorepo');
+  return parts.join(' ');
 }
 
 function gitStateLines(git: GitMetadata | null): string[] {
