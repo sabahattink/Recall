@@ -1,22 +1,15 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/container';
 import { renderSimpleMarkdown } from '@/lib/simple-markdown';
+import { readRepoMarkdown } from '@/lib/read-repo-markdown';
 
 export const metadata: Metadata = {
   title: 'Roadmap',
   description: 'What is in scope, deferred, and planned for Recall.',
 };
 
-// Reads the repository's actual docs/roadmap.md rather than duplicating it.
-async function getRoadmap(): Promise<string> {
-  const path = join(process.cwd(), '..', '..', 'docs', 'roadmap.md');
-  return readFile(path, 'utf8');
-}
-
 export default async function RoadmapPage() {
-  const markdown = await getRoadmap();
+  const markdown = await readRepoMarkdown('docs', 'roadmap.md');
 
   return (
     <Container className="py-16 sm:py-20">

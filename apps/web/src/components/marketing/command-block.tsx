@@ -40,6 +40,9 @@ export function CommandBlock({ command, className }: { command: string; classNam
       >
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
+      <span className="sr-only" role="status" aria-live="polite">
+        {copied ? 'Command copied to clipboard' : ''}
+      </span>
     </div>
   );
 }

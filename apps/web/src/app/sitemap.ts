@@ -1,10 +1,13 @@
 import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/config/site';
+import { source } from '@/lib/source';
 
-const staticRoutes = ['/', '/docs', '/examples', '/changelog', '/roadmap'];
+const staticRoutes = ['/', '/examples', '/changelog', '/roadmap'];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return staticRoutes.map((route) => ({
+  const docRoutes = source.getPages().map((page) => page.url);
+
+  return [...staticRoutes, ...docRoutes].map((route) => ({
     url: `${siteConfig.url}${route}`,
     lastModified: new Date(),
   }));

@@ -1,23 +1,15 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/container';
 import { renderSimpleMarkdown } from '@/lib/simple-markdown';
+import { readRepoMarkdown } from '@/lib/read-repo-markdown';
 
 export const metadata: Metadata = {
   title: 'Changelog',
   description: 'Release notes for the recall-context npm package.',
 };
 
-// Reads the repository's actual CHANGELOG.md rather than duplicating it, so
-// this page can never drift from the real release notes.
-async function getChangelog(): Promise<string> {
-  const path = join(process.cwd(), '..', '..', 'CHANGELOG.md');
-  return readFile(path, 'utf8');
-}
-
 export default async function ChangelogPage() {
-  const markdown = await getChangelog();
+  const markdown = await readRepoMarkdown('CHANGELOG.md');
 
   return (
     <Container className="py-16 sm:py-20">

@@ -7,7 +7,7 @@ import { MobileNavigation } from './mobile-navigation';
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 border-b border-border bg-background">
       <Container className="relative flex h-16 items-center justify-between">
         <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
           {siteConfig.name}

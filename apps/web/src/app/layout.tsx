@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { ThemeProvider } from '@/components/layout/theme-provider';
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = siteMetadata;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Container } from '@/components/ui/container';
 import { CommandBlock } from '@/components/marketing/command-block';
 
@@ -46,9 +47,9 @@ export default function ExamplesPage() {
       <h1 className="text-3xl font-semibold tracking-tight text-foreground">Examples</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         A selection of real Recall commands. See the{' '}
-        <a href="/docs/commands" className="underline underline-offset-4">
+        <Link href="/docs/commands" className="underline underline-offset-4">
           commands reference
-        </a>{' '}
+        </Link>{' '}
         for every flag and exit code.
       </p>
 
