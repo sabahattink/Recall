@@ -1,6 +1,7 @@
 import { siteConfig } from '@/config/site';
 import { Section } from '@/components/ui/section';
 import { HeroSection } from '@/components/marketing/hero-section';
+import { ProblemSection } from '@/components/marketing/problem-section';
 import { CommandBlock } from '@/components/marketing/command-block';
 import { FeatureCard } from '@/components/marketing/feature-card';
 
@@ -92,6 +93,8 @@ export default function MarketingPage() {
   return (
     <>
       <HeroSection />
+
+      <ProblemSection />
 
       <Section aria-labelledby="problem-heading">
         <h2 id="problem-heading" className="text-2xl font-semibold tracking-tight text-foreground">
