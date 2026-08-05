@@ -113,6 +113,76 @@ describe('task-focused ranking (regression fixture, end-to-end)', () => {
     }
   });
 
+  it('Sprint 2.1 regression: "Fix Windows npm packaging shebang" is not crowded out by generic package.json/config matches', async () => {
+    const result = await runContext({
+      path: dir,
+      stdout: true,
+      task: 'Fix Windows npm packaging shebang',
+    });
+    const topPaths = result.rankedFiles.slice(0, TOP_N).map((f) => f.path);
+
+    for (const required of [
+      'apps/cli/scripts/bundle.mjs',
+      'apps/cli/scripts/bundle-internal.mjs',
+      'apps/cli/scripts/verify-package.mjs',
+    ]) {
+      expect(topPaths, `expected ${required} in top ${TOP_N}`).toContain(required);
+    }
+    expect(
+      topPaths.some(
+        (p) =>
+          p === 'apps/cli/src/__tests__/packaging.test.ts' ||
+          p.endsWith('bundle-internal.test.mjs'),
+      ),
+      'expected a packaging/bundle test file in the top N',
+    ).toBe(true);
+
+    const packageJsonCount = topPaths.filter((p) => p.endsWith('package.json')).length;
+    expect(
+      packageJsonCount,
+      'unrelated workspace package.json files must not dominate top N',
+    ).toBeLessThanOrEqual(2);
+
+    const packageManagerScore =
+      result.rankedFiles.find((f) => f.path === 'apps/cli/scripts/bundle-internal.mjs')?.score ?? 0;
+    const otherWorkspaceConfigScores = result.rankedFiles
+      .filter(
+        (f) => f.path === 'packages/alpha/package.json' || f.path === 'packages/beta/package.json',
+      )
+      .map((f) => f.score);
+    for (const score of otherWorkspaceConfigScores) {
+      expect(
+        score,
+        'an unrelated workspace config file must not outrank the true bundler seed',
+      ).toBeLessThan(packageManagerScore);
+    }
+  });
+
+  it('D: "Upgrade zod dependency" still ranks package.json and the lockfile highly despite generic-term protection', async () => {
+    const result = await runContext({
+      path: dir,
+      stdout: true,
+      task: 'Upgrade zod dependency',
+    });
+    const topPaths = result.rankedFiles.slice(0, TOP_N).map((f) => f.path);
+    expect(topPaths).toContain('package.json');
+    expect(topPaths).toContain('package-lock.json');
+  });
+
+  it('E: "Update Windows CI Node version" ranks the workflow above unrelated source files', async () => {
+    const result = await runContext({
+      path: dir,
+      stdout: true,
+      task: 'Update Windows CI Node version',
+    });
+    const byPath = new Map(result.rankedFiles.map((f) => [f.path, f.score]));
+    const workflowScore = byPath.get('.github/workflows/ci.yml') ?? 0;
+    expect(workflowScore).toBeGreaterThan(0);
+    for (const unrelated of ['src/billing/invoice-generator.ts', 'src/misc/logger.ts']) {
+      expect(workflowScore).toBeGreaterThan(byPath.get(unrelated) ?? 0);
+    }
+  });
+
   it('never ranks a generated/dist file for any task', async () => {
     const result = await runContext({ path: dir, stdout: true, task: 'improve context ranking' });
     expect(result.rankedFiles.some((f) => f.path.startsWith('dist/'))).toBe(false);

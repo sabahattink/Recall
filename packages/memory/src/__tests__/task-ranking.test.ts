@@ -345,6 +345,132 @@ describe('rankFilesForTask: determinism and ordering', () => {
   });
 });
 
+describe('rankFilesForTask: Sprint 2.1 precision signals', () => {
+  it('dampens a generic term ("package") that matches nearly every file relative to a rare term ("shebang")', async () => {
+    const snapshot = makeSnapshot({
+      files: [
+        // "packag" (from "packaging") relates to "package" in every one of
+        // these filenames — a repository-wide generic match.
+        makeFile({ path: 'packages/alpha/package.json', kind: 'config' }),
+        makeFile({ path: 'packages/beta/package.json', kind: 'config' }),
+        makeFile({ path: 'packages/gamma/package.json', kind: 'config' }),
+        makeFile({ path: 'packages/delta/package.json', kind: 'config' }),
+        // "shebang" matches only this one file's exported symbol.
+        makeFile({
+          path: 'apps/cli/scripts/bundle-internal.mjs',
+          extension: '.mjs',
+          exportedSymbols: ['CANONICAL_SHEBANG'],
+        }),
+      ],
+    });
+    const result = await rankFilesForTask({ task: 'fix windows npm packaging shebang', snapshot });
+    const byPath = new Map(result.files.map((f) => [f.path, f.score]));
+    const shebangScore = byPath.get('apps/cli/scripts/bundle-internal.mjs') ?? 0;
+    const genericScore = byPath.get('packages/alpha/package.json') ?? 0;
+    expect(shebangScore).toBeGreaterThan(genericScore);
+    // Generic terms must still count for something, never zero.
+    expect(genericScore).toBeGreaterThan(0);
+  });
+
+  it('does not treat additive tokenizer stem-variants ("packag"/"package") as two distinct terms for multi-term density', async () => {
+    const snapshot = makeSnapshot({
+      files: [makeFile({ path: 'package.json', kind: 'config' })],
+    });
+    const result = await rankFilesForTask({ task: 'update ci packaging', snapshot });
+    const file = result.files.find((f) => f.path === 'package.json');
+    expect(file?.reasons.some((r) => r.kind === 'multi-term-density')).toBe(false);
+  });
+
+  it('adds multi-term-density only once a file matches two genuinely distinct task terms', async () => {
+    const snapshot = makeSnapshot({
+      workspaces: [
+        {
+          name: 'password-service',
+          path: 'src/auth',
+          kind: 'package',
+          version: null,
+          private: true,
+          dependsOn: [],
+          main: null,
+          scripts: {},
+        },
+      ],
+      files: [
+        // Filename matches "controller" only; workspace name matches
+        // "password" only — two genuinely independent signals, not the
+        // same word found twice.
+        makeFile({ path: 'src/auth/reset.controller.ts', workspace: 'src/auth' }),
+        makeFile({ path: 'src/misc/logger.ts' }),
+      ],
+    });
+    const result = await rankFilesForTask({ task: 'fix password reset controller', snapshot });
+    const controller = result.files.find((f) => f.path === 'src/auth/reset.controller.ts');
+    expect(controller?.reasons.some((r) => r.kind === 'multi-term-density')).toBe(true);
+  });
+
+  it('boosts a file via workspace-locality when it shares a workspace with a strong seed', async () => {
+    const snapshot = makeSnapshot({
+      workspaces: [
+        {
+          name: 'cli',
+          path: 'apps/cli',
+          kind: 'app',
+          version: null,
+          private: true,
+          dependsOn: [],
+          main: null,
+          scripts: {},
+        },
+      ],
+      files: [
+        makeFile({
+          path: 'apps/cli/scripts/bundle-internal.mjs',
+          extension: '.mjs',
+          workspace: 'apps/cli',
+          exportedSymbols: ['CANONICAL_SHEBANG'],
+        }),
+        makeFile({ path: 'apps/cli/package.json', kind: 'config', workspace: 'apps/cli' }),
+      ],
+    });
+    // Deliberately a task package.json has no independent signal for
+    // ("shebang" only, no "package"/"npm"/dependency vocabulary) — this
+    // isolates the locality boost from any of package.json's own Stage 1
+    // signals, and also keeps package.json from becoming a seed itself
+    // (a seed is never locality-boosted by another seed in its workspace).
+    const result = await rankFilesForTask({ task: 'shebang', snapshot });
+    const pkg = result.files.find((f) => f.path === 'apps/cli/package.json');
+    expect(pkg?.reasons.some((r) => r.kind === 'workspace-locality')).toBe(true);
+  });
+
+  it('does not apply workspace-locality when there is no strong seed', async () => {
+    const snapshot = makeSnapshot({
+      workspaces: [
+        {
+          name: 'cli',
+          path: 'apps/cli',
+          kind: 'app',
+          version: null,
+          private: true,
+          dependsOn: [],
+          main: null,
+          scripts: {},
+        },
+      ],
+      files: [makeFile({ path: 'apps/cli/package.json', kind: 'config', workspace: 'apps/cli' })],
+    });
+    const result = await rankFilesForTask({ task: 'improve unrelated behavior', snapshot });
+    expect(result.files).toEqual([]);
+  });
+
+  it('still ranks package.json for a pure dependency-upgrade task (generic-term protection does not break dependency work)', async () => {
+    const snapshot = makeSnapshot({
+      files: [makeFile({ path: 'package.json', kind: 'config' })],
+    });
+    const result = await rankFilesForTask({ task: 'upgrade zod dependency', snapshot });
+    expect(result.files.map((f) => f.path)).toContain('package.json');
+  });
+});
+
 describe('RANKING_WEIGHTS', () => {
   it('is a single, named, positive-weight configuration object', () => {
     for (const [name, weight] of Object.entries(RANKING_WEIGHTS)) {

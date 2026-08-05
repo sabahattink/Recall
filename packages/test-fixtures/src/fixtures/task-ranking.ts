@@ -34,6 +34,99 @@ export function taskRankingTree(): FileTree {
       null,
       2,
     ),
+    'package-lock.json': JSON.stringify(
+      { name: 'task-ranking-fixture', version: '1.0.0', lockfileVersion: 3 },
+      null,
+      2,
+    ),
+    // Registers apps/* and packages/* as real workspaces, so workspace-scoped
+    // signals (workspace-match, workspace-locality) have something to test
+    // against — without this, every file below would share a single
+    // (root-only) workspace and those signals could never meaningfully fire.
+    'pnpm-workspace.yaml': "packages:\n  - 'apps/*'\n  - 'packages/*'\n",
+
+    // --- Windows npm packaging shebang (Sprint 2.1 precision-test target,
+    // shaped after the real apps/cli/scripts/{bundle,bundle-internal,
+    // verify-package}.mjs relationship) ---------------------------------
+    'apps/cli/package.json': JSON.stringify(
+      {
+        name: 'cli-fixture',
+        version: '1.0.0',
+        private: true,
+        scripts: { bundle: 'node scripts/bundle.mjs' },
+        dependencies: {},
+        devDependencies: {},
+      },
+      null,
+      2,
+    ),
+    'apps/cli/scripts/bundle-internal.mjs': [
+      "export const CANONICAL_SHEBANG = '#!/usr/bin/env node';",
+      '',
+      'export function normalizeShebang(source) {',
+      '  return source;',
+      '}',
+      '',
+    ].join('\n'),
+    'apps/cli/scripts/bundle.mjs': [
+      "import { normalizeShebang } from './bundle-internal.mjs';",
+      '',
+      'export function bundle(source) {',
+      '  return normalizeShebang(source);',
+      '}',
+      '',
+    ].join('\n'),
+    'apps/cli/scripts/verify-package.mjs': [
+      "import { CANONICAL_SHEBANG } from './bundle-internal.mjs';",
+      '',
+      'export function verifyPackage(source) {',
+      '  return source.startsWith(CANONICAL_SHEBANG);',
+      '}',
+      '',
+    ].join('\n'),
+    'apps/cli/scripts/__tests__/bundle-internal.test.mjs': [
+      "import { describe, expect, it } from 'vitest';",
+      "import { normalizeShebang } from '../bundle-internal.mjs';",
+      '',
+      "describe('normalizeShebang', () => {",
+      "  it('is a function', () => {",
+      "    expect(typeof normalizeShebang).toBe('function');",
+      '  });',
+      '});',
+      '',
+    ].join('\n'),
+    'apps/cli/src/__tests__/packaging.test.ts': [
+      "import { describe, expect, it } from 'vitest';",
+      '',
+      "describe('packaging', () => {",
+      "  it('produces a valid package', () => {",
+      '    expect(true).toBe(true);',
+      '  });',
+      '});',
+      '',
+    ].join('\n'),
+
+    // --- Extra sibling package.json files, to create realistic "many
+    // workspace package.json files" crowding for the generic-term-precision
+    // tests, without being relevant to any task above. --------------------
+    'packages/alpha/package.json': JSON.stringify(
+      { name: 'alpha-fixture', version: '1.0.0', private: true },
+      null,
+      2,
+    ),
+    'packages/alpha/src/index.ts': 'export const alpha = 1;\n',
+    'packages/beta/package.json': JSON.stringify(
+      { name: 'beta-fixture', version: '1.0.0', private: true },
+      null,
+      2,
+    ),
+    'packages/beta/src/index.ts': 'export const beta = 1;\n',
+    'packages/gamma/package.json': JSON.stringify(
+      { name: 'gamma-fixture', version: '1.0.0', private: true },
+      null,
+      2,
+    ),
+    'packages/gamma/src/index.ts': 'export const gamma = 1;\n',
 
     // --- CI packaging (task C target) ---------------------------------
     '.github/workflows/ci.yml': [

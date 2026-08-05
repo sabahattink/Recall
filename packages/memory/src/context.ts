@@ -49,6 +49,10 @@ function describeReason(reason: RankingReason): string {
       return `Repository entry point (${reason.evidence}).`;
     case 'config-relevance':
       return `Configuration relevant to this task (${reason.evidence}).`;
+    case 'multi-term-density':
+      return `Matches multiple distinct task terms (${reason.evidence}).`;
+    case 'workspace-locality':
+      return `Near a strongly-matched file (${reason.evidence}).`;
     default:
       return reason.evidence;
   }
