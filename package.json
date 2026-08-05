@@ -2,12 +2,12 @@
   "name": "recall-monorepo",
   "private": true,
   "version": "0.1.0",
-  "description": "Recall: Git remembers code. Recall remembers why.",
+  "description": "Persistent, evidence-backed codebase context for AI coding agents.",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sabahattink/Recall.git"
+    "url": "git+https://github.com/sabahattink/Recall.git"
   },
   "engines": {
     "node": ">=22"

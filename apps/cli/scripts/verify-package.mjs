@@ -33,7 +33,7 @@ if (existsSync(distEntry)) {
 
 const pkg = JSON.parse(readFileSync(join(cliRoot, 'package.json'), 'utf8'));
 
-check('package.json declares a "recall" bin entry', pkg.bin?.recall === './dist/index.js');
+check('package.json declares a "recall" bin entry', pkg.bin?.recall === 'dist/index.js');
 check(
   'the bin target file exists on disk',
   pkg.bin?.recall ? existsSync(join(cliRoot, pkg.bin.recall)) : false,

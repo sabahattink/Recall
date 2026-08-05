@@ -10,11 +10,20 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: command
+    attributes:
+      label: Exact command
+      description: The exact `recall` command that triggered this (including flags).
+      placeholder: recall init --path . --max-files 5000
+    validations:
+      required: true
+
   - type: textarea
     id: reproduction
     attributes:
       label: Steps to reproduce
-      description: Ideally against a minimal repository. Include the exact `recall` command you ran.
+      description: Ideally against a minimal, sanitized repository (no proprietary code or secrets) — a small public repo, or a fixture you can share.
       placeholder: |
         1. `recall init` in a repo with...
         2. `recall status`
@@ -23,9 +32,30 @@ body:
       required: true
 
   - type: textarea
+    id: actual
+    attributes:
+      label: Actual output
+      description: Paste the exact terminal output, including any error message.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
     id: expected
     attributes:
       label: Expected behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: repo-type
+    attributes:
+      label: Repository type
+      options:
+        - Git repository
+        - Non-Git repository
+        - Git monorepo (multiple workspaces)
+        - Unsure
     validations:
       required: true
 

@@ -7,7 +7,7 @@
   "homepage": "https://github.com/sabahattink/Recall#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sabahattink/Recall.git",
+    "url": "git+https://github.com/sabahattink/Recall.git",
     "directory": "apps/cli"
   },
   "bugs": "https://github.com/sabahattink/Recall/issues",
@@ -25,7 +25,7 @@
     "developer-tools"
   ],
   "bin": {
-    "recall": "./dist/index.js"
+    "recall": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [

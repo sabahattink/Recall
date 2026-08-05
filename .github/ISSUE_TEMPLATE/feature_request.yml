@@ -11,10 +11,34 @@ body:
       required: true
 
   - type: textarea
+    id: workaround
+    attributes:
+      label: Current workaround
+      description: How are you handling this today, if at all (manual steps, a different tool, editing generated files directly)?
+
+  - type: textarea
     id: proposal
     attributes:
-      label: Proposed solution
+      label: Proposed behavior
       description: How would you like this to work? Include example command output if relevant.
+    validations:
+      required: true
+
+  - type: input
+    id: target-agent
+    attributes:
+      label: Target agent/tool (if relevant)
+      description: The AI coding agent or tool this would help — e.g. Claude Code, Codex, Gemini CLI, Cursor.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: What does this affect?
+      options:
+        - CLI (commands, flags, exit codes)
+        - Context output (.recall/ content, recall context)
+        - Integration with an external agent/tool
+        - Something else
     validations:
       required: true
 
