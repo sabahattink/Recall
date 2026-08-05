@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, chmodSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeShebang } from './bundle-internal.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cliRoot = join(here, '..');
@@ -50,7 +51,11 @@ if (!existsSync(bundledEntry)) {
 // runtime file.
 rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
-writeFileSync(join(distDir, 'index.js'), readFileSync(bundledEntry, 'utf8'));
+// Normalize the shebang boundary regardless of what ncc produced (see
+// bundle-internal.mjs for why this is necessary on Windows), then write
+// explicitly as UTF-8 with no BOM.
+const normalized = normalizeShebang(readFileSync(bundledEntry, 'utf8'));
+writeFileSync(join(distDir, 'index.js'), normalized, { encoding: 'utf8' });
 chmodSync(join(distDir, 'index.js'), 0o755);
 
 rmSync(tmpOutDir, { recursive: true, force: true });
