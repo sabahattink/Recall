@@ -113,10 +113,11 @@ Generates compact, agent-ready context from the last snapshot. Writes `.recall/c
 recall context [--task "<description>"] [--max-tokens <n>] [--format markdown] [--stdout] [--json]
 ```
 
-- `--task "<description>"` — focuses the context on a task: keywords are extracted from the description and used to rank source files by path relevance.
+- `--task "<description>"` — focuses "Files an agent should read first" (section 10) on the task using deterministic, local, explainable ranking: no embeddings and no AI provider. The description is tokenized (lowercased, punctuation/camelCase/kebab-case/snake_case split, stop words removed, safe additive singular/plural and gerund normalization) and matched against file/path names, exported symbol names, workspace names, and configuration relevance, then expanded through the import graph (direct and reverse neighbors, bounded to depth 2) and test/production counterparts. Every ranked file's Markdown entry shows one concise reason; raw scores are never printed in Markdown. See [architecture.md](architecture.md#task-focused-ranking) for the full signal/weight breakdown.
 - `--max-tokens <n>` — approximate maximum size of the generated context. Token estimation is a fixed, documented heuristic (~4 characters/token; see [architecture.md](architecture.md)), not a model-specific tokenizer. When the estimate exceeds the budget, list-based sections are shrunk through a fixed sequence of item caps (20 → 10 → 5 → 3 → 1) until the content fits, or hard-truncated as a last resort.
 - `--format markdown` — currently the only supported format (the flag exists for forward compatibility).
 - `--stdout` — prints to stdout instead of writing `.recall/context.md`.
+- `--json` — in addition to the existing `estimatedTokens`/`truncated`/`outputPath`/`content` fields, includes `task` (the task string, or `null`) and `rankedFiles` (every file that scored above zero, in ranked order, each with `path`, `score`, and a `reasons` array of `{ kind, weight, evidence }`) — the full ranking explanation, for tooling that wants it. Both fields are additive to the existing JSON contract: `task` is `null` and `rankedFiles` is `[]` for a non-task context, so existing `--json` consumers reading only the original fields see no change in shape. `content` was kept as the field name (not renamed to `markdown`) specifically to avoid a breaking change to the already-published `recall-context` package's JSON output.
 
 Exit codes: `3` if no snapshot exists, otherwise `0`.
 

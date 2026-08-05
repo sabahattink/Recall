@@ -67,16 +67,21 @@ The schema is also published as a standalone JSON Schema at `.recall/schema/mani
 
 The full, normalized `RepositorySnapshot` produced by the most recent `recall init`/`recall scan`/`recall update`. Its shape is defined by `packages/schemas/src/repository.ts` and published as JSON Schema at `.recall/schema/snapshot.schema.json`. Key fields:
 
-| Field                                            | Description                                                                                                                           |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `repository`, `git`, `ecosystem`                 | Repository name/root, current Git branch/commit/dirty state, package manager and monorepo status                                      |
-| `workspaces`                                     | Discovered workspace packages, their kind (`app`/`package`/`service`/`library`/`root`), and internal `dependsOn`                      |
-| `files`                                          | Every scanned file with its owning workspace and kind (`source`/`test`/`config`/`documentation`/`generated`/`other`)                  |
-| `entryPoints`                                    | Detected `bin`/`main`/`script`/`framework-convention` entry points, each with evidence                                                |
-| `dependencies`, `internalEdges`                  | Declared dependencies and internal (workspace- and import-level) dependency edges                                                     |
-| `frameworks`, `conventions`, `risks`             | Evidence-backed findings, each with a `confidence` or `severity` and an `evidence` array                                              |
-| `testing`, `ci`, `docker`, `serviceIntegrations` | Detected test frameworks/files, CI configuration, Docker configuration, and service integrations (database/queue/cache/auth/external) |
-| `generatedFiles`, `ignoredDirectories`           | Files classified as generated, and the directories Recall never scans                                                                 |
+| Field                                            | Description                                                                                                                                                                                                                                   |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `repository`, `git`, `ecosystem`                 | Repository name/root, current Git branch/commit/dirty state, package manager and monorepo status                                                                                                                                              |
+| `workspaces`                                     | Discovered workspace packages, their kind (`app`/`package`/`service`/`library`/`root`), and internal `dependsOn`                                                                                                                              |
+| `files`                                          | Every scanned file with its owning workspace and kind (`source`/`test`/`config`/`documentation`/`generated`/`other`)                                                                                                                          |
+| `entryPoints`                                    | Detected `bin`/`main`/`script`/`framework-convention` entry points, each with evidence, plus an optional `sourcePath` mapping a generated/build entry (e.g. `dist/index.js`) back to its source file (e.g. `src/index.ts`) when one was found |
+| `dependencies`, `internalEdges`                  | Declared dependencies and internal (workspace- and import-level) dependency edges, each optionally carrying a `dependencyType` (`runtime`/`development`/`optional`/`peer`)                                                                    |
+| `frameworks`, `conventions`, `risks`             | Evidence-backed findings, each with a `confidence` or `severity` and an `evidence` array                                                                                                                                                      |
+| `testing`, `ci`, `docker`, `serviceIntegrations` | Detected test frameworks/files, CI configuration, Docker configuration, and service integrations (database/queue/cache/auth/external)                                                                                                         |
+| `generatedFiles`, `ignoredDirectories`           | Files classified as generated, and the directories Recall never scans                                                                                                                                                                         |
+| `projectProfile`                                 | Optional derived summary: `language`, `applicationType` (`cli`/`library`/`web-app`/`api-service`/`unknown`), `repositoryType` (`single-package`/`monorepo`), `frameworks`                                                                     |
+
+Each `FileRecord` in `files` also optionally carries `exportedSymbols`: top-level exported function/class/interface/type/const/enum names, extracted once at scan time and used by `recall context --task`'s symbol-match ranking signal.
+
+`sourcePath`, `dependencyType`, `exportedSymbols`, and `projectProfile` are all optional fields, added without a `schemaVersion` bump — a snapshot from before they existed still parses; `recall update`/`recall init` populate them on the next run.
 
 ## Generated-section markers
 
@@ -110,7 +115,7 @@ Rules Recall follows, enforced by `packages/memory/src/markers.ts`:
 
 ## `context.md`
 
-Written by `recall context` (unless `--stdout` is passed). Twelve fixed sections: project summary, repository layout, architecture, important conventions, primary entry points, important commands, known risks, technical debt, relevant decisions, files an agent should read first, files/directories to avoid modifying, and current Git state. See [cli-reference.md](cli-reference.md#recall-context) for `--task`, `--max-tokens`, and truncation behavior.
+Written by `recall context` (unless `--stdout` is passed). Twelve fixed sections: project summary (including the detected `projectProfile`, when available), repository layout, architecture (runtime workspace edges, with a "Development-only workspace dependencies" subsection for `devDependency`-derived edges), important conventions, primary entry points, important commands, known risks, technical debt, relevant decisions, files an agent should read first, files/directories to avoid modifying, and current Git state. See [cli-reference.md](cli-reference.md#recall-context) for `--task`, `--max-tokens`, and truncation behavior, and [architecture.md](architecture.md#task-focused-ranking) for how "files an agent should read first" is ranked.
 
 ## Backups
 
