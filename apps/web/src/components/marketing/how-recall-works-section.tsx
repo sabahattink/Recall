@@ -58,10 +58,19 @@ function StepCard({ step }: { step: Step }) {
  * A single hairline connecting adjacent steps — vertical when stacked
  * (mobile), horizontal in the row (desktop). Decorative only: the real
  * sequence is already conveyed by the step numbers and heading order.
+ *
+ * On desktop the line is pinned to a fixed offset (card padding + half the
+ * step numeral's line-height: 24px + 10px) rather than centered against
+ * whichever card happens to be tallest — so it runs precisely through the
+ * numerals themselves regardless of how much a description wraps, instead
+ * of landing at an approximate row-center.
  */
 function StepConnector() {
   return (
-    <div aria-hidden className="h-6 w-px self-center bg-border lg:h-px lg:w-10 lg:flex-none" />
+    <div
+      aria-hidden
+      className="h-6 w-px self-center bg-border lg:mt-[34px] lg:h-px lg:w-10 lg:flex-none lg:self-start"
+    />
   );
 }
 

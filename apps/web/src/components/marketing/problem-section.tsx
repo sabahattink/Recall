@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { Section } from '@/components/ui/section';
+import { cn } from '@/lib/utils';
 
 const disappearingContext = [
   'Architecture decisions.',
@@ -21,11 +22,28 @@ const transcript = [
 
 const availableMemory = ['Architecture', 'Conventions', 'Decisions', 'Risks', 'Technical debt'];
 
+interface ComparisonCardProps {
+  title: string;
+  children: ReactNode;
+  /**
+   * "Without Recall" renders its title in muted-foreground rather than
+   * foreground — a deliberate, tokens-only hierarchy choice (§4 rule 3:
+   * "Color, not size, is the secondary hierarchy signal") that reads the
+   * left column as the gap being described and the right column as the
+   * resolution, without introducing any new color or icon.
+   */
+  muted?: boolean;
+}
+
 /** Shared card shell for the two comparison columns — same border/padding/radius as every other card on the site (design-system.md §7), never clickable, so no hover state. */
-function ComparisonCard({ title, children }: { title: string; children: ReactNode }) {
+function ComparisonCard({ title, children, muted }: ComparisonCardProps) {
   return (
     <div className="rounded-lg border border-border bg-card p-6">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <h3
+        className={cn('text-sm font-semibold', muted ? 'text-muted-foreground' : 'text-foreground')}
+      >
+        {title}
+      </h3>
       {children}
     </div>
   );
@@ -57,7 +75,7 @@ export function ProblemSection() {
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <ComparisonCard title="Without Recall">
+        <ComparisonCard title="Without Recall" muted>
           <div className="mt-4 flex flex-col gap-4">
             {transcript.map((turn, index) => (
               <div key={index}>
