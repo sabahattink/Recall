@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/container';
 import { renderSimpleMarkdown } from '@/lib/simple-markdown';
-import { readRepoMarkdown } from '@/lib/read-repo-markdown';
+import { readChangelogMarkdown } from '@/lib/read-repo-markdown';
 
 export const metadata: Metadata = {
   title: 'Changelog',
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ChangelogPage() {
-  const markdown = await readRepoMarkdown('CHANGELOG.md');
+  const markdown = await readChangelogMarkdown();
 
   return (
     <Container className="py-16 sm:py-20">

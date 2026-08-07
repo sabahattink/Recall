@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/container';
 import { renderSimpleMarkdown } from '@/lib/simple-markdown';
-import { readRepoMarkdown } from '@/lib/read-repo-markdown';
+import { readRoadmapMarkdown } from '@/lib/read-repo-markdown';
 
 export const metadata: Metadata = {
   title: 'Roadmap',
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RoadmapPage() {
-  const markdown = await readRepoMarkdown('docs', 'roadmap.md');
+  const markdown = await readRoadmapMarkdown();
 
   return (
     <Container className="py-16 sm:py-20">
