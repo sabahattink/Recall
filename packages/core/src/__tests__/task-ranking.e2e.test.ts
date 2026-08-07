@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { buildTaskRankingFixture, createTempDir, removeTempDir } from '@recall-ai/test-fixtures';
+import {
+  buildTaskRankingFixture,
+  createTempDir,
+  integrationHookTimeout,
+  removeTempDir,
+} from '@recall-ai/test-fixtures';
 import { runInit } from '../use-cases/init.js';
 import { runContext } from '../use-cases/context.js';
 
@@ -14,11 +19,19 @@ import { runContext } from '../use-cases/context.js';
 describe('task-focused ranking (regression fixture, end-to-end)', () => {
   let dir: string;
 
+  // Writes ~35 fixture files, then `runInit` scans them and probes Git via
+  // several `git` subprocess spawns (repo detection + metadata, all of which
+  // no-op/fail cleanly since this temp dir isn't a Git repo, but each spawn
+  // still pays full process-creation cost). This hook has measured over
+  // Vitest's default 10000ms hookTimeout on Windows CI, where process-spawn
+  // and AV-scan overhead run far higher than on Linux/macOS or a local dev
+  // machine. The `it()` bodies below only read the already-computed snapshot
+  // in memory, so they don't need the same allowance.
   beforeEach(async () => {
     dir = await createTempDir();
     await buildTaskRankingFixture(dir);
     await runInit({ path: dir, toolVersion: '0.1.0' });
-  });
+  }, integrationHookTimeout);
 
   afterEach(async () => {
     await removeTempDir(dir);

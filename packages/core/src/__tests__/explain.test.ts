@@ -4,6 +4,7 @@ import {
   commitAll,
   createTempDir,
   initGitRepo,
+  integrationHookTimeout,
   removeTempDir,
 } from '@recall-ai/test-fixtures';
 import { runInit } from '../use-cases/init.js';
@@ -13,13 +14,19 @@ import { InvalidUsageError } from '../errors.js';
 describe('runExplain', () => {
   let dir: string;
 
+  // initGitRepo + commitAll + a full runInit (~11 real `git` spawns) before
+  // every test — the same order of Git-subprocess cost measured elsewhere in
+  // this suite to approach/exceed Vitest's default hookTimeout on Windows
+  // CI. `runExplain` itself does no Git/FS-heavy work (it only reads the
+  // snapshot this hook already produced), so only the hook needs the
+  // widened timeout — the `it()` bodies below keep the default testTimeout.
   beforeEach(async () => {
     dir = await createTempDir();
     await buildNestJsFixture(dir);
     await initGitRepo(dir);
     await commitAll(dir, 'chore: initial commit');
     await runInit({ path: dir, toolVersion: '0.1.0' });
-  });
+  }, integrationHookTimeout);
 
   afterEach(async () => {
     await removeTempDir(dir);

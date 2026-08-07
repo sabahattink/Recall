@@ -80,6 +80,12 @@
     outline-offset: 2px;
   }
 
+  /* Accent at low opacity, not a browser default (design-system.md §3). */
+  ::selection {
+    background-color: hsl(var(--accent) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

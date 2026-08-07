@@ -6,6 +6,7 @@ import {
   commitAll,
   createTempDir,
   initGitRepo,
+  integrationTestTimeout,
   removeTempDir,
 } from '@recall-ai/test-fixtures';
 import { runInit } from '../use-cases/init.js';
@@ -32,25 +33,42 @@ describe('runStatus', () => {
     expect(status.missingMemoryFiles.length).toBeGreaterThan(0);
   });
 
-  it('reports ok immediately after a clean init', async () => {
-    await runInit({ path: dir, toolVersion: '0.1.0' });
-    const status = await runStatus(dir);
-    expect(status.initialized).toBe(true);
-    expect(status.overallStatus).toBe('ok');
-    expect(status.missingMemoryFiles).toEqual([]);
-    expect(status.malformedFiles).toEqual([]);
-    expect(status.detectedProjectType).not.toBeNull();
-  });
+  // Both tests below run `runInit` (init → scan → GitAdapter.collectMetadata
+  // + listTrackedFiles) followed by `runStatus` (currentCommit/currentBranch
+  // /changedFiles), on top of this describe block's beforeEach
+  // (initGitRepo + commitAll) — a chain of real `git` subprocess spawns that
+  // has measured over Vitest's default 5000ms testTimeout on Windows CI,
+  // where each spawn carries process-creation/AV-scan overhead far higher
+  // than on Linux/macOS or a local dev machine. The "stale" variant below
+  // does strictly more of the same work (one extra commitAll), so it shares
+  // the same risk even though it wasn't the one CI happened to flag.
+  it(
+    'reports ok immediately after a clean init',
+    async () => {
+      await runInit({ path: dir, toolVersion: '0.1.0' });
+      const status = await runStatus(dir);
+      expect(status.initialized).toBe(true);
+      expect(status.overallStatus).toBe('ok');
+      expect(status.missingMemoryFiles).toEqual([]);
+      expect(status.malformedFiles).toEqual([]);
+      expect(status.detectedProjectType).not.toBeNull();
+    },
+    integrationTestTimeout,
+  );
 
-  it('reports stale after new commits change the repository', async () => {
-    await runInit({ path: dir, toolVersion: '0.1.0' });
-    await writeFile(join(dir, 'src/extra.js'), 'module.exports = {};\n', 'utf8');
-    await commitAll(dir, 'feat: extra file');
+  it(
+    'reports stale after new commits change the repository',
+    async () => {
+      await runInit({ path: dir, toolVersion: '0.1.0' });
+      await writeFile(join(dir, 'src/extra.js'), 'module.exports = {};\n', 'utf8');
+      await commitAll(dir, 'feat: extra file');
 
-    const status = await runStatus(dir);
-    expect(status.overallStatus).toBe('stale');
-    expect(status.stale).toBe(true);
-  });
+      const status = await runStatus(dir);
+      expect(status.overallStatus).toBe('stale');
+      expect(status.stale).toBe(true);
+    },
+    integrationTestTimeout,
+  );
 });
 
 describe('runStatus (non-Git repository)', () => {
