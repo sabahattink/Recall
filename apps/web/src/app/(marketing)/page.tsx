@@ -4,7 +4,6 @@ import { HeroSection } from '@/components/marketing/hero-section';
 import { ProblemSection } from '@/components/marketing/problem-section';
 import { HowRecallWorksSection } from '@/components/marketing/how-recall-works-section';
 import { CommandBlock } from '@/components/marketing/command-block';
-import { FeatureCard } from '@/components/marketing/feature-card';
 
 const problemRows = [
   {
@@ -31,24 +30,6 @@ const problemRows = [
     label: 'Evidence paths',
     before: 'Not by default',
     after: 'Every claim traces back to source',
-  },
-];
-
-const steps = [
-  {
-    title: 'Scan',
-    description:
-      'Recall walks the repository deterministically and analyzes structure, workspaces, entry points, and conventions — no network access, no AI provider required.',
-  },
-  {
-    title: 'Rank',
-    description:
-      'For a given task, files are ranked with explainable, local signals: filename and symbol matches, import-graph proximity, and workspace locality.',
-  },
-  {
-    title: 'Generate',
-    description:
-      'Recall writes evidence-backed Markdown and JSON context into `.recall/`, ready to paste into or pipe to a coding agent.',
   },
 ];
 
@@ -137,37 +118,23 @@ export default function MarketingPage() {
         </div>
       </Section>
 
-      <Section aria-labelledby="how-it-works-heading">
-        <h2
-          id="how-it-works-heading"
-          className="text-2xl font-semibold tracking-tight text-foreground"
-        >
-          How it works
-        </h2>
-        <div className="mt-8 grid gap-8 sm:grid-cols-3">
-          {steps.map((step, index) => (
-            <div key={step.title}>
-              <span className="text-sm font-mono text-muted-foreground">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <h3 className="mt-2 text-sm font-semibold text-foreground">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {step.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
       <Section aria-labelledby="features-heading">
         <h2 id="features-heading" className="text-2xl font-semibold tracking-tight text-foreground">
           What Recall generates
         </h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="mt-8 divide-y divide-border">
           {features.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
+            <div
+              key={feature.title}
+              className="grid gap-x-8 gap-y-2 py-6 sm:grid-cols-[220px_1fr] sm:py-8"
+            >
+              <dt className="text-sm font-semibold text-foreground">{feature.title}</dt>
+              <dd className="text-sm leading-relaxed text-muted-foreground">
+                {feature.description}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
       </Section>
 
       <Section aria-labelledby="terminal-heading">

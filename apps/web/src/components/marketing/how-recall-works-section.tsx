@@ -1,5 +1,4 @@
 import { Fragment } from 'react';
-import { Check } from 'lucide-react';
 import { Section } from '@/components/ui/section';
 
 interface Step {
@@ -31,12 +30,10 @@ const steps: Step[] = [
   },
 ];
 
-const workflowOutput = [
-  'Ranked relevant files',
-  'Loaded architecture',
-  'Loaded conventions',
-  'Context ready',
-];
+// Reused verbatim from HeroTerminal and ProblemSection's "With Recall" card
+// — not new content, just referenced again at the point where it's actually
+// produced.
+const memoryCategories = ['Architecture', 'Conventions', 'Decisions', 'Risks', 'Technical debt'];
 
 /**
  * One equally-sized step in the flow. Real headings (h3) carry the
@@ -74,30 +71,36 @@ function StepConnector() {
   );
 }
 
-/** Matches HeroTerminal's visual treatment exactly (design-system.md §8: no fake chrome, no typing animation), constrained narrower to read as a compact confirmation rather than a second hero. */
-function WorkflowTerminal() {
+/**
+ * A borderless data-flow line, not another terminal: the step cards above
+ * already show the four *stages* of the process, so this deliberately
+ * avoids repeating that same "boxes + connectors" grammar, and avoids
+ * repeating the Hero's own `$ recall context` terminal a second time in the
+ * same visit. Instead it states the *transformation* as plain, precise
+ * typography — repository in, structured memory in the middle, coding
+ * agent out — closer to a type signature or a pipeline notation than a UI
+ * pattern. Every label is reused verbatim from elsewhere on the page; no
+ * new copy.
+ */
+function MemoryFlow() {
   return (
     <div
-      className="w-full max-w-xl rounded-md border border-border bg-code-background p-6 font-mono text-sm"
       role="img"
-      aria-label='Terminal output: recall context --task "Add password reset" reports ranked relevant files, loaded architecture, loaded conventions, and context ready.'
+      aria-label="Repository transforms into structured memory — architecture, conventions, decisions, risks, and technical debt — which becomes available to the coding agent. Context ready."
     >
-      <p aria-hidden className="text-foreground">
-        <span className="select-none text-muted-foreground">$ </span>
-        recall context \
+      <div
+        aria-hidden
+        className="flex flex-col gap-x-3 gap-y-2 font-mono text-sm sm:flex-row sm:flex-wrap sm:items-baseline"
+      >
+        <span className="text-foreground">Repository</span>
+        <span className="text-muted-foreground">→</span>
+        <span className="text-muted-foreground">{memoryCategories.join(' · ')}</span>
+        <span className="text-muted-foreground">→</span>
+        <span className="text-foreground">Coding agent</span>
+      </div>
+      <p aria-hidden className="mt-3 text-sm text-muted-foreground">
+        Context ready.
       </p>
-      <p aria-hidden className="pl-4 text-foreground">
-        --task &quot;Add password reset&quot;
-      </p>
-
-      <ul aria-hidden className="mt-5 flex flex-col gap-2">
-        {workflowOutput.map((line) => (
-          <li key={line} className="flex items-center gap-2 text-foreground">
-            <Check className="h-3.5 w-3.5 shrink-0 text-success" />
-            {line}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
@@ -126,7 +129,7 @@ export function HowRecallWorksSection() {
       </div>
 
       <div className="mt-10">
-        <WorkflowTerminal />
+        <MemoryFlow />
       </div>
     </Section>
   );
