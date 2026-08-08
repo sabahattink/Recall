@@ -3,3 +3,6 @@ packages:
   - 'packages/*'
 allowBuilds:
   esbuild: false
+  # Downloads the platform sentry-cli binary the Sentry webpack/turbopack
+  # build plugin shells out to for uploading source maps.
+  '@sentry/cli': true

@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 import { createMDX } from 'fumadocs-mdx/next';
 
@@ -16,4 +17,16 @@ const nextConfig: NextConfig = {
   env: {},
 };
 
-export default withMDX(nextConfig);
+export default withSentryConfig(withMDX(nextConfig), {
+  org: 'sabahattin-kalkan',
+  project: 'recall-web',
+  // Suppress build-plugin logs locally; keep them in CI for debuggability.
+  silent: !process.env.CI,
+  // Upload source maps for Next.js/React internals too, not just app code.
+  widenClientFileUpload: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});
