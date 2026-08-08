@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/sabahattin-kalkan/recall-web",
+      "type": "http"
+    }
+  }
+}

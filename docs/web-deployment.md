@@ -32,10 +32,15 @@ installs from the repository root (so workspace dependencies resolve) and builds
 
 ## Environment variables
 
-None are required for the initial release. `apps/web` has no server-side secrets and does not
-call any external API. If a future capability genuinely requires one (e.g. a self-hosted search
-provider), add it to `apps/web/.env.example` with a comment explaining why, and document it here
-before deployment.
+| Variable            | Required | Purpose                                                                                                                                                                                     |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SENTRY_AUTH_TOKEN` | Yes      | Build-time only. Lets the Sentry webpack/turbopack plugin upload source maps during `next build`. Never committed — set it as a Vercel project environment variable (Production + Preview). |
+
+`SENTRY_ORG` and `SENTRY_PROJECT` are not needed: both are hardcoded in `apps/web/next.config.ts`.
+
+If a future capability genuinely requires another variable (e.g. a self-hosted search provider),
+add it to `apps/web/.env.example` with a comment explaining why, and document it here before
+deployment.
 
 ## What is explicitly not done by this document
 

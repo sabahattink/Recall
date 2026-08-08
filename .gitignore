@@ -12,6 +12,7 @@ pnpm-debug.log*
 npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
+!.vscode/mcp.json
 .recall/cache/
 
 # Trying the CLI locally against the bundled fixtures should never create a diff.
