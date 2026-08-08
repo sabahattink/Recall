@@ -5,7 +5,11 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "inputs": ["src/**", "package.json", "tsconfig.json"]
+      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      // Only the Sentry build plugin (source-map upload) reads this; the
+      // token's value never changes build output, so it's passed through
+      // rather than hashed into the cache key.
+      "passThroughEnv": ["SENTRY_AUTH_TOKEN"]
     },
     "lint": {
       "dependsOn": ["^build"],
