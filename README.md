@@ -10,7 +10,7 @@ Recall scans a repository and generates persistent, evidence-backed context that
 [![license](https://img.shields.io/npm/l/recall-context.svg)](LICENSE)
 [![latest release](https://img.shields.io/github/v/release/sabahattink/Recall?include_prereleases&label=release)](https://github.com/sabahattink/Recall/releases)
 
-> **Alpha.** Recall is an early release. Commands, output format, and internals may still change between versions. See [Current scope](#current-scope) for what's supported today.
+> **Early public release.** Commands, output format, and internals may still change between versions. See [Current scope](#current-scope) for what's supported today.
 
 ## Quick start
 
@@ -29,7 +29,11 @@ npm install -g recall-context
 recall init
 ```
 
-The npm package is `recall-context`; the command it installs is `recall`.
+The npm package is `recall-context`; it installs the `recall` and `recall-context` commands, which invoke the same CLI.
+
+## Requirements
+
+- Node.js 22 or newer.
 
 ## What it generates
 
@@ -97,7 +101,7 @@ See [docs/cli-reference.md](docs/cli-reference.md) for every flag and exit code.
 
 - Local-first: everything runs on your machine, in your repository.
 - No account, sign-up, or API key required.
-- No telemetry.
+- The CLI sends no telemetry. The documentation website is a separate application with its own operational analytics.
 - No AI provider is required or called by default (see [docs/provider-interface.md](docs/provider-interface.md)).
 - Does not execute, import, or evaluate your project's source code or scripts.
 - Managed writes are restricted to `.recall/`, `.gitignore`, and any output path you explicitly pass.

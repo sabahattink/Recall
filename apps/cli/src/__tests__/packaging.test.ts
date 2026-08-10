@@ -28,7 +28,7 @@ interface PackResult {
  * real `npm pack` (exercising prepack's build+bundle+devDependency-stripping
  * pipeline), then installs the resulting tarball into a clean consumer
  * project outside the monorepo — the same way a real user would via
- * `npx recall-context init` — and drives the installed `recall` binary
+ * `npx recall-context init` — and drives the installed CLI binary
  * against a throwaway fixture repository.
  */
 describe('npm packaging (packed tarball, clean consumer install)', () => {
@@ -89,8 +89,20 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     expect(manifestText).not.toContain('workspace:');
   });
 
-  it('exposes an executable named exactly "recall"', () => {
-    expect(Object.keys(publishedManifest.bin as Record<string, string>)).toEqual(['recall']);
+  it('exposes the documented executables', () => {
+    expect(Object.keys(publishedManifest.bin as Record<string, string>)).toEqual([
+      'recall',
+      'recall-context',
+    ]);
+  });
+
+  it('runs the README npx command from the installed tarball', async () => {
+    const result = await execa('npx', ['--no-install', 'recall-context', '--version'], {
+      cwd: consumerDir,
+      reject: false,
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain(`recall/${publishedManifest.version}`);
   });
 
   it('the installed CLI version matches the packed package version', async () => {
@@ -140,7 +152,7 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     // Hard-coded to the version this release is expected to carry, not read
     // from package.json — the whole point of these tests is to fail loudly
     // if the on-disk version and the intended release version ever diverge.
-    const EXPECTED_VERSION = '0.2.0-alpha.1';
+    const EXPECTED_VERSION = '0.2.0';
 
     it('apps/cli/package.json version is exact', () => {
       const localManifest = JSON.parse(

@@ -58,8 +58,9 @@ const features = [
       'Generated Markdown wraps Recall’s content in markers; anything you write outside them survives every update.',
   },
   {
-    title: 'No telemetry',
-    description: 'Recall does not call home. Everything runs on your machine, in your repository.',
+    title: 'No CLI telemetry',
+    description:
+      'The Recall CLI does not call home. The documentation website is a separate application.',
   },
 ];
 

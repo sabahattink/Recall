@@ -4,7 +4,7 @@ This document tracks what is deliberately out of scope for the current release a
 
 ## Release status
 
-Recall is published to npm as [`recall-context`](https://www.npmjs.com/package/recall-context) and is currently **alpha**: commands, output format, and internals may still change between versions. It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` (or `npm install -g recall-context`) needs nothing beyond what's declared in its own `dependencies`. See the [README's quick start](../README.md#quick-start) for installation.
+The repository's current CLI release candidate is **0.2.0**. The npm `latest` tag must be advanced to 0.2.0 before public launch. Commands, output format, and internals may still change in future releases. It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` (or `npm install -g recall-context`) needs nothing beyond what's declared in its own `dependencies`. See the [README's quick start](../README.md#quick-start) for installation.
 
 The repository targets `main` as its permanent default branch: `.github/workflows/ci.yml`, `release.yml`, and `.changeset/config.json` all target `main` only.
 

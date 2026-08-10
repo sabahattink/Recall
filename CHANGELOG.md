@@ -2,7 +2,7 @@
 
 Release notes for the published `recall-context` npm package. Internal `@recall-ai/*` workspace packages are never published and are not tracked here.
 
-## 0.2.0-alpha.1
+## 0.2.0
 
 ### Highlights
 
@@ -25,9 +25,9 @@ recall context --task "Fix password reset controller" --stdout
 - New snapshot fields are additive and optional.
 - Running `recall update` refreshes older snapshots with richer metadata.
 
-### Alpha note
+### Release note
 
-Ranking weights are heuristic and may change. Generated output and JSON fields may evolve before stable release. Do not make unsupported performance or accuracy claims based on this release.
+Ranking weights are heuristic. Generated output and JSON fields may evolve in future releases; this release makes no unsupported performance or accuracy claims.
 
 ## 0.1.0
 

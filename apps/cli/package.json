@@ -1,6 +1,6 @@
 {
   "name": "recall-context",
-  "version": "0.2.0-alpha.1",
+  "version": "0.2.0",
   "description": "Persistent, evidence-backed codebase context for AI coding agents.",
   "license": "MIT",
   "type": "module",
@@ -25,7 +25,8 @@
     "developer-tools"
   ],
   "bin": {
-    "recall": "dist/index.js"
+    "recall": "dist/index.js",
+    "recall-context": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [
