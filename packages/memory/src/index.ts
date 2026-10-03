@@ -1,4 +1,5 @@
 export * from './safe-fs.js';
+export * from './config.js';
 export * from './markers.js';
 export * from './manifest.js';
 export * from './snapshots.js';
