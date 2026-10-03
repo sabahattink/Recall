@@ -1,5 +1,6 @@
 import { scanRepository, type ScanOptions as AnalyzerScanOptions } from '@recall-ai/analyzers';
 import { GitAdapter } from '@recall-ai/git';
+import { readRecallConfig } from '@recall-ai/memory';
 import type { RepositorySnapshot } from '@recall-ai/schemas';
 
 export interface RunScanOptions {
@@ -21,9 +22,10 @@ export interface RunScanResult {
  */
 export async function runScan(root: string, options: RunScanOptions = {}): Promise<RunScanResult> {
   const git = new GitAdapter(root);
-  const [gitMetadata, gitTrackedFiles] = await Promise.all([
+  const [gitMetadata, gitTrackedFiles, analysisConfig] = await Promise.all([
     git.collectMetadata(),
     git.listTrackedFiles(),
+    readRecallConfig(root),
   ]);
 
   const analyzerOptions: AnalyzerScanOptions = {
@@ -31,6 +33,7 @@ export async function runScan(root: string, options: RunScanOptions = {}): Promi
     maxFileSizeBytes: options.maxFileSizeBytes,
     gitMetadata,
     gitTrackedFiles: gitTrackedFiles.length > 0 ? gitTrackedFiles : null,
+    analysisConfig,
     signal: options.signal,
   };
 
