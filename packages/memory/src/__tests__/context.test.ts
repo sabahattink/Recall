@@ -20,6 +20,50 @@ describe('generateContext', () => {
     expect(first.content).toBe(second.content);
   });
 
+  it('renders evidence-backed architecture for a single-workspace framework project', () => {
+    const snapshot = makeSnapshot({
+      projectProfile: {
+        language: 'TypeScript',
+        applicationType: 'api-service',
+        repositoryType: 'single-package',
+        frameworks: ['nestjs'],
+      },
+      frameworks: [
+        {
+          name: 'nestjs',
+          workspace: '.',
+          confidence: 'high',
+          evidence: [{ path: 'package.json', reason: 'NestJS dependency detected' }],
+        },
+      ],
+      entryPoints: [
+        {
+          path: 'src/main.ts',
+          workspace: '.',
+          kind: 'framework-convention',
+          evidence: [{ path: 'src/main.ts', reason: 'NestJS bootstrap convention' }],
+        },
+      ],
+      internalEdges: [
+        {
+          from: 'src/main.ts',
+          to: 'src/app.module.ts',
+          kind: 'import',
+          dependencyType: 'runtime',
+          evidence: [{ path: 'src/main.ts', reason: 'Static import' }],
+        },
+      ],
+    });
+
+    const { content } = generateContext(snapshot);
+
+    expect(content).toContain('Project shape: TypeScript API service');
+    expect(content).toContain('Frameworks: nestjs');
+    expect(content).toContain('Entry point: `src/main.ts`');
+    expect(content).toContain('`src/main.ts` → `src/app.module.ts`');
+    expect(content).not.toContain('## 3. Architecture\n\n_None detected._');
+  });
+
   it('surfaces files matching task keywords ahead of generic entry points', () => {
     const snapshot = makeSnapshot({
       files: [
