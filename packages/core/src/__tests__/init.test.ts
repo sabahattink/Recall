@@ -8,6 +8,7 @@ import {
   initGitRepo,
   integrationTestTimeout,
   removeTempDir,
+  writeTree,
 } from '@recall-ai/test-fixtures';
 import { runInit } from '../use-cases/init.js';
 
@@ -50,6 +51,36 @@ describe('runInit', () => {
       ]) {
         await expect(access(join(dir, '.recall', file))).resolves.toBeUndefined();
       }
+    },
+    integrationTestTimeout,
+  );
+
+  it(
+    'applies .recall/config.json include overrides to risk and feature analysis',
+    async () => {
+      await writeTree(dir, {
+        '.recall/config.json': JSON.stringify({
+          ignore: [],
+          include: ['examples/reference/**'],
+        }),
+        'examples/reference/reference.controller.ts': 'export class ReferenceController {}\n',
+        'examples/reference/huge.ts': 'x'.repeat(110 * 1024),
+      });
+
+      const result = await runInit({ path: dir, toolVersion: '0.1.0' });
+      expect(
+        result.snapshot.risks.some(
+          (risk) =>
+            risk.category === 'large-file' &&
+            risk.evidence.some((evidence) => evidence.path === 'examples/reference/huge.ts'),
+        ),
+      ).toBe(true);
+
+      const features = await readFile(join(dir, '.recall', 'features.md'), 'utf8');
+      expect(features).toContain('reference');
+
+      const config = await readFile(join(dir, '.recall', 'config.json'), 'utf8');
+      expect(JSON.parse(config).include).toEqual(['examples/reference/**']);
     },
     integrationTestTimeout,
   );
