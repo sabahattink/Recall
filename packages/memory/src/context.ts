@@ -143,7 +143,46 @@ function renderContext(
   const runtimeEdges = snapshot.internalEdges
     .filter((e) => e.kind === 'workspace' && e.dependencyType !== 'development')
     .slice(0, cap);
-  sections.push(bulletList(runtimeEdges.map((e) => `\`${e.from}\` → \`${e.to}\``)));
+
+  const architectureLines = runtimeEdges.map((e) => `\`${e.from}\` → \`${e.to}\``);
+
+  // A single-package repository has no workspace-to-workspace edges by
+  // definition. In that case, render structure from evidence already present
+  // in the snapshot instead of reporting "None detected."
+  if (architectureLines.length === 0) {
+    if (snapshot.projectProfile) {
+      architectureLines.push(
+        `Project shape: ${formatProjectProfileInline(snapshot.projectProfile)}`,
+      );
+    }
+
+    const frameworks = [...new Set(snapshot.frameworks.map((f) => f.name))];
+    if (frameworks.length > 0) {
+      architectureLines.push(`Frameworks: ${frameworks.join(', ')}`);
+    }
+
+    const sourceEntryPoints = snapshot.entryPoints
+      .map((entry) => entry.sourcePath ?? entry.path)
+      .filter((path) => path !== 'package.json' && !GENERATED_PATH_PATTERN.test(path));
+    const uniqueEntryPoints = [...new Set(sourceEntryPoints)].slice(0, cap);
+    architectureLines.push(...uniqueEntryPoints.map((path) => `Entry point: \`${path}\``));
+
+    const entryPointSet = new Set(uniqueEntryPoints);
+    const entryImportEdges = snapshot.internalEdges
+      .filter(
+        (edge) =>
+          edge.kind === 'import' &&
+          edge.dependencyType !== 'development' &&
+          entryPointSet.has(edge.from),
+      )
+      .slice(0, cap);
+
+    architectureLines.push(
+      ...entryImportEdges.map((edge) => `\`${edge.from}\` → \`${edge.to}\``),
+    );
+  }
+
+  sections.push(bulletList(architectureLines.slice(0, cap)));
   const devEdges = snapshot.internalEdges.filter(
     (e) => e.kind === 'workspace' && e.dependencyType === 'development',
   );
