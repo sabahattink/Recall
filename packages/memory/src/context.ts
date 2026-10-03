@@ -2,6 +2,7 @@ import type { GitMetadata, RepositorySnapshot } from '@recall-ai/schemas';
 import { estimateTokens } from './token-estimate.js';
 import { bulletList } from './markdown/template.js';
 import { rankFilesForTask, type RankedFile, type RankingReason } from './task-ranking.js';
+import { formatEntryPointKind } from './entry-point-format.js';
 
 export interface ContextOptions {
   task?: string;
@@ -198,7 +199,11 @@ function renderContext(
 
   sections.push('\n## 5. Primary entry points\n');
   sections.push(
-    bulletList(snapshot.entryPoints.slice(0, cap).map((e) => `\`${e.path}\` (${e.kind})`)),
+    bulletList(
+      snapshot.entryPoints
+        .slice(0, cap)
+        .map((e) => `\`${e.path}\` (${formatEntryPointKind(e)})`),
+    ),
   );
 
   sections.push('\n## 6. Important commands\n');
