@@ -119,19 +119,60 @@ function detectLargeFiles(context: RiskContext): RiskFinding[] {
 }
 
 function detectDeepCoupling(context: RiskContext): RiskFinding[] {
-  return context.workspaces
-    .filter((w) => w.info.dependsOn.length >= DEEP_COUPLING_THRESHOLD)
-    .map((w) => ({
-      category: 'deep-coupling' as const,
-      severity: 'medium' as const,
-      description: `Workspace "${w.info.name}" depends on ${w.info.dependsOn.length} other internal packages, which may indicate deep coupling.`,
-      evidence: [
-        {
-          path: join(w.info.path, 'package.json').split('\\').join('/'),
-          reason: `depends on: ${w.info.dependsOn.join(', ')}`,
-        },
-      ],
-    }));
+  const workspaceEdges = context.internalEdges.filter((edge) => edge.kind === 'workspace');
+
+  return context.workspaces.flatMap((workspace) => {
+    const outgoing = workspaceEdges.filter((edge) => edge.from === workspace.info.path);
+    const productionTargets = [
+      ...new Set(
+        outgoing
+          .filter(
+            (edge) =>
+              edge.dependencyType === undefined ||
+              edge.dependencyType === 'runtime' ||
+              edge.dependencyType === 'optional',
+          )
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+    const developmentTargets = [
+      ...new Set(
+        outgoing
+          .filter((edge) => edge.dependencyType === 'development')
+          .map((edge) => edge.to),
+      ),
+    ].sort();
+
+    if (productionTargets.length < DEEP_COUPLING_THRESHOLD) return [];
+
+    const packageJsonPath = join(workspace.info.path, 'package.json').split('\\').join('/');
+    const devSuffix =
+      developmentTargets.length > 0
+        ? ` It also has ${developmentTargets.length} development-only internal dependenc${developmentTargets.length === 1 ? 'y' : 'ies'}, which are not counted toward this risk.`
+        : '';
+
+    return [
+      {
+        category: 'deep-coupling' as const,
+        severity: 'medium' as const,
+        description: `Workspace "${workspace.info.name}" has ${productionTargets.length} production internal dependencies, which may indicate deep coupling.${devSuffix}`,
+        evidence: [
+          {
+            path: packageJsonPath,
+            reason: `production dependencies: ${productionTargets.join(', ')}`,
+          },
+          ...(developmentTargets.length > 0
+            ? [
+                {
+                  path: packageJsonPath,
+                  reason: `development-only dependencies (not counted): ${developmentTargets.join(', ')}`,
+                },
+              ]
+            : []),
+        ],
+      },
+    ];
+  });
 }
 
 function detectCommittedEnvFiles(context: RiskContext): RiskFinding[] {
