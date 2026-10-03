@@ -152,7 +152,7 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     // Hard-coded to the version this release is expected to carry, not read
     // from package.json — the whole point of these tests is to fail loudly
     // if the on-disk version and the intended release version ever diverge.
-    const EXPECTED_VERSION = '0.2.0';
+    const EXPECTED_VERSION = '0.2.1';
 
     it('apps/cli/package.json version is exact', () => {
       const localManifest = JSON.parse(
