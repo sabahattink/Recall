@@ -4,7 +4,7 @@ This document tracks what is deliberately out of scope for the current release a
 
 ## Release status
 
-The repository's current CLI release candidate is **0.2.0**. The npm `latest` tag must be advanced to 0.2.0 before public launch. Commands, output format, and internals may still change in future releases. It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` (or `npm install -g recall-context`) needs nothing beyond what's declared in its own `dependencies`. See the [README's quick start](../README.md#quick-start) for installation.
+The current published CLI is **0.2.1**. Commands, output format, and internals may still change in future releases. It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` (or `npm install -g recall-context`) needs nothing beyond what's declared in its own `dependencies`. See the [README's quick start](../README.md#quick-start) for installation.
 
 The repository targets `main` as its permanent default branch: `.github/workflows/ci.yml`, `release.yml`, and `.changeset/config.json` all target `main` only.
 
@@ -24,11 +24,24 @@ In order of what was deprioritized when scope had to be controlled:
 6. **Backup pruning.** `.recall/backups/` accumulates timestamped backups before every overwrite; there is no automatic pruning or retention policy yet.
 7. **Content-hash-based change detection.** `recall update`'s file-changed detection compares file size between snapshots rather than hashing content, so a same-size edit may not be flagged as "changed" (additions/removals of files are always detected).
 
+## Current hardening phase
+
+Phase 0 focuses on correctness and noise before deeper code intelligence lands: broader/correct Next.js route detection, configurable feature/glossary/risk analysis scope, source-aware and deduplicated entry points, lower-noise glossary output, production-only deep-coupling risk counts, and packaging tests that do not hang when the npm registry is unavailable.
+
+This phase deliberately does **not** change the snapshot schema. Existing `1.0.0` snapshots remain readable.
+
 ## Planned next
 
-- A content-hash option for more precise change detection in `recall update`, opt-in given the added I/O cost.
-- Broader framework detection within the Node.js ecosystem (e.g. Remix, NestJS microservices patterns, tRPC).
-- A documented extension point for additional risk rules without modifying `packages/analyzers` core.
+The product direction is evidence-anchored, staleness-aware repository memory that agents can read and write over MCP while remaining deterministic and local-first. The next implementation phases are:
+
+1. Parser-backed TypeScript/JavaScript code intelligence with content hashes, symbol anchors, a file dependency graph, test/source mapping, bounded Git co-change data, and incremental cache.
+2. Task ranking v2 using symbol/path/graph/centrality/co-change/test signals with explicit explanations and context budgets/formats.
+3. A deterministic evaluation harness with pinned OSS repositories and recall@5/recall@10/MRR baselines before ranking improvements are claimed.
+4. `recall mcp` as the primary agent-facing distribution surface.
+5. Evidence-anchored writable memory with freshness/stale/orphaned verification.
+6. Agent sync and freshness hooks for common coding-agent instruction files and CI.
+
+Additional language ecosystems, LLM providers, editor extensions, and website work remain out of scope for these phases.
 
 ## Contributing to the roadmap
 
