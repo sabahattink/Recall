@@ -63,7 +63,8 @@ describe('detectRisks', () => {
     expect(risks.some((r) => r.category === 'large-file')).toBe(true);
   });
 
-  it('flags deeply coupled workspaces', async () => {
+  it('flags deeply coupled workspaces from production internal dependencies only', async () => {
+    const targets = ['a', 'b', 'c', 'd', 'e'];
     const context = baseContext({
       workspaces: [
         {
@@ -73,7 +74,7 @@ describe('detectRisks', () => {
             kind: 'app',
             version: '1.0.0',
             private: true,
-            dependsOn: ['a', 'b', 'c', 'd', 'e'],
+            dependsOn: [...targets, 'test-helper'],
             main: null,
             scripts: {},
           },
@@ -81,9 +82,58 @@ describe('detectRisks', () => {
           packageJson: {},
         },
       ],
+      internalEdges: [
+        ...targets.map((target) => ({
+          from: 'apps/app',
+          to: 'packages/' + target,
+          kind: 'workspace' as const,
+          dependencyType: 'runtime' as const,
+          evidence: [],
+        })),
+        {
+          from: 'apps/app',
+          to: 'packages/test-helper',
+          kind: 'workspace',
+          dependencyType: 'development',
+          evidence: [],
+        },
+      ],
     });
     const risks = await detectRisks(context);
-    expect(risks.some((r) => r.category === 'deep-coupling')).toBe(true);
+    const coupling = risks.find((r) => r.category === 'deep-coupling');
+    expect(coupling).toBeDefined();
+    expect(coupling?.description).toContain('5 production internal dependencies');
+    expect(coupling?.description).toContain('1 development-only');
+  });
+
+  it('does not treat devDependency-only workspace edges as deep coupling', async () => {
+    const context = baseContext({
+      workspaces: [
+        {
+          info: {
+            name: 'app',
+            path: 'apps/app',
+            kind: 'app',
+            version: '1.0.0',
+            private: true,
+            dependsOn: ['a', 'b', 'c', 'd', 'e', 'f'],
+            main: null,
+            scripts: {},
+          },
+          absolutePath: '/repo/apps/app',
+          packageJson: {},
+        },
+      ],
+      internalEdges: ['a', 'b', 'c', 'd', 'e', 'f'].map((target) => ({
+        from: 'apps/app',
+        to: 'packages/' + target,
+        kind: 'workspace' as const,
+        dependencyType: 'development' as const,
+        evidence: [],
+      })),
+    });
+    const risks = await detectRisks(context);
+    expect(risks.some((r) => r.category === 'deep-coupling')).toBe(false);
   });
 
   it('flags committed .env files but not .env.example', async () => {
