@@ -154,9 +154,10 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     if (fixtureDir) await removeTempDir(fixtureDir);
   });
 
-  function requireConsumer(skip: (reason?: string) => never): asserts publishedManifest {
+  function requireConsumer(skip: (reason?: string) => void): Record<string, unknown> {
     if (consumerUnavailableReason) skip(consumerUnavailableReason);
     if (!publishedManifest) throw new Error('consumer install did not produce a package manifest');
+    return publishedManifest;
   }
 
   function recallBin(...args: string[]) {
@@ -174,33 +175,33 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
   });
 
   it('contains no workspace:* dependencies in the packed manifest', ({ skip }) => {
-    requireConsumer(skip);
-    expect(JSON.stringify(publishedManifest)).not.toContain('workspace:');
+    const manifest = requireConsumer(skip);
+    expect(JSON.stringify(manifest)).not.toContain('workspace:');
   });
 
   it('exposes the documented executables', ({ skip }) => {
-    requireConsumer(skip);
-    expect(Object.keys(publishedManifest.bin as Record<string, string>)).toEqual([
+    const manifest = requireConsumer(skip);
+    expect(Object.keys(manifest.bin as Record<string, string>)).toEqual([
       'recall',
       'recall-context',
     ]);
   });
 
   it('runs the README npx command from the installed tarball', async ({ skip }) => {
-    requireConsumer(skip);
+    const manifest = requireConsumer(skip);
     const result = await execa('npx', ['--no-install', 'recall-context', '--version'], {
       cwd: consumerDir,
       reject: false,
     });
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain(`recall/${publishedManifest.version}`);
+    expect(result.stdout).toContain(`recall/${manifest.version}`);
   });
 
   it('the installed CLI version matches the packed package version', async ({ skip }) => {
-    requireConsumer(skip);
+    const manifest = requireConsumer(skip);
     const result = await recallBin('--version');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain(`recall/${publishedManifest.version}`);
+    expect(result.stdout).toContain(`recall/${manifest.version}`);
   });
 
   it('runs --help from the installed tarball with no workspace resolution', async ({ skip }) => {
@@ -236,8 +237,8 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
   it('reports a consistent Node.js 22+ requirement across package metadata and doctor output', async ({
     skip,
   }) => {
-    requireConsumer(skip);
-    expect((publishedManifest.engines as Record<string, string>).node).toBe('>=22');
+    const manifest = requireConsumer(skip);
+    expect((manifest.engines as Record<string, string>).node).toBe('>=22');
 
     const doctor = await recallBin('doctor', '--path', fixtureDir);
     const runtimeLine = doctor.stdout
@@ -253,8 +254,8 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     });
 
     it('the packed manifest version matches the source package version', ({ skip }) => {
-      requireConsumer(skip);
-      expect(publishedManifest.version).toBe(EXPECTED_VERSION);
+      const manifest = requireConsumer(skip);
+      expect(manifest.version).toBe(EXPECTED_VERSION);
     });
 
     it('the tarball filename matches the source package version', () => {
@@ -268,14 +269,14 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     });
 
     it('the publishable manifest has no provenance=true left in publishConfig', ({ skip }) => {
-      requireConsumer(skip);
-      const publishConfig = publishedManifest.publishConfig as Record<string, unknown> | undefined;
+      const manifest = requireConsumer(skip);
+      const publishConfig = manifest.publishConfig as Record<string, unknown> | undefined;
       expect(publishConfig?.provenance).not.toBe(true);
     });
 
     it('the bin target resolves to a real, executable file inside the tarball', ({ skip }) => {
-      requireConsumer(skip);
-      const bin = publishedManifest.bin as Record<string, string>;
+      const manifest = requireConsumer(skip);
+      const bin = manifest.bin as Record<string, string>;
       const binTarget = join(consumerDir, 'node_modules', 'recall-context', bin.recall as string);
       expect(existsSync(binTarget)).toBe(true);
       expect(packedFiles).toContain(bin.recall);
