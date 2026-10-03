@@ -1,5 +1,10 @@
 import { basename, join } from 'node:path';
-import type { GitMetadata, RepositorySnapshot } from '@recall-ai/schemas';
+import {
+  shouldAnalyzePath,
+  type GitMetadata,
+  type RecallConfig,
+  type RepositorySnapshot,
+} from '@recall-ai/schemas';
 import { walkRepository } from './file-walk.js';
 import { detectEcosystem } from './package-manager.js';
 import { discoverWorkspaces } from './workspaces.js';
@@ -28,6 +33,7 @@ export interface ScanOptions {
   gitMetadata?: GitMetadata | null;
   /** Result of `git ls-files`, used only for the generated-file-tracking risk rule. */
   gitTrackedFiles?: string[] | null;
+  analysisConfig?: RecallConfig;
   signal?: AbortSignal;
 }
 
@@ -55,7 +61,7 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
   const files = classifyFiles(walkedFiles, workspaces);
   const frameworks = await detectFrameworks(root, workspaces);
   const rawEntryPoints = await detectEntryPoints(workspaces, frameworks);
-  const entryPoints = resolveEntryPointSources(rawEntryPoints, files);
+  const entryPoints = await resolveEntryPointSources(root, rawEntryPoints, files);
   const projectProfile = detectProjectProfile(ecosystem, entryPoints, frameworks);
   const dependencies = collectDependencies(workspaces);
   const { edges: internalEdges, symbolsByPath } = await buildImportGraph(
@@ -78,16 +84,51 @@ export async function scanRepository(root: string, options: ScanOptions = {}): P
 
   throwIfAborted(options.signal);
 
+  const fileKinds = new Map(filesWithSymbols.map((file) => [file.path, file.kind]));
+  const analysisFiles = walkedFiles.filter((file) =>
+    shouldAnalyzePath(file.path, options.analysisConfig, fileKinds.get(file.path)),
+  );
+  const includedWorkspacePaths = new Set(
+    workspaces
+      .filter((workspace) =>
+        shouldAnalyzePath(
+          workspace.info.path === '.' ? 'package.json' : workspace.info.path + '/package.json',
+          options.analysisConfig,
+        ),
+      )
+      .map((workspace) => workspace.info.path),
+  );
+  const analysisWorkspaces = workspaces.filter((workspace) =>
+    includedWorkspacePaths.has(workspace.info.path),
+  );
+  const analysisDependencies = dependencies.filter(
+    (dependency) =>
+      dependency.workspace === null || includedWorkspacePaths.has(dependency.workspace),
+  );
+  const analysisInternalEdges = internalEdges.filter((edge) => {
+    if (edge.kind === 'workspace') {
+      return includedWorkspacePaths.has(edge.from) && includedWorkspacePaths.has(edge.to);
+    }
+    const toPath = includedWorkspacePaths.has(edge.to) ? edge.to + '/package.json' : edge.to;
+    return (
+      shouldAnalyzePath(edge.from, options.analysisConfig, fileKinds.get(edge.from)) &&
+      shouldAnalyzePath(toPath, options.analysisConfig, fileKinds.get(edge.to))
+    );
+  });
+  const analysisTesting = detectTesting(analysisFiles, analysisDependencies);
+
   const risks = await detectRisks({
     root,
-    files: walkedFiles,
-    workspaces,
-    internalEdges,
+    files: analysisFiles,
+    workspaces: analysisWorkspaces,
+    internalEdges: analysisInternalEdges,
     ecosystem,
-    dependencies,
-    dockerFiles: docker.files,
-    testFileCount: testing.testFiles.length,
-    gitTrackedFiles: options.gitTrackedFiles ?? null,
+    dependencies: analysisDependencies,
+    dockerFiles: docker.files.filter((path) => shouldAnalyzePath(path, options.analysisConfig)),
+    testFileCount: analysisTesting.testFiles.length,
+    gitTrackedFiles:
+      options.gitTrackedFiles?.filter((path) => shouldAnalyzePath(path, options.analysisConfig)) ??
+      null,
   });
 
   const generatedFiles = filesWithSymbols.filter((f) => f.kind === 'generated').map((f) => f.path);
