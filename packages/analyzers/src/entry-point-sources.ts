@@ -87,18 +87,25 @@ async function resolveOneEntryPoint(
 
   // Fallback for conventional compiler output when tsconfig is absent or
   // does not declare outDir.
+  let conventionalSourceRoot: string | null = null;
   if (GENERATED_FILE_PATTERN.test(runtimePath)) {
     const segments = runtimePath.split('/');
     const generatedIndex = segments.findIndex((segment) => GENERATED_DIR_NAMES.has(segment));
     if (generatedIndex >= 0) {
       const relativeStem = stripExtension(segments.slice(generatedIndex + 1).join('/'));
-      if (relativeStem) candidateStems.push(joinPosix(sourceRoot, relativeStem));
+      const generatedPrefix = segments.slice(0, generatedIndex).join('/');
+      conventionalSourceRoot =
+        entry.workspace === null ? joinPosix(generatedPrefix, 'src') : sourceRoot;
+      if (relativeStem) candidateStems.push(joinPosix(conventionalSourceRoot, relativeStem));
     }
   }
 
   // Common CLI/library convention: package.json points at dist/<name>.js but
   // the editable entry surface is src/index.ts.
   candidateStems.push(joinPosix(sourceRoot, 'index'));
+  if (conventionalSourceRoot && conventionalSourceRoot !== sourceRoot) {
+    candidateStems.push(joinPosix(conventionalSourceRoot, 'index'));
+  }
 
   for (const stem of [...new Set(candidateStems)]) {
     for (const candidate of sourceCandidatesForStem(stem)) {
