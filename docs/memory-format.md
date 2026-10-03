@@ -7,6 +7,7 @@ This document describes the on-disk format Recall creates and maintains in a tar
 ```
 .recall/
 ├── manifest.json
+├── config.json               (optional, human-authored analysis scope)
 ├── architecture.md
 ├── conventions.md
 ├── decisions.md
@@ -25,6 +26,22 @@ This document describes the on-disk format Recall creates and maintains in a tar
 ```
 
 Everything except `cache/` is intended to be committed to Git.
+
+
+## `config.json`
+
+`.recall/config.json` is optional and human-authored. Recall reads it but never creates, rewrites, or removes it. It scopes the analyses that intentionally summarize repository meaning — feature detection, glossary extraction, and risk analysis — without hiding files from the normalized snapshot.
+
+```json
+{
+  "ignore": ["src/legacy/**", "examples/**"],
+  "include": ["examples/reference/**"]
+}
+```
+
+Both fields are arrays of repository-relative glob patterns. `include` wins over both Recall's default analysis exclusions and user `ignore` patterns. By default, Recall excludes test-fixture directories, examples, `__fixtures__`, `fixtures/`, `__mocks__`, `generated/`, and vendored directories from feature/glossary/risk analysis. Conventional compiler/build output and other hard scanner exclusions that never enter the snapshot cannot be re-included with this file.
+
+A malformed config is ignored and Recall falls back to its deterministic defaults. The config is not part of the snapshot schema, so adding it does not change `schemaVersion`.
 
 ## `manifest.json`
 
