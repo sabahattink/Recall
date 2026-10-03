@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import type { RepositorySnapshot } from '@recall-ai/schemas';
-import type { ManifestFiles } from '@recall-ai/schemas';
+import type { ManifestFiles, RecallConfig, RepositorySnapshot } from '@recall-ai/schemas';
 import { upsertGeneratedSection } from './markers.js';
+import { readRecallConfig } from './config.js';
 import { readFileIfExists, atomicWriteFile, backupIfExists, RECALL_DIR_NAME } from './safe-fs.js';
 import { architectureTemplate, generateArchitectureBody } from './markdown/architecture.js';
 import { conventionsTemplate, generateConventionsBody } from './markdown/conventions.js';
@@ -15,15 +15,18 @@ export type MemoryFileKey = keyof ManifestFiles;
 
 const GENERATORS: Record<
   MemoryFileKey,
-  { body: (snapshot: RepositorySnapshot) => string; template: () => (section: string) => string }
+  {
+    body: (snapshot: RepositorySnapshot, config: RecallConfig) => string;
+    template: () => (section: string) => string;
+  }
 > = {
-  architecture: { body: generateArchitectureBody, template: architectureTemplate },
-  conventions: { body: generateConventionsBody, template: conventionsTemplate },
-  decisions: { body: generateDecisionsBody, template: decisionsTemplate },
-  features: { body: generateFeaturesBody, template: featuresTemplate },
-  glossary: { body: generateGlossaryBody, template: glossaryTemplate },
-  risks: { body: generateRisksBody, template: risksTemplate },
-  technicalDebt: { body: generateTechnicalDebtBody, template: technicalDebtTemplate },
+  architecture: { body: (snapshot) => generateArchitectureBody(snapshot), template: architectureTemplate },
+  conventions: { body: (snapshot) => generateConventionsBody(snapshot), template: conventionsTemplate },
+  decisions: { body: (snapshot) => generateDecisionsBody(snapshot), template: decisionsTemplate },
+  features: { body: (snapshot, config) => generateFeaturesBody(snapshot, config), template: featuresTemplate },
+  glossary: { body: (snapshot, config) => generateGlossaryBody(snapshot, config), template: glossaryTemplate },
+  risks: { body: (snapshot) => generateRisksBody(snapshot), template: risksTemplate },
+  technicalDebt: { body: (snapshot) => generateTechnicalDebtBody(snapshot), template: technicalDebtTemplate },
 };
 
 export const MEMORY_FILE_NAMES: ManifestFiles = {
@@ -50,6 +53,7 @@ export async function computeMemoryFileUpdates(
   snapshot: RepositorySnapshot,
 ): Promise<MemoryFileUpdate[]> {
   const recallDir = join(root, RECALL_DIR_NAME);
+  const config = await readRecallConfig(root);
   const updates: MemoryFileUpdate[] = [];
   for (const key of Object.keys(GENERATORS) as MemoryFileKey[]) {
     const fileName = MEMORY_FILE_NAMES[key];
@@ -58,7 +62,7 @@ export async function computeMemoryFileUpdates(
     const generator = GENERATORS[key];
     const { content, changed } = upsertGeneratedSection(
       existingContent,
-      generator.body(snapshot),
+      generator.body(snapshot, config),
       generator.template(),
     );
     updates.push({ key, fileName, path, existingContent, nextContent: content, changed });
