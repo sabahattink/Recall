@@ -8,3 +8,4 @@ export * from './fixtures/nestjs.js';
 export * from './fixtures/nextjs.js';
 export * from './fixtures/pnpm-monorepo.js';
 export * from './fixtures/task-ranking.js';
+export * from './fixtures/phase-zero.js';

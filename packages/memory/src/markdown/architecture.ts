@@ -1,5 +1,6 @@
 import type { RepositorySnapshot } from '@recall-ai/schemas';
 import { bulletList, defaultTemplate, evidenceList } from './template.js';
+import { formatEntryPointKind } from '../entry-point-format.js';
 
 export function architectureTemplate(): (section: string) => string {
   return defaultTemplate(
@@ -43,7 +44,7 @@ export function generateArchitectureBody(snapshot: RepositorySnapshot): string {
     bulletList(
       snapshot.entryPoints.map((e) => {
         const ev = evidenceList(e.evidence);
-        return `\`${e.path}\` (${e.kind})${ev ? `\n${ev}` : ''}`;
+        return `\`${e.path}\` (${formatEntryPointKind(e)})${ev ? `\n${ev}` : ''}`;
       }),
     ),
   );

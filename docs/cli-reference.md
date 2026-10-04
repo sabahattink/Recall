@@ -14,6 +14,22 @@ These apply to every command:
 
 `recall --help`, `recall --version`, and `recall <command> --help` are always available.
 
+
+### Analysis scope configuration
+
+Recall optionally reads `.recall/config.json` when scanning or regenerating memory:
+
+```json
+{
+  "ignore": ["src/legacy/**"],
+  "include": ["examples/reference/**"]
+}
+```
+
+`ignore` and `include` are repository-relative glob arrays. They scope feature detection, glossary extraction, and risk analysis; they do not remove ordinary scanned files from the snapshot. Explicit `include` patterns win over Recall's default analysis-noise exclusions and user `ignore` patterns. The defaults omit test fixtures, examples, mocks, generated directories, and vendored code from those analyses.
+
+Some directories are scanner-level exclusions for correctness/performance (`node_modules`, `.git`, `.recall`, and conventional build/cache output). Because those files never enter the scan, `include` cannot opt them back in. Malformed config falls back to defaults. Recall never rewrites `config.json`.
+
 ## Output and exit-code conventions
 
 - stdout carries successful command output only (human text, or a single JSON document in `--json` mode).

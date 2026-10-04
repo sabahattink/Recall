@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  buildAnalysisNoiseFixture,
   buildNestJsFixture,
   buildNextJsFixture,
   buildPnpmMonorepoFixture,
@@ -70,6 +71,34 @@ describe('scanRepository', () => {
     const importEdges = snapshot.internalEdges.filter((e) => e.kind === 'import');
     expect(
       importEdges.some((e) => e.from === 'apps/api/src/index.ts' && e.to === 'packages/shared'),
+    ).toBe(true);
+  });
+
+
+  it('excludes analysis-noise directories from risks by default and allows explicit includes', async () => {
+    await buildAnalysisNoiseFixture(dir);
+
+    const defaultScan = await scanRepository(dir);
+    expect(defaultScan.snapshot.files.some((file) => file.path === 'examples/reference/huge.ts')).toBe(
+      true,
+    );
+    expect(
+      defaultScan.snapshot.risks.some(
+        (risk) =>
+          risk.category === 'large-file' &&
+          risk.evidence.some((evidence) => evidence.path === 'examples/reference/huge.ts'),
+      ),
+    ).toBe(false);
+
+    const includedScan = await scanRepository(dir, {
+      analysisConfig: { ignore: [], include: ['examples/reference/**'] },
+    });
+    expect(
+      includedScan.snapshot.risks.some(
+        (risk) =>
+          risk.category === 'large-file' &&
+          risk.evidence.some((evidence) => evidence.path === 'examples/reference/huge.ts'),
+      ),
     ).toBe(true);
   });
 

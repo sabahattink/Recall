@@ -1,4 +1,4 @@
-import type { RepositorySnapshot } from '@recall-ai/schemas';
+import type { RecallConfig, RepositorySnapshot } from '@recall-ai/schemas';
 import { bulletList, defaultTemplate, evidenceList } from './template.js';
 import { detectFeatureCandidates } from '../feature-detection.js';
 
@@ -10,8 +10,8 @@ export function featuresTemplate(): (section: string) => string {
   );
 }
 
-export function generateFeaturesBody(snapshot: RepositorySnapshot): string {
-  const candidates = detectFeatureCandidates(snapshot.files);
+export function generateFeaturesBody(snapshot: RepositorySnapshot, config?: RecallConfig): string {
+  const candidates = detectFeatureCandidates(snapshot.files, config);
   if (candidates.length === 0) {
     return '_No features could be identified from strong structural evidence in this repository._';
   }

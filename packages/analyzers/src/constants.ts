@@ -9,7 +9,6 @@ export const DEFAULT_IGNORED_DIRECTORIES = [
   '.turbo',
   '.cache',
   'out',
-  'vendor',
   '.recall',
 ];
 
