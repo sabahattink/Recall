@@ -1,6 +1,6 @@
 {
   "name": "recall-context",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Persistent, evidence-backed codebase context for AI coding agents.",
   "license": "MIT",
   "type": "module",
