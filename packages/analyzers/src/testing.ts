@@ -2,7 +2,7 @@ import type { DependencyRecord, TestingInfo } from '@recall-ai/schemas';
 import type { WalkedFile } from './file-walk.js';
 import { TEST_FILE_PATTERN } from './constants.js';
 
-const TEST_FRAMEWORK_DEPENDENCIES = [
+export const TEST_FRAMEWORK_DEPENDENCIES = [
   'vitest',
   'jest',
   'mocha',
