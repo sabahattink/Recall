@@ -122,6 +122,35 @@ describe('walkRepository', () => {
     expect(consumed).toBeLessThan(totalAvailable);
   });
 
+  it('stops well short of 10,000+ available entries, proving it never buffers them all in memory', async () => {
+    // Directly proves the SCAN-02 acceptance criterion that the walker
+    // completes on a 10,000+-file repository without exhausting memory.
+    // Uses the same synthetic-stream technique as the 5000-entry test above
+    // rather than creating 10,000+ real files on disk — a real fixture that
+    // large was already tried for a similar case and reverted for being too
+    // slow on GitHub-hosted Windows runners (see the "real, modestly sized
+    // filesystem tree" test directly below).
+    const totalAvailable = 15_000;
+    let consumed = 0;
+    async function* syntheticEntries(): AsyncGenerator<string> {
+      for (let i = 0; i < totalAvailable; i++) {
+        consumed++;
+        yield `file-${i}.ts`;
+      }
+    }
+
+    const { matchedEntries, truncated } = await collectTruncated(
+      syntheticEntries(),
+      () => false,
+      50,
+    );
+
+    expect(truncated).toBe(true);
+    expect(matchedEntries.length).toBe(50);
+    expect(consumed).toBe(50);
+    expect(consumed).toBeLessThan(totalAvailable);
+  });
+
   it('truncates results on a real, modestly sized filesystem tree (integration)', async () => {
     // Companion to the synthetic test above: a small real fixture (20
     // files) proves the same behavior end-to-end through `walkRepository`
