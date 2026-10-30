@@ -19,9 +19,16 @@ export async function initGitRepo(dir: string, defaultBranch = 'main'): Promise<
   await execa('git', ['init', '-q', '-b', defaultBranch, dir]);
 }
 
+/**
+ * `maintenance.auto=false` stops the commit from starting a detached
+ * `git maintenance run --auto`, which would otherwise create and delete
+ * `.git/objects/maintenance.lock` while a test is snapshotting the tree.
+ */
 export async function commitAll(dir: string, message: string): Promise<void> {
   await execa('git', ['-C', dir, 'add', '-A']);
-  await execa('git', ['-C', dir, 'commit', '-q', '-m', message], { env: TEST_GIT_IDENTITY_ENV });
+  await execa('git', ['-C', dir, '-c', 'maintenance.auto=false', 'commit', '-q', '-m', message], {
+    env: TEST_GIT_IDENTITY_ENV,
+  });
 }
 
 export async function currentCommit(dir: string): Promise<string> {

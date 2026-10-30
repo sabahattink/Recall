@@ -149,6 +149,9 @@ for (const fixture of REFERENCE_FIXTURES) {
     await fixture.build(repo);
     run('git', ['init', '-q', '-b', 'main', repo]);
     run('git', ['-C', repo, 'add', '-A']);
+    // `maintenance.auto=false`: otherwise the commit starts a detached
+    // `git maintenance run --auto` that creates and deletes
+    // `.git/objects/maintenance.lock` while the tree is being hashed.
     run('git', [
       '-C',
       repo,
@@ -156,6 +159,8 @@ for (const fixture of REFERENCE_FIXTURES) {
       'user.name=Recall CI',
       '-c',
       'user.email=ci@example.com',
+      '-c',
+      'maintenance.auto=false',
       'commit',
       '-q',
       '-m',
@@ -226,6 +231,8 @@ for (const fixture of REFERENCE_FIXTURES) {
       'every run exits 0 and reproduces the first run byte for byte',
       divergence,
     );
+  } catch (error) {
+    assert(false, 'verification threw', error instanceof Error ? error.stack : String(error));
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
