@@ -5,7 +5,10 @@ import {
   buildNestJsFixture,
   buildNextJsFixture,
   buildPnpmMonorepoFixture,
+  buildGoCliFixture,
+  buildPythonServiceFixture,
   buildSimpleNodeFixture,
+  REFERENCE_FIXTURES,
   createTempDir,
   removeTempDir,
 } from '../index.js';
@@ -44,5 +47,21 @@ describe('fixture builders', () => {
     await expect(access(join(dir, 'pnpm-workspace.yaml'))).resolves.toBeUndefined();
     await expect(access(join(dir, 'apps/api/package.json'))).resolves.toBeUndefined();
     await expect(access(join(dir, 'packages/shared/package.json'))).resolves.toBeUndefined();
+  });
+  it('writes a Python service', async () => {
+    await buildPythonServiceFixture(dir);
+    await expect(access(join(dir, 'pyproject.toml'))).resolves.toBeUndefined();
+    await expect(access(join(dir, 'tests/test_stock.py'))).resolves.toBeUndefined();
+  });
+
+  it('writes a Go command-line tool', async () => {
+    await buildGoCliFixture(dir);
+    await expect(access(join(dir, 'go.mod'))).resolves.toBeUndefined();
+    await expect(access(join(dir, 'internal/links/links_test.go'))).resolves.toBeUndefined();
+  });
+
+  it('lists reference fixtures with unique names', () => {
+    const names = REFERENCE_FIXTURES.map((fixture) => fixture.name);
+    expect(new Set(names).size).toBe(names.length);
   });
 });

@@ -7,4 +7,6 @@ export * from './fixtures/simple-node.js';
 export * from './fixtures/nestjs.js';
 export * from './fixtures/nextjs.js';
 export * from './fixtures/pnpm-monorepo.js';
-export * from './fixtures/task-ranking.js';
+export * from './fixtures/python-service.js';
+export * from './fixtures/go-cli.js';
+export * from './reference-fixtures.js';
