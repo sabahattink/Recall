@@ -57,19 +57,18 @@ apps/web/
 │   ├── app/              # Next.js App Router routes
 │   │   ├── (marketing)/   # `/` landing page
 │   │   ├── docs/           # Fumadocs-powered documentation routes
-│   │   ├── examples/       # CLI command examples
+│   │   ├── examples/       # renders the repo's own committed .recall/ output
 │   │   ├── changelog/      # renders the repo's CHANGELOG.md
 │   │   ├── roadmap/        # renders the repo's docs/roadmap.md
 │   │   ├── api/search/      # Fumadocs static search endpoint
 │   │   ├── layout.tsx, globals.css, not-found.tsx, robots.ts, sitemap.ts
 │   ├── components/
 │   │   ├── layout/    # header, footer, theme provider/toggle, mobile nav
-│   │   ├── marketing/  # hero, command block, feature card
-│   │   ├── docs/        # docs-specific components
-│   │   └── ui/           # container, section, button primitives
-│   ├── config/          # site.ts (single source of product identity/URLs), navigation.ts
+│   │   ├── marketing/  # homepage sections, code panel, JSON highlighting, copy button
+│   │   └── ui/           # container, section, button, inline-code primitives
+│   ├── config/          # site.ts (identity/URLs), product.ts (v1 output contract facts), navigation.ts
 │   ├── lib/              # utils, fumadocs source loader, metadata, markdown renderer
-│   └── __tests__/        # site config / navigation / metadata assertions
+│   └── __tests__/        # config, navigation, metadata, docs-content and product-fact guards
 ├── source.config.ts     # Fumadocs MDX source definition
 ├── next.config.ts
 ├── postcss.config.mjs
@@ -87,7 +86,11 @@ does not extend the repository's `tsconfig.base.json`. Next.js requires `moduleR
 - **Docs**: edit or add `.mdx` files under `content/docs/`, and list new pages in
   `content/docs/meta.json` to control sidebar order.
 - **Changelog / roadmap**: edit the repository's root `CHANGELOG.md` / `docs/roadmap.md` directly
-  — the web pages render those files at request time, so there is nothing to duplicate.
+  — the web pages render those files at build time, so there is nothing to duplicate.
+- **Examples**: the page renders the repository's own `.recall/` directory. Regenerate it from the
+  repository root with `node apps/cli/dist/index.js init . --force` (after `pnpm build`).
+- **Product facts** (the four output lines, the `.recall/` tree, `memory.json` keys): edit
+  `src/config/product.ts`; `product-facts.test.ts` checks them against the product specification.
 - **Site identity, URLs, naming**: edit `src/config/site.ts` only. Components and metadata read
   from it; nothing else should hard-code the domain, package name, or executable name.
 - **Navigation**: edit `src/config/navigation.ts`.
@@ -95,20 +98,12 @@ does not extend the repository's `tsconfig.base.json`. Next.js requires `moduleR
 ## Relationship to the Recall CLI
 
 This app is purely presentational — it has no runtime dependency on `apps/cli` or any
-`@recall-ai/*` package, and building/publishing it never touches the `recall-context` npm
-package. See [`docs/web-deployment.md`](../../docs/web-deployment.md) for the planned deployment.
+`@recall-ai/*` package (it reads the committed `.recall/` files as text), and building or
+publishing it never touches the `recall-context` npm package. See [`docs/web-deployment.md`](../../docs/web-deployment.md) for the planned deployment.
 
-## Current scope and non-goals
+## Non-goals
 
-**In scope for this sprint:** routing structure, Fumadocs documentation, design tokens and
-dark/light/system theming, SEO metadata (`robots.ts`, `sitemap.ts`, Open Graph, JSON-LD), and
-accessible, restrained component foundations.
-
-**Explicitly not in scope yet:**
-
-- Final landing-page visual design (this sprint ships structural placeholders with real content,
-  not final visuals).
-- Analytics, cookies, or any tracking script.
+- Analytics beyond Vercel Analytics/Speed Insights, cookies, or any other tracking script.
 - A paid/hosted search service (Fumadocs' static search is used instead).
-- Blog content (the structure is meant to accommodate one later, but no blog exists yet).
-- Deployment, DNS, or Vercel project creation (see `docs/web-deployment.md`).
+- Describing anything Recall v1 does not ship (docs/product-specification.md §19) — the
+  `docs-content.test.ts` guard fails the build on retired commands and non-goal features.

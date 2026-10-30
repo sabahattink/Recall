@@ -13,21 +13,28 @@ export interface SiteConfig {
   author: {
     name: string;
   };
+  /** The npm package name. The npm name `recall` belongs to an unrelated package. */
   packageName: string;
+  /** The executable the package installs. */
   executableName: string;
+  /** The one public command (docs/product-specification.md §18), run through npx. */
+  initCommand: string;
 }
+
+const packageName = 'recall-context';
 
 export const siteConfig: SiteConfig = {
   name: 'Recall',
-  title: 'Recall — persistent, evidence-backed context for AI coding agents',
+  title: 'Recall — initialize your repository’s memory for AI coding assistants',
   description:
-    'Recall generates persistent, evidence-backed repository context for AI coding agents.',
+    'One command gives every AI coding assistant an evidence-backed memory of your repository. Offline, deterministic, no account or API key.',
   url: 'https://recall.sabahattinkalkan.com',
   githubUrl: 'https://github.com/sabahattink/Recall',
   npmUrl: 'https://www.npmjs.com/package/recall-context',
   author: {
     name: 'Sabahattin Kalkan',
   },
-  packageName: 'recall-context',
+  packageName,
   executableName: 'recall',
+  initCommand: `npx ${packageName} init`,
 };

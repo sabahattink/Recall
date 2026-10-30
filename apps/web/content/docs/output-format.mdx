@@ -1,0 +1,151 @@
+---
+title: Output format
+description: The shape of memory.json, how evidence works, and how each assistant uses its agent file.
+---
+
+## Layout
+
+`recall init` produces exactly one directory:
+
+```text
+.recall/
+├── memory.json
+└── agents/
+    ├── claude.md
+    ├── codex.md
+    ├── cursor.md
+    ├── gemini.md
+    └── openai.md
+```
+
+There is no cache, no snapshot history, no separate manifest, and no hidden metadata file.
+
+## memory.json
+
+`memory.json` is the serialized Project Memory: the single source of truth about the repository.
+Every agent file is rendered from it, and only from it.
+
+### Top-level keys
+
+Keys always appear in this order:
+
+| Key             | Contents                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------- |
+| `schemaVersion` | The version of the `memory.json` format.                                                          |
+| `metadata`      | Project name, description, current commit, default branch, and remote URL, where evidenced.       |
+| `stack`         | Languages, frameworks, and package managers.                                                      |
+| `architecture`  | Repository layout (single package or monorepo, with its workspaces) and entry points.             |
+| `structure`     | Important directories and their roles, such as source, tests, or configuration.                   |
+| `commands`      | Commands the repository declares, such as `package.json` scripts, with their exact command lines. |
+| `conventions`   | Testing and linting tools in use.                                                                 |
+| `dependencies`  | Declared dependencies, with version, scope, and the manifest that declares them.                  |
+| `risks`         | Risk indicators, such as no CI configuration or an `.env` file not ignored by `.gitignore`.       |
+
+### Evidence
+
+Every entry carries an `evidence` list. Each item names a repository-relative `path` and the
+`reason` that path justifies the entry:
+
+```json
+{
+  "name": "test",
+  "command": "vitest run",
+  "evidence": [{ "path": "package.json", "reason": "scripts.test declared as \"vitest run\"" }]
+}
+```
+
+An entry without evidence does not exist: when the Scanner cannot point to a file, Recall makes no
+claim. A list with nothing to report is empty; a single value with no evidence is `null`.
+
+### Example
+
+An abridged excerpt for a Next.js repository:
+
+```json title="memory.json"
+{
+  "schemaVersion": "1.0.0",
+  "stack": {
+    "frameworks": [
+      {
+        "name": "nextjs",
+        "evidence": [
+          { "path": "next.config.ts", "reason": "next.config.ts present" },
+          { "path": "package.json", "reason": "dependency \"next\" declared" }
+        ]
+      }
+    ]
+  },
+  "risks": [
+    {
+      "id": "env-file-not-ignored",
+      "description": "Environment files are not ignored by the root .gitignore and may contain secrets.",
+      "evidence": [{ "path": ".env.local", "reason": "present and not matched by .gitignore" }]
+    }
+  ]
+}
+```
+
+## Agent files
+
+The five files in `.recall/agents/` are read-only renderings of `memory.json`, one per assistant.
+Each contains the same knowledge, shaped for the assistant that reads it.
+
+| File        | For              | Format                                                |
+| ----------- | ---------------- | ----------------------------------------------------- |
+| `claude.md` | Claude Code      | Markdown, for import from `CLAUDE.md`                 |
+| `codex.md`  | Codex            | Markdown in `AGENTS.md` style                         |
+| `cursor.md` | Cursor           | Markdown with Cursor rule (MDC) front matter          |
+| `gemini.md` | Gemini CLI       | Markdown, for import from `GEMINI.md`                 |
+| `openai.md` | ChatGPT / OpenAI | Markdown, for Project instructions or a system prompt |
+
+Don't edit these files: `recall init --force` regenerates them from `memory.json`. Keep your own
+instructions in the files you already maintain (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) and point
+those at Recall's files.
+
+## Using the agent files
+
+### Claude Code
+
+Claude Code reads `CLAUDE.md` and follows `@`-imports inside it. Add one line:
+
+```md title="CLAUDE.md"
+@.recall/agents/claude.md
+```
+
+### Codex
+
+`codex.md` is written in `AGENTS.md` style. If the repository has no `AGENTS.md` yet, copy it:
+
+```bash
+cp .recall/agents/codex.md AGENTS.md
+```
+
+If you already maintain an `AGENTS.md`, reference `.recall/agents/codex.md` from it, or append the
+file's contents, so your own instructions stay intact.
+
+### Cursor
+
+`cursor.md` starts with Cursor rule (MDC) front matter, so it works as a project rule as-is:
+
+```bash
+mkdir -p .cursor/rules
+cp .recall/agents/cursor.md .cursor/rules/recall.mdc
+```
+
+### Gemini CLI
+
+Gemini CLI reads `GEMINI.md` and follows `@`-imports inside it. Add one line:
+
+```md title="GEMINI.md"
+@.recall/agents/gemini.md
+```
+
+### ChatGPT / OpenAI
+
+Paste the contents of `openai.md` into a ChatGPT Project's instructions, or send it as the system
+prompt in an API request.
+
+<Callout title="Copies don't follow regeneration">
+  Imports (Claude Code, Gemini CLI) always read the current file. Copies (Codex, Cursor, ChatGPT) do
+  not: after `recall init --force`, copy or paste the regenerated file again.
+</Callout>

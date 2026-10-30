@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install recall-context and use the recall command.
+description: Run Recall with npx, or install the recall executable once.
 ---
 
 ## Run without installing
@@ -9,22 +9,33 @@ description: Install recall-context and use the recall command.
 npx recall-context init
 ```
 
-`npx` downloads and runs the package for a single invocation — nothing is installed globally.
+`npx` downloads the package and runs it once; nothing is installed globally.
+
+<Callout type="warn" title="Use recall-context, not recall">
+  The npm package named `recall` is unrelated to this project. Always run `npx recall-context`.
+</Callout>
 
 ## Install once
 
 ```bash
 npm install -g recall-context
+```
+
+The package installs an executable named `recall`:
+
+```bash
 recall init
 ```
 
-The npm package is `recall-context`; the command it installs is `recall`.
+With pnpm, `pnpm add -g recall-context` installs the same executable.
 
 ## Requirements
 
 - Node.js 22 or newer.
-- No account, sign-up, or API key required.
-- No AI provider is required or called by default.
+- Nothing else. No account, no API key, no configuration file.
+
+Recall itself never uses the network. The only network access involved is your package manager
+downloading `recall-context`.
 
 ## Package
 

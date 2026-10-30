@@ -1,48 +1,94 @@
 ---
 title: Getting started
-description: Initialize Recall in a repository and generate your first context.
+description: Initialize a repository and connect your AI assistant to its memory.
 ---
 
-## 1. Initialize Recall
+## 1. Initialize the repository
 
-Run this from the root of the repository you want Recall to analyze:
+From the root of the repository:
 
 ```bash
 npx recall-context init
 ```
 
-This analyzes the repository and creates a `.recall/` directory containing a manifest, a
-deterministic snapshot, and several generated Markdown files.
-
-## 2. Generate context
+To initialize a repository somewhere else, pass its path:
 
 ```bash
-npx recall-context context --stdout
+npx recall-context init ./path/to/repository
 ```
 
-Paste or pipe the output into your coding agent.
+## 2. Check the output
 
-## 3. Focus context on a task (optional)
+A successful run prints exactly this, and nothing else:
+
+```text
+Scanning repository...
+Detecting architecture...
+Generating AI memory...
+Done.
+```
+
+It has written one directory:
+
+```text
+.recall/
+├── memory.json
+└── agents/
+    ├── claude.md
+    ├── codex.md
+    ├── cursor.md
+    ├── gemini.md
+    └── openai.md
+```
+
+Nothing outside `.recall/` was created or changed. `.recall/` is plain text; whether you commit it
+is up to you. Recall does not edit `.gitignore` or any other file.
+
+## 3. Connect your assistant
+
+Each file in `.recall/agents/` is written for one assistant. Connect the ones you use:
+
+| Assistant        | File                       | One-time setup                                                                     |
+| ---------------- | -------------------------- | ---------------------------------------------------------------------------------- |
+| Claude Code      | `.recall/agents/claude.md` | Add `@.recall/agents/claude.md` to `CLAUDE.md`.                                    |
+| Codex            | `.recall/agents/codex.md`  | Copy it to `AGENTS.md`, or reference it from your existing `AGENTS.md`.            |
+| Cursor           | `.recall/agents/cursor.md` | Copy it to `.cursor/rules/recall.mdc`.                                             |
+| Gemini CLI       | `.recall/agents/gemini.md` | Add `@.recall/agents/gemini.md` to `GEMINI.md`.                                    |
+| ChatGPT / OpenAI | `.recall/agents/openai.md` | Paste it into a ChatGPT Project's instructions, or use it as an API system prompt. |
+
+For Claude Code, the entire change is one line in `CLAUDE.md`:
+
+```md title="CLAUDE.md"
+@.recall/agents/claude.md
+```
+
+[Output format](/docs/output-format#using-the-agent-files) has the exact steps for every assistant.
+
+## 4. Regenerate when the repository changes
+
+Running `recall init` again on an initialized repository changes nothing and exits with code `4`.
+To regenerate the memory from the current state of the repository, pass `--force`:
 
 ```bash
-recall context --task "Fix password reset controller" --stdout
+npx recall-context init --force
 ```
-
-Recall ranks the files most relevant to the task using local, explainable signals — filename and
-symbol matches, workspace locality, and import-graph proximity — and shows the reason for each
-ranked file.
-
-## 4. Keep memory current
-
-```bash
-recall status
-```
-
-`recall status` reports whether `.recall/` reflects the current state of the repository. Run
-`recall update` to refresh it after making changes.
 
 ## Next steps
 
-- [Installation](/docs/installation) — installing once vs. `npx`
-- [Commands](/docs/commands) — every command, flag, and exit code
-- [How it works](/docs/how-it-works) — what Recall actually does under the hood
+<Cards>
+  <Card
+    title="Command reference"
+    href="/docs/commands"
+    description="Arguments, --force, and exit codes."
+  />
+  <Card
+    title="Output format"
+    href="/docs/output-format"
+    description="What memory.json and each agent file contain."
+  />
+  <Card
+    title="How it works"
+    href="/docs/how-it-works"
+    description="The pipeline and its guarantees."
+  />
+</Cards>

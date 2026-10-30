@@ -9,6 +9,10 @@ describe('siteConfig', () => {
     expect(siteConfig.author.name).toBe('Sabahattin Kalkan');
   });
 
+  it('runs the one public command through the recall-context package, never the unrelated `recall` npm package', () => {
+    expect(siteConfig.initCommand).toBe('npx recall-context init');
+  });
+
   it('uses the canonical production URL, with no trailing slash', () => {
     expect(siteConfig.url).toBe('https://recall.sabahattinkalkan.com');
     expect(siteConfig.url.endsWith('/')).toBe(false);
@@ -22,6 +26,12 @@ describe('siteConfig', () => {
   it('has a non-empty description that does not claim ratings, pricing, or user counts', () => {
     expect(siteConfig.description.length).toBeGreaterThan(0);
     const forbidden = /rating|pricing|price|users?\s+trust|downloads?/i;
+    expect(siteConfig.description).not.toMatch(forbidden);
+  });
+
+  it('describes the v1 product, not the retired context/ranking/staleness features', () => {
+    const forbidden = /staleness|stale|ranking|task-focused|snapshot|manifest|MCP|embedding/i;
+    expect(siteConfig.title).not.toMatch(forbidden);
     expect(siteConfig.description).not.toMatch(forbidden);
   });
 });

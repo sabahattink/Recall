@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+/* Fumadocs UI's layout and prose styles for /docs (sidebar, TOC, MDX body). */
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 
 /*
  * Semantic design tokens. Every component consumes these — never a raw
@@ -40,6 +43,32 @@
   --code-background: 0 0% 12%;
   --ring: 217 91% 60%;
   color-scheme: dark;
+}
+
+/*
+ * Fumadocs' own color tokens, pointed at the site's semantic tokens so /docs
+ * shares one palette (and one light/dark switch) with the rest of the site
+ * instead of Fumadocs' built-in neutral theme. Declared after the Fumadocs
+ * imports so these win in both modes.
+ */
+:root,
+.dark {
+  --color-fd-background: hsl(var(--background));
+  --color-fd-foreground: hsl(var(--foreground));
+  --color-fd-muted: hsl(var(--muted));
+  --color-fd-muted-foreground: hsl(var(--muted-foreground));
+  --color-fd-popover: hsl(var(--card));
+  --color-fd-popover-foreground: hsl(var(--card-foreground));
+  --color-fd-card: hsl(var(--card));
+  --color-fd-card-foreground: hsl(var(--card-foreground));
+  --color-fd-border: hsl(var(--border));
+  --color-fd-primary: hsl(var(--accent));
+  --color-fd-primary-foreground: hsl(var(--accent-foreground));
+  --color-fd-secondary: hsl(var(--muted));
+  --color-fd-secondary-foreground: hsl(var(--foreground));
+  --color-fd-accent: hsl(var(--muted));
+  --color-fd-accent-foreground: hsl(var(--foreground));
+  --color-fd-ring: hsl(var(--ring));
 }
 
 @theme inline {

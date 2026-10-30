@@ -1,22 +1,84 @@
 ---
-title: Commands
-description: Every Recall command, in brief.
+title: Command reference
+description: recall init — the one command, its argument, its flag, and its exit codes.
 ---
 
+Recall has exactly one command. There are no other commands or subcommands.
+
+## Synopsis
+
 ```bash
-recall init                                  # analyze the repository and create .recall/
-recall scan                                   # re-run deterministic analysis, save a snapshot
-recall update                                 # refresh memory from the current repository state
-recall status                                 # check whether memory is initialized and up to date
-recall explain <path>                         # explain a file or directory's role
-recall context                                # generate compact, agent-ready context
-recall context --task "Add password reset"    # focus that context on a specific task
-recall doctor                                 # validate the environment and memory state
+recall init [path] [--force]
 ```
 
-Each command exits with a specific, documented exit code so it composes cleanly in scripts and CI
-(for example, `recall update --check` exits non-zero when memory is stale).
+Through npx, without installing:
 
-For the full flag and exit-code reference, see
-[`docs/cli-reference.md`](https://github.com/sabahattink/Recall/blob/main/docs/cli-reference.md)
-in the repository.
+```bash
+npx recall-context init [path] [--force]
+```
+
+## Argument
+
+| Argument | Description                                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------------------- |
+| `path`   | Optional. The repository to initialize. Defaults to the current directory. `.recall/` is written inside it. |
+
+## Option
+
+| Option    | Description                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| `--force` | Regenerate `.recall/` when it already exists. Without it, an existing `.recall/` is never touched (exit code `4`). |
+
+## Output
+
+On success, Recall prints exactly these four lines:
+
+```text
+Scanning repository...
+Detecting architecture...
+Generating AI memory...
+Done.
+```
+
+It writes `.recall/memory.json` and the five files in `.recall/agents/`, and nothing else. See
+[Output format](/docs/output-format).
+
+On any failure, Recall exits with a non-zero code and writes nothing: either the complete
+`.recall/` is produced, or no file is.
+
+## Exit codes
+
+| Code | Meaning                                                                     |
+| ---- | --------------------------------------------------------------------------- |
+| `0`  | Success. `.recall/` was written.                                            |
+| `1`  | Unexpected failure.                                                         |
+| `2`  | Invalid usage, such as an unknown option or an extra argument.              |
+| `3`  | Invalid path: the given path cannot be used as a repository.                |
+| `4`  | `.recall/` already exists and `--force` was not given. Nothing was changed. |
+| `5`  | Unsafe output location, such as a `.recall` that is a symbolic link.        |
+
+## Examples
+
+Initialize the repository in the current directory:
+
+```bash
+recall init
+```
+
+Initialize a different repository:
+
+```bash
+recall init ../api-service
+```
+
+Regenerate after the repository has changed:
+
+```bash
+recall init --force
+```
+
+In a script, treat "already initialized" as success:
+
+```bash
+recall init || [ $? -eq 4 ]
+```

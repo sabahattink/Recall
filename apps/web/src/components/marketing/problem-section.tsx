@@ -1,109 +1,61 @@
-import type { ReactNode } from 'react';
-import { Check } from 'lucide-react';
 import { Section } from '@/components/ui/section';
-import { cn } from '@/lib/utils';
+import { InlineCode } from '@/components/ui/inline-code';
+import { SectionHeading } from './section-heading';
 
-const disappearingContext = [
-  'Architecture decisions.',
-  'Naming conventions.',
-  'Important dependencies.',
-  'Project history.',
-  'Previous trade-offs.',
-];
-
-const transcript = [
-  { speaker: 'Developer', message: 'How does authentication work?' },
-  { speaker: 'Agent', message: 'I do not know this repository yet.' },
-  {
-    speaker: 'Agent',
-    message: 'Can you explain the architecture, conventions, and relevant files?',
-  },
-];
-
-const availableMemory = ['Architecture', 'Conventions', 'Decisions', 'Risks', 'Technical debt'];
-
-interface ComparisonCardProps {
-  title: string;
-  children: ReactNode;
-  /**
-   * "Without Recall" renders its title in muted-foreground rather than
-   * foreground — a deliberate, tokens-only hierarchy choice (§4 rule 3:
-   * "Color, not size, is the secondary hierarchy signal") that reads the
-   * left column as the gap being described and the right column as the
-   * resolution, without introducing any new color or icon.
-   */
-  muted?: boolean;
+interface RepeatedQuestion {
+  question: string;
+  /** Where `memory.json` answers it. */
+  keys: string[];
 }
 
-/** Shared card shell for the two comparison columns — same border/padding/radius as every other card on the site (design-system.md §7), never clickable, so no hover state. */
-function ComparisonCard({ title, children, muted }: ComparisonCardProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <h3
-        className={cn('text-sm font-semibold', muted ? 'text-muted-foreground' : 'text-foreground')}
-      >
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
-}
+const repeatedQuestions: RepeatedQuestion[] = [
+  { question: 'What is this built with?', keys: ['stack.languages', 'stack.frameworks'] },
+  { question: 'pnpm, npm, or Yarn?', keys: ['stack.packageManagers'] },
+  { question: 'How do I run the tests?', keys: ['commands', 'conventions.testing'] },
+  { question: 'Is this a monorepo?', keys: ['architecture.layout'] },
+  { question: 'Where is the source? Where are the tests?', keys: ['structure.directories'] },
+  { question: 'What does it depend on?', keys: ['dependencies'] },
+  { question: 'Anything I should be careful with?', keys: ['risks'] },
+];
 
+/**
+ * The problem stated as the literal questions a developer re-answers, each
+ * paired with the `memory.json` key that answers it — a factual mapping
+ * rather than an adjective (design-system.md §2, principle 5).
+ */
 export function ProblemSection() {
   return (
-    <Section aria-labelledby="context-loss-heading">
-      <div className="max-w-2xl">
-        <h2
-          id="context-loss-heading"
-          className="text-2xl font-semibold tracking-tight text-foreground"
+    <Section aria-labelledby="problem-heading">
+      <SectionHeading id="problem-heading" title="Every session starts from zero.">
+        A new session in Claude Code, Codex, Cursor, Gemini CLI, or ChatGPT knows nothing about your
+        repository. So you explain it again: the stack, the layout, the commands. Tomorrow you
+        explain it again, to a different assistant.
+      </SectionHeading>
+
+      <div className="mt-10 text-sm">
+        <div
+          aria-hidden
+          className="grid gap-1 border-b border-border pb-3 font-medium text-muted-foreground sm:grid-cols-2 sm:gap-8"
         >
-          Every new session starts here.
-        </h2>
-
-        <p className="mt-3 text-muted-foreground">
-          Most coding agents only know what you paste into the current conversation.
-        </p>
-
-        <ul className="mt-4 flex flex-col gap-1 text-muted-foreground">
-          {disappearingContext.map((item) => (
-            <li key={item}>{item}</li>
+          <span>The question you keep answering</span>
+          <span>
+            Answered once, in <span className="font-mono">memory.json</span>
+          </span>
+        </div>
+        <dl className="divide-y divide-border">
+          {repeatedQuestions.map((row) => (
+            <div key={row.question} className="grid gap-2 py-4 sm:grid-cols-2 sm:gap-8">
+              <dt className="text-foreground">{row.question}</dt>
+              <dd className="flex flex-wrap gap-2">
+                <span className="sr-only">Answered in memory.json by </span>
+                {row.keys.map((key) => (
+                  <InlineCode key={key}>{key}</InlineCode>
+                ))}
+              </dd>
+            </div>
           ))}
-        </ul>
-
-        <p className="mt-6 text-muted-foreground">They disappear.</p>
-        <p className="mt-1 text-muted-foreground">So every new session starts from zero.</p>
+        </dl>
       </div>
-
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <ComparisonCard title="Without Recall" muted>
-          <div className="mt-4 flex flex-col gap-4">
-            {transcript.map((turn, index) => (
-              <div key={index}>
-                <p className="text-sm text-muted-foreground">{turn.speaker}:</p>
-                <p className="mt-1 text-sm text-foreground">{turn.message}</p>
-              </div>
-            ))}
-          </div>
-        </ComparisonCard>
-
-        <ComparisonCard title="With Recall">
-          <ul className="mt-4 flex flex-col gap-2">
-            {availableMemory.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-foreground">
-                <Check aria-hidden className="h-3.5 w-3.5 shrink-0 text-success" />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-sm text-muted-foreground">Context ready.</p>
-        </ComparisonCard>
-      </div>
-
-      <p className="mx-auto mt-10 max-w-xl text-center text-muted-foreground">
-        Recall does not replace the coding agent.
-        <br />
-        It gives the agent the repository context it did not have.
-      </p>
     </Section>
   );
 }

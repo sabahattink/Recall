@@ -1,135 +1,115 @@
-import { Fragment } from 'react';
+import type { ReactNode } from 'react';
 import { Section } from '@/components/ui/section';
+import { InlineCode } from '@/components/ui/inline-code';
+import { SectionHeading } from './section-heading';
 
-interface Step {
-  number: string;
-  title: string;
-  description: string;
+interface Stage {
+  name: string;
+  description: ReactNode;
+  /** What the stage hands to the next one. */
+  produces: string;
 }
 
-const steps: Step[] = [
+/** The five stages of docs/product-specification.md §14, in order. */
+const stages: Stage[] = [
   {
-    number: '01',
-    title: 'Scan Repository',
-    description: 'Analyze project structure, frameworks, dependencies and conventions.',
+    name: 'Repository',
+    description: 'Your files, exactly as they are on disk. The only input.',
+    produces: 'files on disk',
   },
   {
-    number: '02',
-    title: 'Build Memory',
-    description: 'Generate architecture, decisions, conventions, risks and technical debt.',
+    name: 'Scanner',
+    description:
+      'Reads manifests, lockfiles, and configuration and records Facts: observations with evidence, never opinions. No evidence, no claim.',
+    produces: 'Facts',
   },
   {
-    number: '03',
-    title: 'Understand Task',
-    description: 'Rank the most relevant files for the current request.',
+    name: 'Project Memory',
+    description: 'Normalizes Facts into agent-independent knowledge, the single source of truth.',
+    produces: 'memory.json',
   },
   {
-    number: '04',
-    title: 'Provide Context',
-    description: 'Produce deterministic context that any coding agent can immediately use.',
+    name: 'Agent Templates',
+    description: (
+      <>
+        Render <InlineCode>memory.json</InlineCode> into each assistant&apos;s format. Templates
+        format; they never read the repository.
+      </>
+    ),
+    produces: 'agents/*.md',
+  },
+  {
+    name: 'Disk',
+    description: 'Writes the complete output at once, or nothing at all.',
+    produces: '.recall/',
   },
 ];
 
-// Reused verbatim from HeroTerminal and ProblemSection's "With Recall" card
-// — not new content, just referenced again at the point where it's actually
-// produced.
-const memoryCategories = ['Architecture', 'Conventions', 'Decisions', 'Risks', 'Technical debt'];
-
-/**
- * One equally-sized step in the flow. Real headings (h3) carry the
- * accessible structure — connectors between cards are purely decorative
- * (design-system.md §7 card rules: border, bg-card, no shadow, no hover,
- * since these aren't clickable).
- */
-function StepCard({ step }: { step: Step }) {
-  return (
-    <div className="flex-1 rounded-lg border border-border bg-card p-6">
-      <span className="font-mono text-sm text-muted-foreground">{step.number}</span>
-      <h3 className="mt-3 text-sm font-semibold text-foreground">{step.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
-    </div>
-  );
+interface DetectionRow {
+  label: string;
+  values: string;
 }
 
-/**
- * A single hairline connecting adjacent steps — vertical when stacked
- * (mobile), horizontal in the row (desktop). Decorative only: the real
- * sequence is already conveyed by the step numbers and heading order.
- *
- * On desktop the line is pinned to a fixed offset (card padding + half the
- * step numeral's line-height: 24px + 10px) rather than centered against
- * whichever card happens to be tallest — so it runs precisely through the
- * numerals themselves regardless of how much a description wraps, instead
- * of landing at an approximate row-center.
- */
-function StepConnector() {
-  return (
-    <div
-      aria-hidden
-      className="h-6 w-px self-center bg-border lg:mt-[34px] lg:h-px lg:w-10 lg:flex-none lg:self-start"
-    />
-  );
-}
+const detections: DetectionRow[] = [
+  { label: 'Languages', values: 'TypeScript, JavaScript, Python, Go, Rust' },
+  {
+    label: 'Frameworks',
+    values:
+      'Next.js, NestJS, React, Express, Fastify, Vue, Angular, Nuxt, Svelte and SvelteKit, Astro, Remix, React Native, Electron, Hono, Koa',
+  },
+  {
+    label: 'Package managers',
+    values: 'pnpm, npm, Yarn, Bun, pip, Poetry, uv, Pipenv, Go modules, Cargo',
+  },
+  { label: 'Monorepos', values: 'package.json workspaces, pnpm-workspace.yaml' },
+];
 
 /**
- * A borderless data-flow line, not another terminal: the step cards above
- * already show the four *stages* of the process, so this deliberately
- * avoids repeating that same "boxes + connectors" grammar, and avoids
- * repeating the Hero's own `$ recall context` terminal a second time in the
- * same visit. Instead it states the *transformation* as plain, precise
- * typography — repository in, structured memory in the middle, coding
- * agent out — closer to a type signature or a pipeline notation than a UI
- * pattern. Every label is reused verbatim from elsewhere on the page; no
- * new copy.
+ * The pipeline as a segmented strip: hairline-divided cells on a single
+ * bordered surface (design-system.md §7 — borders, no shadows, no hover,
+ * since nothing here is clickable). Order is carried by the list semantics
+ * and the stage numbers, not by decorative connectors.
  */
-function MemoryFlow() {
-  return (
-    <div
-      role="img"
-      aria-label="Repository transforms into structured memory — architecture, conventions, decisions, risks, and technical debt — which becomes available to the coding agent. Context ready."
-    >
-      <div
-        aria-hidden
-        className="flex flex-col gap-x-3 gap-y-2 font-mono text-sm sm:flex-row sm:flex-wrap sm:items-baseline"
-      >
-        <span className="text-foreground">Repository</span>
-        <span className="text-muted-foreground">→</span>
-        <span className="text-muted-foreground">{memoryCategories.join(' · ')}</span>
-        <span className="text-muted-foreground">→</span>
-        <span className="text-foreground">Coding agent</span>
-      </div>
-      <p aria-hidden className="mt-3 text-sm text-muted-foreground">
-        Context ready.
-      </p>
-    </div>
-  );
-}
-
 export function HowRecallWorksSection() {
   return (
-    <Section aria-labelledby="how-recall-works-heading">
-      <h2
-        id="how-recall-works-heading"
-        className="text-2xl font-semibold tracking-tight text-foreground"
-      >
-        How Recall works
-      </h2>
-      <p className="mt-3 max-w-2xl text-muted-foreground">
-        Recall analyzes your repository once, builds a structured project memory, and gives every
-        future AI session immediate access to the parts of the codebase that matter.
-      </p>
+    <Section aria-labelledby="how-it-works-heading">
+      <SectionHeading id="how-it-works-heading" title="Five stages, in one direction.">
+        Each stage consumes only the output of the stage before it. Nothing feeds back, nothing runs
+        in the background, and every agent file comes from the same{' '}
+        <InlineCode>memory.json</InlineCode>, so all five assistants read the same facts.
+      </SectionHeading>
 
-      <div className="mt-10 flex flex-col lg:flex-row">
-        {steps.map((step, index) => (
-          <Fragment key={step.number}>
-            <StepCard step={step} />
-            {index < steps.length - 1 ? <StepConnector /> : null}
-          </Fragment>
+      <ol className="mt-10 grid gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-5">
+        {stages.map((stage, index) => (
+          <li key={stage.name} className="flex flex-col bg-card p-6">
+            <span aria-hidden className="font-mono text-sm text-muted-foreground">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <h3 className="mt-3 font-semibold text-foreground">{stage.name}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {stage.description}
+            </p>
+            <p className="mt-auto pt-5 font-mono text-sm text-foreground">
+              <span aria-hidden className="select-none text-muted-foreground">
+                →{' '}
+              </span>
+              <span className="sr-only">Produces: </span>
+              {stage.produces}
+            </p>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      <div className="mt-10">
-        <MemoryFlow />
+      <div className="mt-16">
+        <h3 className="font-semibold text-foreground">Recognized today</h3>
+        <dl className="mt-4 divide-y divide-border border-t border-border text-sm">
+          {detections.map((row) => (
+            <div key={row.label} className="grid gap-1 py-4 sm:grid-cols-[200px_1fr] sm:gap-8">
+              <dt className="font-medium text-foreground">{row.label}</dt>
+              <dd className="leading-relaxed text-muted-foreground">{row.values}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </Section>
   );

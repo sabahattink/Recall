@@ -1,35 +1,89 @@
 ---
 title: Introduction
-description: Persistent, evidence-backed codebase context for AI coding agents.
+description: Recall initializes a repository's memory for AI coding assistants.
 ---
 
-Recall scans a repository and generates persistent, evidence-backed context that Claude Code,
-Codex, Gemini CLI, Cursor, and other coding agents can reuse.
-
-## Quick start
+Every AI coding assistant starts a new session knowing nothing about your repository. Recall
+removes that gap once: one command reads the repository and writes `.recall/`, a project memory
+that Claude Code, Codex, Cursor, Gemini CLI, and ChatGPT can read instead of asking you.
 
 ```bash
 npx recall-context init
 ```
 
-```bash
-npx recall-context context --stdout
+```text
+Scanning repository...
+Detecting architecture...
+Generating AI memory...
+Done.
 ```
 
-The npm package is `recall-context`; the command it installs is `recall`.
+The npm package is `recall-context`; the executable it installs is `recall`.
 
-## Current scope
+## What you get
 
-**Supported now:** JavaScript, TypeScript, Node.js, NestJS, Next.js, pnpm/npm/Yarn, monorepos,
-both Git and non-Git repositories.
+```text
+.recall/
+├── memory.json
+└── agents/
+    ├── claude.md
+    ├── codex.md
+    ├── cursor.md
+    ├── gemini.md
+    └── openai.md
+```
 
-**Not yet built:** an MCP server, additional language ecosystems, deeper semantic (AST-based)
-analysis, an optional AI-assisted "why" layer, editor integrations. See the
-[roadmap](/roadmap) for the full list.
+- **`memory.json`** is the Project Memory: the single source of truth about the repository. Every
+  entry carries `evidence`, the file it was derived from and why.
+- **`agents/*.md`** are five read-only renderings of `memory.json`, one per assistant, each in the
+  format that assistant reads.
 
-## Learn more
+Nothing else is written, and nothing outside `.recall/` is touched. See
+[Output format](/docs/output-format) for both files in detail.
 
-- [Getting started](/docs/getting-started)
-- [Installation](/docs/installation)
-- [Commands](/docs/commands)
-- [How it works](/docs/how-it-works)
+## What Recall does, and doesn't
+
+- It **reads** your repository. It never runs your code, tests, build, or scripts.
+- It works **offline**. No account, no API key, no telemetry, no LLM calls.
+- It is **deterministic**. The same repository state produces byte-identical output on any machine.
+- It is **not** an assistant, a chat interface, or a platform. It produces the memory assistants
+  read; it does not talk to them or for them.
+
+## Supported today
+
+| Area             | Recognized                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Languages        | TypeScript, JavaScript, Python, Go, Rust                                                                                            |
+| Frameworks       | Next.js, NestJS, React, Express, Fastify, Vue, Angular, Nuxt, Svelte and SvelteKit, Astro, Remix, React Native, Electron, Hono, Koa |
+| Package managers | pnpm, npm, Yarn, Bun, pip, Poetry, uv, Pipenv, Go modules, Cargo                                                                    |
+| Monorepos        | `workspaces` in `package.json`, `pnpm-workspace.yaml`                                                                               |
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Getting started"
+    href="/docs/getting-started"
+    description="Initialize a repository and connect your assistant."
+  />
+  <Card
+    title="Installation"
+    href="/docs/installation"
+    description="Run with npx, or install the recall executable."
+  />
+  <Card
+    title="Command reference"
+    href="/docs/commands"
+    description="recall init, --force, and every exit code."
+  />
+  <Card
+    title="Output format"
+    href="/docs/output-format"
+    description="memory.json and the five agent files."
+  />
+  <Card
+    title="How it works"
+    href="/docs/how-it-works"
+    description="The pipeline, the guarantees, and determinism."
+  />
+</Cards>

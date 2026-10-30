@@ -1,46 +1,102 @@
 ---
 title: How it works
-description: What Recall generates and how task-focused ranking works.
+description: The pipeline from repository to .recall/, the guarantees it keeps, and why its output is deterministic.
 ---
 
-## What it generates
+## The pipeline
 
+`recall init` runs five stages, in one direction:
+
+```text
+Repository
+    ↓
+Scanner
+    ↓
+Project Memory
+    ↓
+Agent Templates
+    ↓
+Disk
 ```
-.recall/
-├── manifest.json       # pointer to the current snapshot + memory files
-├── architecture.md      # detected apps/packages/layers, entry points, dependency direction
-├── conventions.md       # naming, aliases, linting/formatting, scripts
-├── decisions.md         # human-editable decision log
-├── features.md          # features backed by structural evidence (controllers, routes, jobs...)
-├── glossary.md          # recurring domain terms extracted from identifiers
-├── risks.md              # evidence-based risk findings (missing tests, circular deps, etc.)
-├── technical-debt.md    # measurable debt findings with evidence and severity
-└── snapshots/
-    └── latest.json       # the deterministic scan result everything above is derived from
+
+Each stage consumes only the output of the stage before it. Nothing feeds back, and nothing keeps
+running after the command exits.
+
+### Repository
+
+Your files, exactly as they are on disk when you run `recall init`. This is the only input.
+
+### Scanner
+
+The Scanner reads the repository (manifests, lockfiles, configuration files, and the file layout)
+and records **Facts**. A Fact is a single observation that can be traced to something that
+concretely exists: a file, a dependency entry, a configuration value. The Scanner discovers facts,
+never opinions. When the evidence is ambiguous or absent, it makes no claim rather than a guess.
+
+The Scanner surfaces languages, frameworks, package managers, workspace layout, important
+directories, available commands, testing and linting tools, entry points, dependencies, repository
+metadata, and risk indicators. It currently recognizes:
+
+| Area             | Recognized                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Languages        | TypeScript, JavaScript, Python, Go, Rust                                                                                            |
+| Frameworks       | Next.js, NestJS, React, Express, Fastify, Vue, Angular, Nuxt, Svelte and SvelteKit, Astro, Remix, React Native, Electron, Hono, Koa |
+| Package managers | pnpm, npm, Yarn, Bun, pip, Poetry, uv, Pipenv, Go modules, Cargo                                                                    |
+| Monorepos        | `workspaces` in `package.json`, `pnpm-workspace.yaml`                                                                               |
+
+### Project Memory
+
+Facts are normalized into **Project Memory**: agent-independent knowledge about the repository,
+grouped into metadata, stack, architecture, structure, commands, conventions, dependencies, and
+risks. Project Memory has no concept of any particular assistant. It is serialized as
+`memory.json`, the single source of truth for everything else Recall writes.
+
+### Agent Templates
+
+Each Agent Template turns Project Memory into the format one assistant reads best. Templates are
+read-only consumers of `memory.json`: they format knowledge, they never gather it, and they never
+look at the repository. An agent file therefore never contains a fact that `memory.json` doesn't.
+
+### Disk
+
+The complete output, `memory.json` and the five agent files, is written to `.recall/` as a whole.
+If anything fails along the way, nothing is written.
+
+## Guarantees
+
+Every run of `recall init` keeps these, unconditionally:
+
+- **No network access.** Recall works entirely offline, using only what is already on disk.
+- **No code execution.** Recall reads the repository. It never runs its code, tests, build, or
+  scripts to learn about it.
+- **Writes only inside `.recall/`.** Nothing outside that directory is created, modified, or
+  deleted.
+- **Idempotent.** On an unchanged repository, regenerating produces an unchanged `.recall/`.
+  Without `--force`, an existing `.recall/` is never touched.
+- **Deterministic.** The same repository state always produces the same `memory.json` and the same
+  agent files, on any machine, at any time.
+- **All or nothing.** Either the complete `.recall/` is written, or nothing is.
+
+There is also nothing to set up or trust beyond the files on disk: no account, no API key, no
+telemetry, and no LLM calls. Every fact in the output comes from a file in your repository.
+
+## Determinism
+
+Given the same repository state, Recall produces byte-identical output, every time, on every
+machine. Two developers who initialize the same commit get the same `.recall/`, and regenerating an
+unchanged repository with `--force` rewrites the same bytes.
+
+A practical consequence: if you commit `.recall/`, a change to it in a diff always reflects a
+change in the repository itself, never noise from the machine or the moment it ran on.
+
+## Running it again
+
+`recall init` is a one-time act. Running it on a repository that already has `.recall/` changes
+nothing and exits with code `4`. When the repository has changed and you want the memory to
+reflect it, regenerate it explicitly:
+
+```bash
+recall init --force
 ```
 
-Every generated file wraps Recall's content in markers; anything written outside them is
-preserved and survives every `recall update`.
-
-## Task-focused ranking
-
-`recall context --task "<description>"` ranks which files an agent should read first for that
-task, using deterministic, local, and explainable signals only — no embeddings, no AI provider,
-no network access:
-
-- filename, path, and exported-symbol matches against the task description
-- workspace name matches
-- bounded import-graph proximity (direct and reverse neighbors)
-- test/production counterpart linking
-- term specificity, so a task term that matches nearly every file in the repository is weighted
-  down relative to a rare, specific term
-
-Every ranked file carries a human-readable reason, available in full via `--json`.
-
-## Safety
-
-- Local-first: everything runs on your machine, in your repository.
-- No telemetry.
-- Does not execute, import, or evaluate your project's source code or scripts.
-- Managed writes are restricted to `.recall/`, `.gitignore`, and any output path explicitly
-  passed on the command line.
+See the [command reference](/docs/commands) for every exit code.
