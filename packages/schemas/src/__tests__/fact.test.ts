@@ -16,6 +16,21 @@ const EXPECTED_CATEGORIES = [
   'risk-indicator',
 ];
 
+const SAMPLE_VALUES: Record<string, unknown> = {
+  language: 'TypeScript',
+  framework: 'nextjs',
+  'package-manager': 'pnpm',
+  'workspace-layout': ['.', 'packages/core'],
+  directory: { path: 'src', role: 'source' },
+  command: { name: 'test', command: 'vitest run' },
+  'testing-framework': 'vitest',
+  linting: 'eslint',
+  'architecture-hint': { path: 'dist/index.js', kind: 'bin', workspace: null },
+  dependency: { name: 'zod', version: '^3.24.1', scope: 'dependency' },
+  'repository-metadata': { key: 'name', value: 'recall' },
+  'risk-indicator': { id: 'no-ci-configuration', description: 'No CI configuration found.' },
+};
+
 function validFact() {
   return {
     category: 'language',
@@ -63,9 +78,33 @@ describe('FactSchema', () => {
 
   it('accepts a well-formed fact for every defined category', () => {
     for (const category of EXPECTED_CATEGORIES) {
-      const result = FactSchema.safeParse({ ...validFact(), category });
-      expect(result.success).toBe(true);
+      const value = SAMPLE_VALUES[category];
+      const result = FactSchema.safeParse({ ...validFact(), category, value });
+      expect(result.success, category).toBe(true);
     }
+  });
+
+  it('rejects a value whose shape does not match its category', () => {
+    const result = FactSchema.safeParse({ ...validFact(), category: 'command', value: 'test' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a risk indicator whose id is not kebab-case', () => {
+    const result = FactSchema.safeParse({
+      ...validFact(),
+      category: 'risk-indicator',
+      value: { id: 'No CI', description: 'No CI configuration found.' },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an empty workspace layout', () => {
+    const result = FactSchema.safeParse({
+      ...validFact(),
+      category: 'workspace-layout',
+      value: [],
+    });
+    expect(result.success).toBe(false);
   });
 });
 
