@@ -19,7 +19,7 @@ Demonstrable: given Facts, produce a valid `memory.json` on disk for a real repo
 Demonstrable: given a `memory.json`, produce all five agent files — `claude.md`, `codex.md`, `cursor.md`, `gemini.md`, `openai.md` — as strings (spec §17).
 
 ### Milestone 4 — CLI
-Demonstrable: `npx recall init` runs end to end against a real repository and produces the exact `.recall/` output contract (spec §11, §12, §18).
+Demonstrable: `npx recall-context init` runs end to end against a real repository and produces the exact `.recall/` output contract (spec §11, §12, §18).
 
 ### Milestone 5 — Polish
 Demonstrable: the published npm package, installed from a clean environment, produces correct, deterministic, cross-platform output and is ready for public release.
@@ -410,7 +410,7 @@ Per spec §19, none of the above are rejected ideas — they are future products
 - **Atomic write failures.** A crash or permission error mid-write must never leave a partial or corrupt `.recall/`. Mitigation: write-then-rename atomic writes (MEM-04, CLI-03) are a release gate, not an optimization.
 - **Template drift.** An agent template silently diverging from what its target assistant actually reads well degrades value without any test catching it. Mitigation: golden output tests (TPL-07) catch unintentional drift; intentional changes require an explicit golden-file update, creating a visible review point.
 - **Large repository scan performance.** A very large repository (tens of thousands of files) could make the Scanner slow enough to violate the "fast" guarantee (spec §9). Mitigation: filesystem walker (SCAN-02) excludes dependency/build directories early; performance verified against a large fixture as part of REL-06.
-- **npm package name availability.** The `recall` (or chosen) package name may already be taken or disputed on the npm registry, blocking `npx recall init` as specified. Mitigation: name reserved early, before Milestone 4 begins, not discovered at release time.
+- **npm package name availability.** The `recall` (or chosen) package name may already be taken or disputed on the npm registry, blocking `npx recall init` as specified. Mitigation: name reserved early, before Milestone 4 begins, not discovered at release time. Outcome: `recall` belongs to an unrelated package, so v1 ships as `recall-context` (`npx recall-context init`), which installs the `recall` command.
 - **Monorepo/workspace edge cases.** Unusual workspace configurations (nested workspaces, non-standard manifests) could produce incorrect structure facts. Mitigation: workspace detection (SCAN-05) is evidence-based only; an unrecognized configuration produces a single-package result rather than a wrong guess.
 
 ---
@@ -419,13 +419,13 @@ Per spec §19, none of the above are rejected ideas — they are future products
 
 Recall v1 is finished when all of the following are true, simultaneously:
 
-1. `npx recall init` succeeds against every repository in the reference fixture set, on Linux, macOS, and Windows.
+1. `npx recall-context init` succeeds against every repository in the reference fixture set, on Linux, macOS, and Windows.
 2. The output for every successful run is exactly the six files defined in spec §12 — no more, no fewer, in every case.
 3. Every generated agent file's content is fully traceable to `memory.json`, verified by the golden output test suite.
 4. Ten consecutive runs against an unchanged repository produce byte-identical `memory.json` and agent files, on every supported platform.
 5. A second `init` run without `--force` makes no change to disk; a second run with `--force` reproduces the first run's output exactly.
 6. No test run, in any suite, makes a network call or modifies any file outside `.recall/`.
-7. The published npm package installs and runs correctly via `npx recall init` from a machine with no prior local build artifacts.
+7. The published npm package installs and runs correctly via `npx recall-context init` from a machine with no prior local build artifacts.
 8. README and CLI reference document exactly the command surface that ships — one command, one flag — with no undocumented behavior and no described behavior that doesn't exist.
 9. A GitHub Release is published with a tag matching the npm version, and the post-publish smoke test (REL-08) has passed against the real published artifact.
 

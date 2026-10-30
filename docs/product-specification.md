@@ -55,7 +55,7 @@ This vision is deliberately narrow in one respect: Recall's role is to *establis
 A developer clones a repository, runs exactly one command:
 
 ```
-npx recall init
+npx recall-context init
 ```
 
 Within one minute, every major AI assistant understands the project without asking repetitive questions.
@@ -140,7 +140,7 @@ If the honest answer is no, the feature does not belong in Recall v1 — regardl
 The complete onboarding to Recall is exactly one command:
 
 ```
-npx recall init
+npx recall-context init
 ```
 
 The user sees, in order:
@@ -283,8 +283,10 @@ Adding support for a new AI assistant MUST require only **one new template and o
 Recall v1 has exactly one public command:
 
 ```
-npx recall init
+npx recall-context init
 ```
+
+The npm package is `recall-context`, because the npm name `recall` belongs to an unrelated package; the command it installs is `recall`, so after a global install the same command is `recall init`.
 
 With one optional flag:
 

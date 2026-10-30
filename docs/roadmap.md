@@ -21,7 +21,6 @@ These are boundaries of the current detectors, not bugs. Each one errs toward sa
 - **Workspace members** are every `package.json` below a workspace root, not matched against the declared globs; a package deliberately excluded from the globs is still listed.
 - **`.gitignore`** is read from the repository root only; nested `.gitignore` files are not applied.
 - **The walk stops at 20,000 files**; larger repositories get a `file-limit-reached` risk.
-- **`npx recall init`**, as written in the specification, needs the npm name `recall`, which belongs to an unrelated package. v1 ships as `recall-context` (`npx recall-context init`); the installed command is `recall`.
 
 Closing one of these is a change to what the Scanner observes; it changes `memory.json` and is released and documented as such.
 
