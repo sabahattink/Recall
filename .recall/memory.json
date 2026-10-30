@@ -1,0 +1,1444 @@
+{
+  "schemaVersion": "1.0.0",
+  "metadata": {
+    "name": {
+      "value": "recall-monorepo",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "name declared in package.json"
+        }
+      ]
+    },
+    "description": {
+      "value": "Initialize a repository's memory for AI coding assistants.",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "description declared in package.json"
+        }
+      ]
+    },
+    "commit": {
+      "value": "61bb11ab88eac916a7643b7e484a822514ce38b8",
+      "evidence": [
+        {
+          "path": ".",
+          "reason": "git HEAD resolves to this commit"
+        }
+      ]
+    },
+    "defaultBranch": {
+      "value": "main",
+      "evidence": [
+        {
+          "path": ".",
+          "reason": "refs/remotes/origin/HEAD points to this branch"
+        }
+      ]
+    },
+    "remoteUrl": {
+      "value": "https://github.com/sabahattink/Recall.git",
+      "evidence": [
+        {
+          "path": ".",
+          "reason": "URL of the git remote \"origin\""
+        }
+      ]
+    }
+  },
+  "stack": {
+    "languages": [
+      {
+        "name": "TypeScript",
+        "evidence": [
+          {
+            "path": "tsconfig.json",
+            "reason": "tsconfig.json present"
+          }
+        ]
+      },
+      {
+        "name": "JavaScript",
+        "evidence": [
+          {
+            "path": "apps/cli/scripts/__tests__/bundle-internal.test.mjs",
+            "reason": ".mjs source file present"
+          }
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "nextjs",
+        "evidence": [
+          {
+            "path": "apps/web/next.config.ts",
+            "reason": "next.config.ts present"
+          },
+          {
+            "path": "apps/web/package.json",
+            "reason": "dependency \"next\" declared"
+          }
+        ]
+      }
+    ],
+    "packageManagers": [
+      {
+        "name": "pnpm",
+        "evidence": [
+          {
+            "path": "pnpm-lock.yaml",
+            "reason": "pnpm-lock.yaml present"
+          }
+        ]
+      }
+    ]
+  },
+  "architecture": {
+    "layout": {
+      "kind": "monorepo",
+      "workspaces": [
+        ".",
+        "apps/cli",
+        "apps/web",
+        "packages/analyzers",
+        "packages/core",
+        "packages/git",
+        "packages/memory",
+        "packages/schemas",
+        "packages/templates",
+        "packages/test-fixtures"
+      ],
+      "evidence": [
+        {
+          "path": "pnpm-workspace.yaml",
+          "reason": "pnpm-workspace.yaml present"
+        },
+        {
+          "path": "apps/cli/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "apps/web/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/core/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/git/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/memory/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/schemas/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/templates/package.json",
+          "reason": "workspace member package.json present"
+        },
+        {
+          "path": "packages/test-fixtures/package.json",
+          "reason": "workspace member package.json present"
+        }
+      ]
+    },
+    "entryPoints": [
+      {
+        "path": "apps/cli/dist/index.js",
+        "kind": "bin",
+        "workspace": "apps/cli",
+        "evidence": [
+          {
+            "path": "apps/cli/package.json",
+            "reason": "bin entry \"recall\" declared"
+          }
+        ]
+      },
+      {
+        "path": "apps/cli/dist/index.js",
+        "kind": "main",
+        "workspace": "apps/cli",
+        "evidence": [
+          {
+            "path": "apps/cli/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/analyzers/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/analyzers",
+        "evidence": [
+          {
+            "path": "packages/analyzers/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/core/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/core",
+        "evidence": [
+          {
+            "path": "packages/core/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/git/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/git",
+        "evidence": [
+          {
+            "path": "packages/git/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/memory/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/memory",
+        "evidence": [
+          {
+            "path": "packages/memory/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/schemas/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/schemas",
+        "evidence": [
+          {
+            "path": "packages/schemas/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/templates/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/templates",
+        "evidence": [
+          {
+            "path": "packages/templates/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      },
+      {
+        "path": "packages/test-fixtures/dist/index.js",
+        "kind": "main",
+        "workspace": "packages/test-fixtures",
+        "evidence": [
+          {
+            "path": "packages/test-fixtures/package.json",
+            "reason": "\"main\" field declared"
+          }
+        ]
+      }
+    ]
+  },
+  "structure": {
+    "directories": [
+      {
+        "path": ".changeset",
+        "roles": [
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": ".changeset/README.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": ".changeset/recall-v1-init.md",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": ".github",
+        "roles": [
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": ".github/pull_request_template.md",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": "apps",
+        "roles": [
+          "source",
+          "test",
+          "config",
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": "apps/cli/scripts/__tests__/bundle-internal.test.mjs",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "apps/cli/scripts/bundle-internal.mjs",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "apps/cli/scripts/bundle.mjs",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "apps/cli/scripts/__tests__/bundle-internal.test.mjs",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "apps/cli/src/__tests__/cli.test.ts",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "apps/cli/src/__tests__/packaging.test.ts",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "apps/cli/package.json",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "apps/cli/tsconfig.json",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "apps/cli/vitest.config.ts",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "apps/web/README.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "apps/web/content/docs/commands.mdx",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "apps/web/content/docs/getting-started.mdx",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": "docs",
+        "roles": [
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": "docs/architecture.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "docs/assets/README.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "docs/cli-reference.md",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": "examples",
+        "roles": [
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": "examples/README.md",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": "packages",
+        "roles": [
+          "source",
+          "test",
+          "config",
+          "documentation"
+        ],
+        "evidence": [
+          {
+            "path": "packages/analyzers/src/__tests__/architecture-hint-facts.test.ts",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "packages/analyzers/src/__tests__/command-tooling-facts.test.ts",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "packages/analyzers/src/__tests__/dependency-facts.test.ts",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "packages/analyzers/src/__tests__/__golden__/go-cli.facts.json",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "packages/analyzers/src/__tests__/__golden__/nestjs.facts.json",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "packages/analyzers/src/__tests__/__golden__/nextjs.facts.json",
+            "reason": "matches the test file pattern"
+          },
+          {
+            "path": "packages/analyzers/package.json",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "packages/analyzers/tsconfig.json",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "packages/core/package.json",
+            "reason": "matches the config file pattern"
+          },
+          {
+            "path": "packages/core/src/__tests__/__golden__/go-cli/agents/claude.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "packages/core/src/__tests__/__golden__/go-cli/agents/codex.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
+            "path": "packages/core/src/__tests__/__golden__/go-cli/agents/cursor.md",
+            "reason": "matches the documentation file pattern"
+          }
+        ]
+      },
+      {
+        "path": "scripts",
+        "roles": [
+          "source"
+        ],
+        "evidence": [
+          {
+            "path": "scripts/ci-verify.mjs",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "scripts/clean-package.mjs",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "scripts/no-network.mjs",
+            "reason": "matches the source file pattern"
+          }
+        ]
+      }
+    ]
+  },
+  "commands": [
+    {
+      "name": "build",
+      "command": "turbo run build",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "scripts.build declared as \"turbo run build\""
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "command": "turbo run test",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "scripts.test declared as \"turbo run test\""
+        }
+      ]
+    },
+    {
+      "name": "lint",
+      "command": "turbo run lint",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "scripts.lint declared as \"turbo run lint\""
+        }
+      ]
+    },
+    {
+      "name": "typecheck",
+      "command": "turbo run typecheck",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "scripts.typecheck declared as \"turbo run typecheck\""
+        }
+      ]
+    },
+    {
+      "name": "format",
+      "command": "prettier --write .",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "scripts.format declared as \"prettier --write .\""
+        }
+      ]
+    }
+  ],
+  "conventions": {
+    "testing": [
+      {
+        "name": "vitest",
+        "evidence": [
+          {
+            "path": "package.json",
+            "reason": "dependency \"vitest\" declared"
+          }
+        ]
+      }
+    ],
+    "linting": [
+      {
+        "name": "eslint",
+        "evidence": [
+          {
+            "path": "package.json",
+            "reason": "dependency \"eslint\" declared"
+          },
+          {
+            "path": "eslint.config.js",
+            "reason": "eslint.config.js present"
+          }
+        ]
+      },
+      {
+        "name": "prettier",
+        "evidence": [
+          {
+            "path": "package.json",
+            "reason": "dependency \"prettier\" declared"
+          },
+          {
+            "path": ".prettierrc.json",
+            "reason": ".prettierrc.json present"
+          }
+        ]
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "fast-glob",
+      "version": "^3.3.2",
+      "scope": "dependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "dependencies.fast-glob declared"
+        }
+      ]
+    },
+    {
+      "name": "ignore",
+      "version": "^6.0.2",
+      "scope": "dependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "dependencies.ignore declared"
+        }
+      ]
+    },
+    {
+      "name": "zod",
+      "version": "^3.24.1",
+      "scope": "dependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "dependencies.zod declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/core",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.@recall-ai/core declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/test-fixtures",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.@recall-ai/test-fixtures declared"
+        }
+      ]
+    },
+    {
+      "name": "@vercel/ncc",
+      "version": "^0.44.1",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.@vercel/ncc declared"
+        }
+      ]
+    },
+    {
+      "name": "execa",
+      "version": "^9.5.2",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.execa declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "apps/cli/package.json",
+      "evidence": [
+        {
+          "path": "apps/cli/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@sentry/nextjs",
+      "version": "10",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.@sentry/nextjs declared"
+        }
+      ]
+    },
+    {
+      "name": "@vercel/analytics",
+      "version": "^2.0.1",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.@vercel/analytics declared"
+        }
+      ]
+    },
+    {
+      "name": "@vercel/speed-insights",
+      "version": "^2.0.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.@vercel/speed-insights declared"
+        }
+      ]
+    },
+    {
+      "name": "class-variance-authority",
+      "version": "0.7.1",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.class-variance-authority declared"
+        }
+      ]
+    },
+    {
+      "name": "clsx",
+      "version": "2.1.1",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.clsx declared"
+        }
+      ]
+    },
+    {
+      "name": "fumadocs-core",
+      "version": "16.14.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.fumadocs-core declared"
+        }
+      ]
+    },
+    {
+      "name": "fumadocs-mdx",
+      "version": "15.2.2",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.fumadocs-mdx declared"
+        }
+      ]
+    },
+    {
+      "name": "fumadocs-ui",
+      "version": "16.14.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.fumadocs-ui declared"
+        }
+      ]
+    },
+    {
+      "name": "lucide-react",
+      "version": "1.28.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.lucide-react declared"
+        }
+      ]
+    },
+    {
+      "name": "next",
+      "version": "16.3.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.next declared"
+        }
+      ]
+    },
+    {
+      "name": "next-themes",
+      "version": "0.4.6",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.next-themes declared"
+        }
+      ]
+    },
+    {
+      "name": "react",
+      "version": "19.2.8",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.react declared"
+        }
+      ]
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.8",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.react-dom declared"
+        }
+      ]
+    },
+    {
+      "name": "tailwind-merge",
+      "version": "3.6.0",
+      "scope": "dependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "dependencies.tailwind-merge declared"
+        }
+      ]
+    },
+    {
+      "name": "@tailwindcss/postcss",
+      "version": "4.3.3",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.@tailwindcss/postcss declared"
+        }
+      ]
+    },
+    {
+      "name": "@types/mdx",
+      "version": "2.0.14",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.@types/mdx declared"
+        }
+      ]
+    },
+    {
+      "name": "@types/node",
+      "version": "^22.10.2",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.@types/node declared"
+        }
+      ]
+    },
+    {
+      "name": "@types/react",
+      "version": "19.2.18",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.@types/react declared"
+        }
+      ]
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.2.4",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.@types/react-dom declared"
+        }
+      ]
+    },
+    {
+      "name": "postcss",
+      "version": "8.5.25",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.postcss declared"
+        }
+      ]
+    },
+    {
+      "name": "tailwindcss",
+      "version": "4.3.3",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.tailwindcss declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "apps/web/package.json",
+      "evidence": [
+        {
+          "path": "apps/web/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@changesets/cli",
+      "version": "^2.27.11",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.@changesets/cli declared"
+        }
+      ]
+    },
+    {
+      "name": "@eslint/js",
+      "version": "^9.17.0",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.@eslint/js declared"
+        }
+      ]
+    },
+    {
+      "name": "@types/node",
+      "version": "^22.10.2",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.@types/node declared"
+        }
+      ]
+    },
+    {
+      "name": "eslint",
+      "version": "^9.17.0",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.eslint declared"
+        }
+      ]
+    },
+    {
+      "name": "eslint-config-prettier",
+      "version": "^9.1.0",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.eslint-config-prettier declared"
+        }
+      ]
+    },
+    {
+      "name": "prettier",
+      "version": "^3.4.2",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.prettier declared"
+        }
+      ]
+    },
+    {
+      "name": "turbo",
+      "version": "^2.3.3",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.turbo declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript-eslint",
+      "version": "^8.18.1",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.typescript-eslint declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "package.json",
+      "evidence": [
+        {
+          "path": "package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/schemas",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "dependencies.@recall-ai/schemas declared"
+        }
+      ]
+    },
+    {
+      "name": "fast-glob",
+      "version": "^3.3.2",
+      "scope": "dependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "dependencies.fast-glob declared"
+        }
+      ]
+    },
+    {
+      "name": "ignore",
+      "version": "^6.0.2",
+      "scope": "dependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "dependencies.ignore declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/test-fixtures",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "devDependencies.@recall-ai/test-fixtures declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/analyzers/package.json",
+      "evidence": [
+        {
+          "path": "packages/analyzers/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/analyzers",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "dependencies.@recall-ai/analyzers declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/git",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "dependencies.@recall-ai/git declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/memory",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "dependencies.@recall-ai/memory declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/schemas",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "dependencies.@recall-ai/schemas declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/templates",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "dependencies.@recall-ai/templates declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/test-fixtures",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "devDependencies.@recall-ai/test-fixtures declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/core/package.json",
+      "evidence": [
+        {
+          "path": "packages/core/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/schemas",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/git/package.json",
+      "evidence": [
+        {
+          "path": "packages/git/package.json",
+          "reason": "dependencies.@recall-ai/schemas declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/test-fixtures",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "packages/git/package.json",
+      "evidence": [
+        {
+          "path": "packages/git/package.json",
+          "reason": "devDependencies.@recall-ai/test-fixtures declared"
+        }
+      ]
+    },
+    {
+      "name": "execa",
+      "version": "^9.5.2",
+      "scope": "devDependency",
+      "manifest": "packages/git/package.json",
+      "evidence": [
+        {
+          "path": "packages/git/package.json",
+          "reason": "devDependencies.execa declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/git/package.json",
+      "evidence": [
+        {
+          "path": "packages/git/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/git/package.json",
+      "evidence": [
+        {
+          "path": "packages/git/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/schemas",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/memory/package.json",
+      "evidence": [
+        {
+          "path": "packages/memory/package.json",
+          "reason": "dependencies.@recall-ai/schemas declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/test-fixtures",
+      "version": "workspace:*",
+      "scope": "devDependency",
+      "manifest": "packages/memory/package.json",
+      "evidence": [
+        {
+          "path": "packages/memory/package.json",
+          "reason": "devDependencies.@recall-ai/test-fixtures declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/memory/package.json",
+      "evidence": [
+        {
+          "path": "packages/memory/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/memory/package.json",
+      "evidence": [
+        {
+          "path": "packages/memory/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "zod",
+      "version": "^3.24.1",
+      "scope": "dependency",
+      "manifest": "packages/schemas/package.json",
+      "evidence": [
+        {
+          "path": "packages/schemas/package.json",
+          "reason": "dependencies.zod declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/schemas/package.json",
+      "evidence": [
+        {
+          "path": "packages/schemas/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/schemas/package.json",
+      "evidence": [
+        {
+          "path": "packages/schemas/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "@recall-ai/schemas",
+      "version": "workspace:*",
+      "scope": "dependency",
+      "manifest": "packages/templates/package.json",
+      "evidence": [
+        {
+          "path": "packages/templates/package.json",
+          "reason": "dependencies.@recall-ai/schemas declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/templates/package.json",
+      "evidence": [
+        {
+          "path": "packages/templates/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/templates/package.json",
+      "evidence": [
+        {
+          "path": "packages/templates/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    },
+    {
+      "name": "execa",
+      "version": "^9.5.2",
+      "scope": "dependency",
+      "manifest": "packages/test-fixtures/package.json",
+      "evidence": [
+        {
+          "path": "packages/test-fixtures/package.json",
+          "reason": "dependencies.execa declared"
+        }
+      ]
+    },
+    {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency",
+      "manifest": "packages/test-fixtures/package.json",
+      "evidence": [
+        {
+          "path": "packages/test-fixtures/package.json",
+          "reason": "devDependencies.typescript declared"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "version": "^2.1.8",
+      "scope": "devDependency",
+      "manifest": "packages/test-fixtures/package.json",
+      "evidence": [
+        {
+          "path": "packages/test-fixtures/package.json",
+          "reason": "devDependencies.vitest declared"
+        }
+      ]
+    }
+  ],
+  "risks": []
+}
