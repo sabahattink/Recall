@@ -39,18 +39,42 @@ const DETERMINISM_RUNS = 10;
 const EXIT_ALREADY_INITIALIZED = 4;
 
 let failures = 0;
+let currentFixture = '';
 
 function step(label) {
   console.log(`\n--- ${label} ---`);
 }
 
-function assert(condition, message) {
+/** GitHub workflow-command escaping, so a multi-line detail stays one annotation. */
+function escapeAnnotation(text) {
+  return text.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+}
+
+/**
+ * Logs a check. A failure is also emitted as a GitHub Actions error
+ * annotation, which is readable from a pull request's checks (and the
+ * public API) without access to the job log.
+ */
+function assert(condition, message, detail = '') {
   if (condition) {
     console.log(`ok: ${message}`);
-  } else {
-    failures++;
-    console.error(`FAIL: ${message}`);
+    return;
   }
+  failures++;
+  console.error(`FAIL: ${message}${detail ? `\n${detail}` : ''}`);
+  if (process.env.GITHUB_ACTIONS === 'true') {
+    const text = `${currentFixture}: ${message}${detail ? `\n${detail}` : ''}`;
+    console.log(`::error title=ci-verify::${escapeAnnotation(text)}`);
+  }
+}
+
+/** Paths added (+), removed (-), or changed (~) between two hashed trees. */
+function treeDiff(before, after) {
+  const paths = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort();
+  return paths
+    .filter((path) => before[path] !== after[path])
+    .map((path) => `${!(path in before) ? '+' : !(path in after) ? '-' : '~'} ${path}`)
+    .join('\n');
 }
 
 function run(command, args, options = {}) {
@@ -118,6 +142,7 @@ for (const required of [cliEntry, fixturesEntry]) {
 const { REFERENCE_FIXTURES } = await import(pathToFileURL(fixturesEntry).href);
 
 for (const fixture of REFERENCE_FIXTURES) {
+  currentFixture = fixture.name;
   const repo = mkdtempSync(join(tmpdir(), `recall-ci-${fixture.name}-`));
   try {
     step(`${fixture.name}: build fixture in a fresh Git repository`);
@@ -144,15 +169,24 @@ for (const fixture of REFERENCE_FIXTURES) {
       first.exitCode === 0,
       `exit code 0 (got ${first.exitCode}; stderr: ${first.stderr.trim()})`,
     );
-    assert(first.stdout === EXPECTED_STDOUT, 'stdout is exactly the four lines of spec §11');
-    assert(first.stderr === '', 'stderr is empty');
+    assert(
+      first.stdout === EXPECTED_STDOUT,
+      'stdout is exactly the four lines of spec §11',
+      `stdout: ${JSON.stringify(first.stdout)}`,
+    );
+    assert(first.stderr === '', 'stderr is empty', `stderr: ${first.stderr}`);
 
     const afterFirst = hashTree(repo);
     assert(
       same(Object.keys(inside(afterFirst)), OUTPUT_CONTRACT),
       '.recall/ holds exactly the six contract files',
+      Object.keys(inside(afterFirst)).join('\n'),
     );
-    assert(same(outside(afterFirst), before), 'nothing outside .recall/ changed (including .git/)');
+    assert(
+      same(outside(afterFirst), before),
+      'nothing outside .recall/ changed (including .git/)',
+      treeDiff(before, outside(afterFirst)),
+    );
     const memory = JSON.parse(readFileSync(join(repo, '.recall', 'memory.json'), 'utf8'));
     assert(
       /^[0-9a-f]{40}$/.test(memory.metadata?.commit?.value ?? ''),
@@ -164,17 +198,34 @@ for (const fixture of REFERENCE_FIXTURES) {
     assert(
       second.exitCode === EXIT_ALREADY_INITIALIZED,
       `exit code ${EXIT_ALREADY_INITIALIZED} (got ${second.exitCode})`,
+      `stderr: ${second.stderr}`,
     );
-    assert(second.stdout === '', 'prints no progress');
-    assert(same(hashTree(repo), afterFirst), 'changes nothing on disk');
+    assert(second.stdout === '', 'prints no progress', `stdout: ${JSON.stringify(second.stdout)}`);
+    const afterSecond = hashTree(repo);
+    assert(
+      same(afterSecond, afterFirst),
+      'changes nothing on disk',
+      treeDiff(afterFirst, afterSecond),
+    );
 
     step(`${fixture.name}: ${DETERMINISM_RUNS} consecutive --force runs`);
-    let identical = true;
-    for (let i = 0; i < DETERMINISM_RUNS; i++) {
+    let divergence = '';
+    for (let i = 0; i < DETERMINISM_RUNS && !divergence; i++) {
       const forced = runCli(['init', repo, '--force'], repo);
-      if (forced.exitCode !== 0 || !same(hashTree(repo), afterFirst)) identical = false;
+      const afterForced = hashTree(repo);
+      if (forced.exitCode !== 0 || !same(afterForced, afterFirst)) {
+        divergence = [
+          `run ${i + 1}: exit code ${forced.exitCode}`,
+          `stderr: ${forced.stderr}`,
+          treeDiff(afterFirst, afterForced),
+        ].join('\n');
+      }
     }
-    assert(identical, 'every run exits 0 and reproduces the first run byte for byte');
+    assert(
+      divergence === '',
+      'every run exits 0 and reproduces the first run byte for byte',
+      divergence,
+    );
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
