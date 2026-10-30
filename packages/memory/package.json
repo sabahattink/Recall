@@ -1,7 +1,7 @@
 {
   "name": "@recall-ai/memory",
   "version": "0.1.0",
-  "description": "Manifest, snapshot, and Markdown memory-file management for Recall.",
+  "description": "Project Memory: normalizes Facts, serializes memory.json, and writes .recall/ atomically.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
