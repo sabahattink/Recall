@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0.0",
+  "metadata": {
+    "name": {
+      "value": "inventory-service",
+      "evidence": [
+        {
+          "path": "pyproject.toml",
+          "reason": "name declared in pyproject.toml"
+        }
+      ]
+    },
+    "description": {
+      "value": "Tracks stock levels for the warehouse.",
+      "evidence": [
+        {
+          "path": "pyproject.toml",
+          "reason": "description declared in pyproject.toml"
+        }
+      ]
+    },
+    "commit": null,
+    "defaultBranch": null,
+    "remoteUrl": null
+  },
+  "stack": {
+    "languages": [
+      {
+        "name": "Python",
+        "evidence": [
+          {
+            "path": "pyproject.toml",
+            "reason": "pyproject.toml present"
+          }
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManagers": [
+      {
+        "name": "poetry",
+        "evidence": [
+          {
+            "path": "poetry.lock",
+            "reason": "poetry.lock present"
+          }
+        ]
+      }
+    ]
+  },
+  "architecture": {
+    "layout": null,
+    "entryPoints": []
+  },
+  "structure": {
+    "directories": [
+      {
+        "path": "inventory",
+        "roles": [
+          "source"
+        ],
+        "evidence": [
+          {
+            "path": "inventory/__init__.py",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "inventory/stock.py",
+            "reason": "matches the source file pattern"
+          }
+        ]
+      },
+      {
+        "path": "tests",
+        "roles": [
+          "source",
+          "test"
+        ],
+        "evidence": [
+          {
+            "path": "tests/test_stock.py",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "tests/test_stock.py",
+            "reason": "matches the test file pattern"
+          }
+        ]
+      }
+    ]
+  },
+  "commands": [],
+  "conventions": {
+    "testing": [],
+    "linting": []
+  },
+  "dependencies": [],
+  "risks": [
+    {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found.",
+      "evidence": [
+        {
+          "path": ".",
+          "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "1.0.0",
+  "metadata": {
+    "name": {
+      "value": "github.com/acme/linkcheck",
+      "evidence": [
+        {
+          "path": "go.mod",
+          "reason": "name declared in go.mod"
+        }
+      ]
+    },
+    "description": null,
+    "commit": null,
+    "defaultBranch": null,
+    "remoteUrl": null
+  },
+  "stack": {
+    "languages": [
+      {
+        "name": "Go",
+        "evidence": [
+          {
+            "path": "go.mod",
+            "reason": "go.mod present"
+          }
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManagers": [
+      {
+        "name": "go-modules",
+        "evidence": [
+          {
+            "path": "go.mod",
+            "reason": "go.mod present"
+          }
+        ]
+      }
+    ]
+  },
+  "architecture": {
+    "layout": null,
+    "entryPoints": []
+  },
+  "structure": {
+    "directories": [
+      {
+        "path": "cmd",
+        "roles": [
+          "source"
+        ],
+        "evidence": [
+          {
+            "path": "cmd/linkcheck/main.go",
+            "reason": "matches the source file pattern"
+          }
+        ]
+      },
+      {
+        "path": "internal",
+        "roles": [
+          "source",
+          "test"
+        ],
+        "evidence": [
+          {
+            "path": "internal/links/links.go",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "internal/links/links_test.go",
+            "reason": "matches the source file pattern"
+          },
+          {
+            "path": "internal/links/links_test.go",
+            "reason": "matches the test file pattern"
+          }
+        ]
+      }
+    ]
+  },
+  "commands": [],
+  "conventions": {
+    "testing": [],
+    "linting": []
+  },
+  "dependencies": [],
+  "risks": []
+}

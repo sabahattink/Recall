@@ -6,10 +6,23 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../schemas" },
-    { "path": "../git" },
-    { "path": "../analyzers" },
-    { "path": "../memory" },
-    { "path": "../test-fixtures" }
+    {
+      "path": "../schemas"
+    },
+    {
+      "path": "../git"
+    },
+    {
+      "path": "../analyzers"
+    },
+    {
+      "path": "../memory"
+    },
+    {
+      "path": "../templates"
+    },
+    {
+      "path": "../test-fixtures"
+    }
   ]
 }
