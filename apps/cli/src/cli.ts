@@ -1,170 +1,86 @@
-import { cac } from 'cac';
-import { InvalidUsageError } from '@recall-ai/core';
+import {
+  ExitCode,
+  RecallError,
+  runInit,
+  type ExitCodeValue,
+  type InitStage,
+} from '@recall-ai/core';
+import { parseArguments } from './arguments.js';
 import { CLI_NAME, CLI_VERSION } from './package-info.js';
-import { resolveGlobalOptions, type RawCacOptions } from './global-options.js';
-import { Reporter } from './reporter.js';
-import { withErrorHandling } from './error-handling.js';
-import { initCommand } from './commands/init.js';
-import { scanCommand } from './commands/scan.js';
-import { updateCommand } from './commands/update.js';
-import { statusCommand } from './commands/status.js';
-import { explainCommand } from './commands/explain.js';
-import { contextCommand } from './commands/context.js';
-import { doctorCommand } from './commands/doctor.js';
 
-interface CommandOptions extends RawCacOptions {
-  force?: boolean;
-  dryRun?: boolean;
-  maxFiles?: string | number;
-  output?: string;
-  since?: string;
-  check?: boolean;
-  task?: string;
-  maxTokens?: string | number;
-  format?: string;
-  stdout?: boolean;
+/** Where the CLI writes. Injected so tests can capture output without a subprocess. */
+export interface CliIo {
+  stdout(line: string): void;
+  stderr(line: string): void;
+  /** When true, unexpected failures also print their stack trace (RECALL_DEBUG=1). */
+  debug: boolean;
 }
 
-function parseOptionalInt(value: string | number | undefined, flag: string): number | undefined {
-  if (value === undefined) return undefined;
-  const parsed = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
-    throw new InvalidUsageError(`${flag} must be a positive integer, got "${value}"`);
+/** The exact progress lines of docs/product-specification.md §11, one per stage. */
+export const STAGE_MESSAGES: Record<InitStage, string> = {
+  scan: 'Scanning repository...',
+  memory: 'Detecting architecture...',
+  generate: 'Generating AI memory...',
+};
+export const DONE_MESSAGE = 'Done.';
+
+export const HELP_TEXT = [
+  `${CLI_NAME} — initialize a repository's memory for AI coding assistants`,
+  '',
+  'Usage:',
+  `  ${CLI_NAME} init [path] [--force]`,
+  '',
+  'Arguments:',
+  '  path           Repository to initialize (default: the current directory)',
+  '',
+  'Options:',
+  '  --force        Regenerate .recall/ when it already exists',
+  '  -h, --help     Show this help',
+  '  -v, --version  Show the version',
+  '',
+  'Writes .recall/memory.json and .recall/agents/{claude,codex,cursor,gemini,openai}.md.',
+].join('\n');
+
+/** Prints a failure to stderr and returns its exit code. */
+export function reportFailure(io: CliIo, error: unknown): ExitCodeValue {
+  if (error instanceof RecallError) {
+    io.stderr(`error: ${error.message}`);
+    return error.exitCode;
   }
-  return parsed;
+  const message = error instanceof Error ? error.message : String(error);
+  io.stderr(`error: Unexpected failure: ${message}`);
+  if (io.debug && error instanceof Error && error.stack) io.stderr(error.stack);
+  else io.stderr('Set RECALL_DEBUG=1 to include a stack trace.');
+  return ExitCode.UnexpectedFailure;
 }
 
-export function createCli() {
-  const cli = cac(CLI_NAME);
-
-  cli
-    .option('--path <path>', 'Repository path to operate on', { default: '.' })
-    .option('--json', 'Emit machine-readable JSON on stdout')
-    .option('--quiet', 'Suppress non-essential output')
-    .option('--verbose', 'Print stack traces on failure')
-    .option('--no-color', 'Disable colored output');
-
-  cli
-    .command('init', 'Create or refresh the .recall memory directory for this repository')
-    .option('--force', 'Reset generatedAt and force a full refresh even if already initialized')
-    .option('--dry-run', 'Show what would be written without writing anything')
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        initCommand(reporter, global, { force: options.force, dryRun: options.dryRun }),
-      );
-    });
-
-  cli
-    .command('scan', 'Run a deterministic repository scan and save a snapshot')
-    .option('--max-files <n>', 'Maximum number of files to scan')
-    .option(
-      '--output <path>',
-      'Write the snapshot JSON to an explicit path instead of stdout summary',
-    )
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        scanCommand(reporter, global, {
-          maxFiles: parseOptionalInt(options.maxFiles, '--max-files'),
-          output: options.output,
-        }),
-      );
-    });
-
-  cli
-    .command('update', 'Compare the repository against the last snapshot and refresh memory')
-    .option('--since <ref>', 'Restrict the file change list to a Git ref range (e.g. HEAD~5)')
-    .option('--dry-run', 'Show what would change without writing anything')
-    .option('--check', 'Exit non-zero if memory is stale, without writing anything (CI-friendly)')
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        updateCommand(reporter, global, {
-          since: options.since,
-          dryRun: options.dryRun,
-          check: options.check,
-        }),
-      );
-    });
-
-  cli
-    .command('status', 'Show whether Recall is initialized and whether memory is stale')
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        statusCommand(reporter, global),
-      );
-    });
-
-  cli
-    .command(
-      'explain <path>',
-      'Explain the role of a file or directory using deterministic evidence',
-    )
-    .action(async (path: string, options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        explainCommand(reporter, global, path),
-      );
-    });
-
-  cli
-    .command('context', 'Generate compact, agent-ready context from the last snapshot')
-    .option('--task <task>', 'Focus the context on a specific task description')
-    .option('--max-tokens <n>', 'Approximate maximum size of the generated context')
-    .option('--format <format>', 'Output format (only "markdown" is supported)', {
-      default: 'markdown',
-    })
-    .option('--stdout', 'Print context to stdout instead of writing .recall/context.md')
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        contextCommand(reporter, global, {
-          task: options.task,
-          maxTokens: parseOptionalInt(options.maxTokens, '--max-tokens'),
-          format: options.format,
-          stdout: options.stdout,
-        }),
-      );
-    });
-
-  cli
-    .command('doctor', "Validate Recall's environment and memory state")
-    .action(async (options: CommandOptions) => {
-      const global = resolveGlobalOptions(options);
-      const reporter = new Reporter(global);
-      process.exitCode = await withErrorHandling(reporter, global.verbose, () =>
-        doctorCommand(reporter, global),
-      );
-    });
-
-  cli.help();
-  cli.version(CLI_VERSION);
-
-  return cli;
-}
-
-export async function runCli(argv: string[]): Promise<void> {
-  const cli = createCli();
+/**
+ * Runs `recall` with the given arguments (without the `node` and script
+ * entries of `process.argv`) and returns the process exit code. On success,
+ * stdout carries exactly the four progress lines of spec §11 and nothing
+ * else; every diagnostic goes to stderr. Stack traces are printed only when
+ * `io.debug` is set (CLI-06).
+ */
+export async function runCli(argv: readonly string[], io: CliIo): Promise<ExitCodeValue> {
   try {
-    cli.parse(argv, { run: false });
-    await cli.runMatchedCommand();
-  } catch (error) {
-    const reporter = new Reporter(resolveGlobalOptions({}));
-    if (error instanceof InvalidUsageError) {
-      reporter.error(error.message);
-      process.exitCode = error.exitCode;
-      return;
+    const parsed = parseArguments(argv);
+    if (parsed.kind === 'help') {
+      io.stdout(HELP_TEXT);
+      return ExitCode.Success;
     }
-    const message = error instanceof Error ? error.message : String(error);
-    reporter.error(`Unexpected failure: ${message}`);
-    process.exitCode = 1;
+    if (parsed.kind === 'version') {
+      io.stdout(`${CLI_NAME}/${CLI_VERSION}`);
+      return ExitCode.Success;
+    }
+
+    await runInit({
+      path: parsed.path,
+      force: parsed.force,
+      onStage: (stage) => io.stdout(STAGE_MESSAGES[stage]),
+    });
+    io.stdout(DONE_MESSAGE);
+    return ExitCode.Success;
+  } catch (error) {
+    return reportFailure(io, error);
   }
 }

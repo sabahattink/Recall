@@ -1,63 +1,98 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { access } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
 import {
-  buildSimpleNodeFixture,
-  commitAll,
+  REFERENCE_FIXTURES,
   createTempDir,
-  initGitRepo,
+  integrationTestTimeout,
   removeTempDir,
 } from '@recall-ai/test-fixtures';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cliEntry = join(here, '..', '..', 'dist', 'index.js');
 
-async function runCliSubprocess(args: string[]) {
-  return execa('node', [cliEntry, ...args], { reject: false });
+const EXPECTED_STDOUT = [
+  'Scanning repository...',
+  'Detecting architecture...',
+  'Generating AI memory...',
+  'Done.',
+  '',
+].join('\n');
+
+async function runCompiledCli(args: string[], cwd?: string) {
+  return execa(process.execPath, [cliEntry, ...args], {
+    reject: false,
+    cwd,
+    stripFinalNewline: false,
+  });
 }
 
-describe('recall CLI smoke tests (compiled subprocess)', () => {
+async function listTree(dir: string, prefix = ''): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map((entry) =>
+      entry.isDirectory()
+        ? listTree(join(dir, entry.name), `${prefix}${entry.name}/`)
+        : Promise.resolve([`${prefix}${entry.name}`]),
+    ),
+  );
+  return nested.flat().sort();
+}
+
+/**
+ * End-to-end tests of the compiled CLI as a subprocess (CLI-07): the real
+ * entry point, real argument handling, real stdout/stderr and exit codes,
+ * against every reference fixture.
+ */
+describe('recall (compiled subprocess)', () => {
   let dir: string;
 
   beforeEach(async () => {
     dir = await createTempDir();
-    await buildSimpleNodeFixture(dir);
-    await initGitRepo(dir);
-    await commitAll(dir, 'chore: initial commit');
   });
 
   afterEach(async () => {
     await removeTempDir(dir);
   });
 
-  it('prints a version string', async () => {
-    const result = await runCliSubprocess(['--version']);
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout.trim().length).toBeGreaterThan(0);
-  });
+  it.each(REFERENCE_FIXTURES.map((fixture) => [fixture.name, fixture] as const))(
+    'initializes the "%s" fixture with the exact output contract',
+    async (_name, fixture) => {
+      await fixture.build(dir);
 
-  it('runs init, status, and context end-to-end against a fixture', async () => {
-    const init = await runCliSubprocess(['init', '--path', dir]);
-    expect(init.exitCode).toBe(0);
-    await expect(access(join(dir, '.recall', 'manifest.json'))).resolves.toBeUndefined();
+      const result = await runCompiledCli(['init'], dir);
 
-    const status = await runCliSubprocess(['status', '--path', dir]);
-    expect(status.exitCode).toBe(0);
+      expect(result.stderr).toBe('');
+      expect(result.stdout).toBe(EXPECTED_STDOUT);
+      expect(result.exitCode).toBe(0);
+      expect(await listTree(join(dir, '.recall'))).toEqual([
+        'agents/claude.md',
+        'agents/codex.md',
+        'agents/cursor.md',
+        'agents/gemini.md',
+        'agents/openai.md',
+        'memory.json',
+      ]);
+    },
+    integrationTestTimeout * 2,
+  );
 
-    const context = await runCliSubprocess(['context', '--path', dir, '--stdout']);
-    expect(context.exitCode).toBe(0);
-    expect(context.stdout).toContain('# Recall Context');
-  });
+  it(
+    'refuses a second run without --force (exit 4) and accepts it with --force',
+    async () => {
+      await REFERENCE_FIXTURES[0]?.build(dir);
+      expect((await runCompiledCli(['init', dir])).exitCode).toBe(0);
+      expect((await runCompiledCli(['init', dir])).exitCode).toBe(4);
+      expect((await runCompiledCli(['init', dir, '--force'])).exitCode).toBe(0);
+    },
+    integrationTestTimeout * 2,
+  );
 
-  it('exits with invalid-usage code for a missing path', async () => {
-    const result = await runCliSubprocess(['status', '--path', '/definitely/not/a/real/path']);
+  it('exits 2 for an unknown command without printing a stack trace', async () => {
+    const result = await runCompiledCli(['status']);
     expect(result.exitCode).toBe(2);
-  });
-
-  it('never requires network access to complete init', async () => {
-    const result = await runCliSubprocess(['init', '--path', dir]);
-    expect(result.exitCode).toBe(0);
+    expect(result.stderr).not.toMatch(/\n\s+at /);
   });
 });

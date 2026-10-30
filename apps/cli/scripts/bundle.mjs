@@ -6,8 +6,8 @@
 // package installable without any of the unpublished @recall-ai/* workspace
 // packages present.
 //
-// Genuine third-party npm dependencies (cac, execa, fast-glob, ignore, yaml,
-// zod) are deliberately left external/un-bundled and declared as normal
+// Genuine third-party npm dependencies (fast-glob, ignore, zod) are
+// deliberately left external/un-bundled and declared as normal
 // "dependencies" in package.json instead: one of them ('ignore') is loaded
 // through `createRequire(import.meta.url)` for CJS/ESM interop
 // (see packages/analyzers/src/file-walk.ts), which bundlers cannot trace
@@ -24,7 +24,7 @@ const cliRoot = join(here, '..');
 const distDir = join(cliRoot, 'dist');
 const tmpOutDir = join(cliRoot, '.bundle-tmp');
 
-const EXTERNAL_PACKAGES = ['cac', 'execa', 'fast-glob', 'ignore', 'yaml', 'zod'];
+const EXTERNAL_PACKAGES = ['fast-glob', 'ignore', 'zod'];
 
 rmSync(tmpOutDir, { recursive: true, force: true });
 

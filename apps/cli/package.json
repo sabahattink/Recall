@@ -1,7 +1,7 @@
 {
   "name": "recall-context",
   "version": "0.2.0-alpha.1",
-  "description": "Persistent, evidence-backed codebase context for AI coding agents.",
+  "description": "Initialize a repository's memory for AI coding assistants: one command writes evidence-backed context for Claude Code, Codex, Cursor, Gemini CLI, and ChatGPT.",
   "license": "MIT",
   "type": "module",
   "homepage": "https://github.com/sabahattink/Recall#readme",
@@ -19,7 +19,9 @@
     "claude",
     "claude-code",
     "codex",
-    "copilot",
+    "cursor",
+    "gemini",
+    "chatgpt",
     "context",
     "repository-context",
     "developer-tools"
@@ -49,19 +51,15 @@
     "postpack": "node scripts/postpack.mjs"
   },
   "dependencies": {
-    "cac": "^6.7.14",
-    "execa": "^9.5.2",
     "fast-glob": "^3.3.2",
     "ignore": "^6.0.2",
-    "yaml": "^2.6.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@recall-ai/core": "workspace:*",
-    "@recall-ai/memory": "workspace:*",
-    "@recall-ai/schemas": "workspace:*",
     "@recall-ai/test-fixtures": "workspace:*",
     "@vercel/ncc": "^0.44.1",
+    "execa": "^9.5.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

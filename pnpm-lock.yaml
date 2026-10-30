@@ -41,21 +41,12 @@ importers:
 
   apps/cli:
     dependencies:
-      cac:
-        specifier: ^6.7.14
-        version: 6.7.14
-      execa:
-        specifier: ^9.5.2
-        version: 9.6.1
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.3
       ignore:
         specifier: ^6.0.2
         version: 6.0.2
-      yaml:
-        specifier: ^2.6.1
-        version: 2.9.0
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -63,18 +54,15 @@ importers:
       '@recall-ai/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@recall-ai/memory':
-        specifier: workspace:*
-        version: link:../../packages/memory
-      '@recall-ai/schemas':
-        specifier: workspace:*
-        version: link:../../packages/schemas
       '@recall-ai/test-fixtures':
         specifier: workspace:*
         version: link:../../packages/test-fixtures
       '@vercel/ncc':
         specifier: ^0.44.1
         version: 0.44.1
+      execa:
+        specifier: ^9.5.2
+        version: 9.6.1
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -166,9 +154,6 @@ importers:
       ignore:
         specifier: ^6.0.2
         version: 6.0.2
-      yaml:
-        specifier: ^2.6.1
-        version: 2.9.0
     devDependencies:
       '@recall-ai/test-fixtures':
         specifier: workspace:*
@@ -194,6 +179,9 @@ importers:
       '@recall-ai/schemas':
         specifier: workspace:*
         version: link:../schemas
+      '@recall-ai/templates':
+        specifier: workspace:*
+        version: link:../templates
     devDependencies:
       '@recall-ai/test-fixtures':
         specifier: workspace:*
@@ -210,10 +198,13 @@ importers:
       '@recall-ai/schemas':
         specifier: workspace:*
         version: link:../schemas
+    devDependencies:
+      '@recall-ai/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
       execa:
         specifier: ^9.5.2
         version: 9.6.1
-    devDependencies:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -242,6 +233,19 @@ importers:
       zod:
         specifier: ^3.24.1
         version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.49.2)
+
+  packages/templates:
+    dependencies:
+      '@recall-ai/schemas':
+        specifier: workspace:*
+        version: link:../schemas
     devDependencies:
       typescript:
         specifier: ^5.7.2

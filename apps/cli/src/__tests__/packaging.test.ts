@@ -68,7 +68,8 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     if (tarballPath && existsSync(tarballPath)) rmSync(tarballPath);
     if (consumerDir) await removeTempDir(consumerDir);
     if (fixtureDir) await removeTempDir(fixtureDir);
-  });
+    // Deleting the consumer's node_modules is slow on Windows runners.
+  }, 120_000);
 
   function recallBin(...args: string[]) {
     const bin = join(
@@ -102,38 +103,29 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
   it('runs --help from the installed tarball with no workspace resolution', async () => {
     const result = await recallBin('--help');
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('$ recall <command>');
+    expect(result.stdout).toContain('recall init [path] [--force]');
   });
 
-  it('runs init, status, context, and doctor against a fixture using only the installed tarball', async () => {
-    const init = await recallBin('init', '--path', fixtureDir);
+  it('runs init against a fixture using only the installed tarball', async () => {
+    const init = await recallBin('init', fixtureDir);
+    expect(init.stderr).toBe('');
+    expect(init.stdout.split(/\r?\n/).filter(Boolean)).toEqual([
+      'Scanning repository...',
+      'Detecting architecture...',
+      'Generating AI memory...',
+      'Done.',
+    ]);
     expect(init.exitCode).toBe(0);
-    expect(existsSync(join(fixtureDir, '.recall', 'manifest.json'))).toBe(true);
+    for (const file of ['memory.json', 'agents/claude.md', 'agents/openai.md']) {
+      expect(existsSync(join(fixtureDir, '.recall', ...file.split('/')))).toBe(true);
+    }
 
-    // A clean init must leave Recall in a valid, non-stale state: `status`
-    // reports ok and `doctor` reports memory freshness as PASS, not WARN.
-    const status = await recallBin('status', '--path', fixtureDir);
-    expect(status.exitCode).toBe(0);
-    expect(status.stdout).toContain('Status: ok');
-
-    const context = await recallBin('context', '--path', fixtureDir, '--stdout');
-    expect(context.exitCode).toBe(0);
-    expect(context.stdout).toContain('# Recall Context');
-
-    const doctor = await recallBin('doctor', '--path', fixtureDir);
-    expect(doctor.exitCode).toBe(0);
-    expect(doctor.stdout).toContain('[PASS] Memory freshness');
+    const again = await recallBin('init', fixtureDir);
+    expect(again.exitCode).toBe(4);
   }, 60_000);
 
-  it('reports a consistent Node.js 22+ requirement across package metadata and doctor output', async () => {
+  it('declares the Node.js 22+ requirement in the published manifest', () => {
     expect((publishedManifest.engines as Record<string, string>).node).toBe('>=22');
-
-    const doctor = await recallBin('doctor', '--path', fixtureDir);
-    const runtimeLine = doctor.stdout
-      .split('\n')
-      .find((line) => line.includes('Node.js runtime version'));
-    expect(runtimeLine).toContain('Node.js 22+');
-    expect(runtimeLine).not.toContain('18+');
   });
 
   describe('release verification (exact-version assertions)', () => {
