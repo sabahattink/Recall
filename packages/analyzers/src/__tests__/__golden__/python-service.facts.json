@@ -1,0 +1,104 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "inventory-service"
+    },
+    "evidence": [
+      {
+        "path": "pyproject.toml",
+        "reason": "name declared in pyproject.toml"
+      }
+    ]
+  },
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "description",
+      "value": "Tracks stock levels for the warehouse."
+    },
+    "evidence": [
+      {
+        "path": "pyproject.toml",
+        "reason": "description declared in pyproject.toml"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "Python",
+    "evidence": [
+      {
+        "path": "pyproject.toml",
+        "reason": "pyproject.toml present"
+      }
+    ]
+  },
+  {
+    "category": "package-manager",
+    "value": "poetry",
+    "evidence": [
+      {
+        "path": "poetry.lock",
+        "reason": "poetry.lock present"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "inventory",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "inventory/__init__.py",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "inventory/stock.py",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "tests",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "tests/test_stock.py",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "tests",
+      "role": "test"
+    },
+    "evidence": [
+      {
+        "path": "tests/test_stock.py",
+        "reason": "matches the test file pattern"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+      }
+    ]
+  }
+]

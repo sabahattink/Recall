@@ -1,0 +1,256 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "nextjs-fixture"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "name declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "description",
+      "value": "A representative Next.js project used as a Recall test fixture."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "description declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "TypeScript",
+    "evidence": [
+      {
+        "path": "tsconfig.json",
+        "reason": "tsconfig.json present"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "JavaScript",
+    "evidence": [
+      {
+        "path": "next.config.js",
+        "reason": ".js source file present"
+      }
+    ]
+  },
+  {
+    "category": "framework",
+    "value": "nextjs",
+    "evidence": [
+      {
+        "path": "next.config.js",
+        "reason": "next.config.js present"
+      },
+      {
+        "path": "package.json",
+        "reason": "dependency \"next\" declared"
+      }
+    ]
+  },
+  {
+    "category": "workspace-layout",
+    "value": [
+      "."
+    ],
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "package.json present, declares no \"workspaces\" field"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "src",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "src/app/api/webhooks/route.ts",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/app/layout.tsx",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/app/page.tsx",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "build",
+      "command": "next build"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.build declared as \"next build\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "lint",
+      "command": "next lint"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.lint declared as \"next lint\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "dev",
+      "command": "next dev"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.dev declared as \"next dev\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "start",
+      "command": "next start"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.start declared as \"next start\""
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "next",
+      "version": "^15.0.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.next declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "react",
+      "version": "^18.3.1",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.react declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "react-dom",
+      "version": "^18.3.1",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.react-dom declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@types/react",
+      "version": "^18.3.12",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.@types/react declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.typescript declared"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-license",
+      "description": "No license file was found at the repository root."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no LICENSE, LICENCE, or COPYING file at the repository root"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-lockfile",
+      "description": "package.json is present without a lockfile, so installs are not reproducible."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "no pnpm-lock.yaml, package-lock.json, yarn.lock, or bun lockfile at the root"
+      }
+    ]
+  }
+]

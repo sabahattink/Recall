@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import type { Fact } from '@recall-ai/schemas';
+import { redactSecrets, type DependencyScope, type FactOf } from '@recall-ai/schemas';
 import type { WalkedFile } from './file-walk.js';
 import { readJsonIfExists } from './json.js';
+import { compareStrings } from '@recall-ai/schemas';
+import { basename } from './path-utils.js';
 
 interface PackageJsonShape {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
+  dependencies?: unknown;
+  devDependencies?: unknown;
+  peerDependencies?: unknown;
 }
-
-type DependencyScope = 'dependency' | 'devDependency' | 'peerDependency';
 
 /** Manifest field to Fact scope, in fixed extraction order — never Object.keys() order. */
 const SCOPE_FIELDS: Array<{ field: keyof PackageJsonShape; scope: DependencyScope }> = [
@@ -17,11 +17,6 @@ const SCOPE_FIELDS: Array<{ field: keyof PackageJsonShape; scope: DependencyScop
   { field: 'devDependencies', scope: 'devDependency' },
   { field: 'peerDependencies', scope: 'peerDependency' },
 ];
-
-function basename(path: string): string {
-  const segments = path.split('/');
-  return segments[segments.length - 1] ?? path;
-}
 
 /**
  * Extracts direct dependency declarations from every `package.json` a
@@ -38,18 +33,22 @@ function basename(path: string): string {
  * A repository with only a lockfile and no `package.json` in `files`
  * produces no dependency Facts at all.
  *
- * `optionalDependencies` is intentionally out of scope: no existing schema
- * or detector in this codebase (including the pre-existing
- * `DependencyScopeSchema`) models it as a distinct dependency scope, and
- * adding a fourth scope with no established precedent would be a new
- * invention rather than a reuse of existing domain knowledge.
+ * `optionalDependencies` is intentionally out of scope: `DependencyScopeSchema`
+ * models exactly the three scopes above. A declaration whose version is not
+ * a string is malformed and skipped, never reported with a made-up version.
+ * Versions are passed through `redactSecrets`: a specifier such as
+ * `git+https://user:token@host/repo.git` must not carry its token into
+ * `memory.json`.
  */
-export async function detectDependencyFacts(files: WalkedFile[], root: string): Promise<Fact[]> {
+export async function detectDependencyFacts(
+  files: WalkedFile[],
+  root: string,
+): Promise<FactOf<'dependency'>[]> {
   const packageJsonFiles = files
     .filter((f) => basename(f.path) === 'package.json')
-    .sort((a, b) => a.path.localeCompare(b.path));
+    .sort((a, b) => compareStrings(a.path, b.path));
 
-  const facts: Fact[] = [];
+  const facts: FactOf<'dependency'>[] = [];
 
   for (const pkgFile of packageJsonFiles) {
     const content = await readJsonIfExists<PackageJsonShape>(join(root, pkgFile.path));
@@ -57,12 +56,18 @@ export async function detectDependencyFacts(files: WalkedFile[], root: string): 
 
     for (const { field, scope } of SCOPE_FIELDS) {
       const declarations = content[field];
-      if (!declarations) continue;
+      if (typeof declarations !== 'object' || declarations === null) continue;
+      if (Array.isArray(declarations)) continue;
 
-      for (const name of Object.keys(declarations).sort()) {
+      const entries = Object.entries(declarations)
+        .filter(
+          (entry): entry is [string, string] => entry[0] !== '' && typeof entry[1] === 'string',
+        )
+        .sort(([a], [b]) => compareStrings(a, b));
+      for (const [name, version] of entries) {
         facts.push({
           category: 'dependency',
-          value: { name, version: declarations[name], scope },
+          value: { name, version: redactSecrets(version), scope },
           evidence: [{ path: pkgFile.path, reason: `${field}.${name} declared` }],
         });
       }

@@ -1,7 +1,9 @@
 import { join } from 'node:path';
-import type { Fact } from '@recall-ai/schemas';
+import type { DirectoryRole, FactOf } from '@recall-ai/schemas';
 import type { WalkedFile } from './file-walk.js';
 import { readJsonIfExists } from './json.js';
+import { compareStrings } from '@recall-ai/schemas';
+import { basename, dirname } from './path-utils.js';
 import {
   CONFIG_FILE_PATTERN,
   DOCUMENTATION_PATTERN,
@@ -10,14 +12,10 @@ import {
   TEST_FILE_PATTERN,
 } from './constants.js';
 
-type DirectoryRole = 'source' | 'test' | 'config' | 'documentation' | 'generated';
-
 /**
- * Reuses the exact per-file classification patterns already established
- * and validated in `constants.ts` — the same ones `file-classification.ts`
- * applies per file, tested against the same field (full path vs. basename)
- * that module already uses for each — rather than inventing a new,
- * directory-name-based heuristic. Order is the emission order for a
+ * Per-file classification patterns from `constants.ts`, each tested
+ * against the field it was written for (full path vs. basename), rather
+ * than a directory-name-based heuristic. Order is the emission order for a
  * directory's roles.
  */
 const DIRECTORY_ROLE_MATCHERS: Array<{
@@ -34,23 +32,19 @@ const DIRECTORY_ROLE_MATCHERS: Array<{
 /** Caps the evidence array for a busy directory rather than citing every matching file. */
 const MAX_EVIDENCE_FILES_PER_ROLE = 3;
 
-function basename(path: string): string {
-  const segments = path.split('/');
-  return segments[segments.length - 1] ?? path;
-}
-
 function topLevelDirectory(path: string): string | null {
   const slash = path.indexOf('/');
   return slash === -1 ? null : path.slice(0, slash);
 }
 
-function dirnameOf(path: string): string {
-  const slash = path.lastIndexOf('/');
-  return slash === -1 ? '' : path.slice(0, slash);
-}
-
-function joinRepoPath(dir: string, relativePath: string): string {
-  const cleaned = relativePath.replace(/^\.\//, '');
+/**
+ * Joins a manifest-relative path onto its workspace directory, or `null`
+ * when nothing is left to point at (`"main": "./"`, `"bin": ""`) — an
+ * empty target is not evidence of an entry point.
+ */
+function joinRepoPath(dir: string, relativePath: string): string | null {
+  const cleaned = relativePath.replace(/^(\.\/)+/, '').replace(/\/+$/, '');
+  if (!cleaned || cleaned === '.') return null;
   return dir ? `${dir}/${cleaned}` : cleaned;
 }
 
@@ -62,15 +56,12 @@ function joinRepoPath(dir: string, relativePath: string): string {
  *
  * A directory is never given a role because of its own name — a directory
  * literally named "test" with no files matching the test pattern inside it
- * gets no Fact. The evidence is always the real, matching file(s), the same
- * way `file-classification.ts` already classifies individual files.
+ * gets no Fact. The evidence is always the real, matching file(s).
  *
  * Entry points come only from a `package.json`'s `bin`/`main` fields —
- * exact manifest evidence. Unlike the pre-existing (unrelated, untouched)
- * `detectEntryPoints`, this detector does not add framework-convention
- * guesses (e.g. assuming NestJS's `src/main.ts`): per this task's
- * instructions, a fact is never inferred merely because it matches a
- * common convention. The resolved path is not required to exist in `files`
+ * exact manifest evidence. Framework-convention guesses (e.g. assuming
+ * NestJS's `src/main.ts`) are never added: a fact is never inferred merely
+ * because it matches a common convention. The resolved path is not required to exist in `files`
  * — a `bin`/`main` field conventionally points at build output, which
  * SCAN-02's walk already excludes by design; the manifest field itself is
  * the evidence, not the target file's presence.
@@ -78,11 +69,11 @@ function joinRepoPath(dir: string, relativePath: string): string {
 export async function detectArchitectureHintFacts(
   files: WalkedFile[],
   root: string,
-): Promise<Fact[]> {
+): Promise<Array<FactOf<'directory'> | FactOf<'architecture-hint'>>> {
   return [...detectDirectoryRoleFacts(files), ...(await detectEntryPointFacts(files, root))];
 }
 
-function detectDirectoryRoleFacts(files: WalkedFile[]): Fact[] {
+function detectDirectoryRoleFacts(files: WalkedFile[]): FactOf<'directory'>[] {
   const filesByDirectory = new Map<string, WalkedFile[]>();
   for (const file of files) {
     const dir = topLevelDirectory(file.path);
@@ -92,13 +83,13 @@ function detectDirectoryRoleFacts(files: WalkedFile[]): Fact[] {
     else filesByDirectory.set(dir, [file]);
   }
 
-  const directories = [...filesByDirectory.keys()].sort((a, b) => a.localeCompare(b));
-  const facts: Fact[] = [];
+  const directories = [...filesByDirectory.keys()].sort(compareStrings);
+  const facts: FactOf<'directory'>[] = [];
 
   for (const dir of directories) {
     const dirFiles = filesByDirectory.get(dir) ?? [];
     for (const { role, matches } of DIRECTORY_ROLE_MATCHERS) {
-      const matched = dirFiles.filter(matches).sort((a, b) => a.path.localeCompare(b.path));
+      const matched = dirFiles.filter(matches).sort((a, b) => compareStrings(a.path, b.path));
       if (matched.length === 0) continue;
 
       facts.push({
@@ -116,49 +107,58 @@ function detectDirectoryRoleFacts(files: WalkedFile[]): Fact[] {
 }
 
 interface PackageJsonShape {
-  name?: string;
-  bin?: string | Record<string, string>;
-  main?: string;
+  name?: unknown;
+  bin?: unknown;
+  main?: unknown;
 }
 
-async function detectEntryPointFacts(files: WalkedFile[], root: string): Promise<Fact[]> {
+/**
+ * Normalizes a manifest `bin` field into name → path pairs, keeping only
+ * string entries. A malformed manifest is not evidence of anything, so a
+ * non-string value produces no entry rather than a fabricated one.
+ */
+function binEntriesOf(bin: unknown, fallbackName: string): Array<[string, string]> {
+  if (typeof bin === 'string') return [[fallbackName, bin]];
+  if (typeof bin !== 'object' || bin === null) return [];
+  return Object.entries(bin)
+    .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+    .sort(([a], [b]) => compareStrings(a, b));
+}
+
+async function detectEntryPointFacts(
+  files: WalkedFile[],
+  root: string,
+): Promise<FactOf<'architecture-hint'>[]> {
   const packageJsonFiles = files
     .filter((f) => basename(f.path) === 'package.json')
-    .sort((a, b) => a.path.localeCompare(b.path));
+    .sort((a, b) => compareStrings(a.path, b.path));
 
-  const facts: Fact[] = [];
+  const facts: FactOf<'architecture-hint'>[] = [];
 
   for (const pkgFile of packageJsonFiles) {
     const content = await readJsonIfExists<PackageJsonShape>(join(root, pkgFile.path));
     if (!content) continue;
 
-    const workspaceDir = dirnameOf(pkgFile.path);
+    const workspaceDir = dirname(pkgFile.path);
 
-    if (content.bin) {
-      const binName = content.name ?? (basename(workspaceDir) || 'root');
-      const binEntries = typeof content.bin === 'string' ? { [binName]: content.bin } : content.bin;
-      const names = Object.keys(binEntries).sort((a, b) => a.localeCompare(b));
-      for (const name of names) {
-        facts.push({
-          category: 'architecture-hint',
-          value: {
-            path: joinRepoPath(workspaceDir, binEntries[name] as string),
-            kind: 'bin',
-            workspace: workspaceDir || null,
-          },
-          evidence: [{ path: pkgFile.path, reason: `bin entry "${name}" declared` }],
-        });
-      }
-    }
-
-    if (content.main) {
+    const binName =
+      typeof content.name === 'string' ? content.name : basename(workspaceDir) || 'root';
+    for (const [name, binPath] of binEntriesOf(content.bin, binName)) {
+      const path = joinRepoPath(workspaceDir, binPath);
+      if (!path) continue;
       facts.push({
         category: 'architecture-hint',
-        value: {
-          path: joinRepoPath(workspaceDir, content.main),
-          kind: 'main',
-          workspace: workspaceDir || null,
-        },
+        value: { path, kind: 'bin', workspace: workspaceDir || null },
+        evidence: [{ path: pkgFile.path, reason: `bin entry "${name}" declared` }],
+      });
+    }
+
+    const mainPath =
+      typeof content.main === 'string' ? joinRepoPath(workspaceDir, content.main) : null;
+    if (mainPath) {
+      facts.push({
+        category: 'architecture-hint',
+        value: { path: mainPath, kind: 'main', workspace: workspaceDir || null },
         evidence: [{ path: pkgFile.path, reason: '"main" field declared' }],
       });
     }

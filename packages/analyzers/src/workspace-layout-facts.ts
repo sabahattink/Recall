@@ -1,18 +1,21 @@
 import { join } from 'node:path';
-import type { Fact } from '@recall-ai/schemas';
+import type { FactOf } from '@recall-ai/schemas';
 import type { WalkedFile } from './file-walk.js';
 import { readJsonIfExists } from './json.js';
+import { compareStrings } from '@recall-ai/schemas';
 
 interface RootPackageJsonShape {
-  workspaces?: string[] | { packages?: string[] };
+  workspaces?: unknown;
 }
 
 function hasWorkspacesField(packageJson: RootPackageJsonShape): boolean {
-  if (Array.isArray(packageJson.workspaces)) return true;
+  const { workspaces } = packageJson;
+  if (Array.isArray(workspaces)) return true;
   return (
-    typeof packageJson.workspaces === 'object' &&
-    packageJson.workspaces !== null &&
-    Array.isArray(packageJson.workspaces.packages)
+    typeof workspaces === 'object' &&
+    workspaces !== null &&
+    'packages' in workspaces &&
+    Array.isArray(workspaces.packages)
   );
 }
 
@@ -36,8 +39,7 @@ function hasWorkspacesField(packageJson: RootPackageJsonShape): boolean {
  * parsing YAML and implementing glob semantics for no gain in evidence
  * quality. A repository with a `package.json` deliberately excluded from
  * its declared workspace globs will be over-reported as a member — a
- * documented scope boundary, not an oversight (see the accompanying task
- * report).
+ * documented scope boundary, not an oversight.
  *
  * A repository with no root `package.json` has no evidence to build a
  * workspace-layout claim from, so no Fact is emitted — absence of evidence
@@ -46,7 +48,7 @@ function hasWorkspacesField(packageJson: RootPackageJsonShape): boolean {
 export async function detectWorkspaceLayoutFacts(
   files: WalkedFile[],
   root: string,
-): Promise<Fact[]> {
+): Promise<FactOf<'workspace-layout'>[]> {
   const rootPackageJsonFile = files.find((f) => f.path === 'package.json');
   if (!rootPackageJsonFile) return [];
 
@@ -70,7 +72,7 @@ export async function detectWorkspaceLayoutFacts(
     ];
   }
 
-  const evidence: Fact['evidence'] = [];
+  const evidence: FactOf<'workspace-layout'>['evidence'] = [];
   if (declaresWorkspaces) {
     evidence.push({ path: 'package.json', reason: '"workspaces" field declared' });
   }
@@ -81,7 +83,7 @@ export async function detectWorkspaceLayoutFacts(
   const memberPaths = files
     .filter((f) => f.path !== 'package.json' && f.path.endsWith('/package.json'))
     .map((f) => f.path.slice(0, -'/package.json'.length))
-    .sort((a, b) => a.localeCompare(b));
+    .sort(compareStrings);
 
   for (const memberPath of memberPaths) {
     evidence.push({

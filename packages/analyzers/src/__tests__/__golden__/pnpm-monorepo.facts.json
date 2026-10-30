@@ -1,0 +1,309 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "pnpm-monorepo-fixture"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "name declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "TypeScript",
+    "evidence": [
+      {
+        "path": "apps/api/src/index.ts",
+        "reason": ".ts source file present"
+      }
+    ]
+  },
+  {
+    "category": "package-manager",
+    "value": "pnpm",
+    "evidence": [
+      {
+        "path": "pnpm-workspace.yaml",
+        "reason": "pnpm-workspace.yaml present"
+      }
+    ]
+  },
+  {
+    "category": "framework",
+    "value": "express",
+    "evidence": [
+      {
+        "path": "apps/api/package.json",
+        "reason": "dependency \"express\" declared"
+      }
+    ]
+  },
+  {
+    "category": "workspace-layout",
+    "value": [
+      ".",
+      "apps/api",
+      "packages/shared",
+      "packages/ui"
+    ],
+    "evidence": [
+      {
+        "path": "pnpm-workspace.yaml",
+        "reason": "pnpm-workspace.yaml present"
+      },
+      {
+        "path": "apps/api/package.json",
+        "reason": "workspace member package.json present"
+      },
+      {
+        "path": "packages/shared/package.json",
+        "reason": "workspace member package.json present"
+      },
+      {
+        "path": "packages/ui/package.json",
+        "reason": "workspace member package.json present"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "apps",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "apps/api/src/index.ts",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "apps",
+      "role": "config"
+    },
+    "evidence": [
+      {
+        "path": "apps/api/package.json",
+        "reason": "matches the config file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "packages",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "packages/shared/src/index.ts",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "packages/ui/src/index.ts",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "packages",
+      "role": "config"
+    },
+    "evidence": [
+      {
+        "path": "packages/shared/package.json",
+        "reason": "matches the config file pattern"
+      },
+      {
+        "path": "packages/ui/package.json",
+        "reason": "matches the config file pattern"
+      }
+    ]
+  },
+  {
+    "category": "architecture-hint",
+    "value": {
+      "path": "apps/api/src/index.ts",
+      "kind": "main",
+      "workspace": "apps/api"
+    },
+    "evidence": [
+      {
+        "path": "apps/api/package.json",
+        "reason": "\"main\" field declared"
+      }
+    ]
+  },
+  {
+    "category": "architecture-hint",
+    "value": {
+      "path": "packages/shared/src/index.ts",
+      "kind": "main",
+      "workspace": "packages/shared"
+    },
+    "evidence": [
+      {
+        "path": "packages/shared/package.json",
+        "reason": "\"main\" field declared"
+      }
+    ]
+  },
+  {
+    "category": "architecture-hint",
+    "value": {
+      "path": "packages/ui/src/index.ts",
+      "kind": "main",
+      "workspace": "packages/ui"
+    },
+    "evidence": [
+      {
+        "path": "packages/ui/package.json",
+        "reason": "\"main\" field declared"
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "build",
+      "command": "turbo run build"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.build declared as \"turbo run build\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "test",
+      "command": "turbo run test"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.test declared as \"turbo run test\""
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@fixture/shared",
+      "version": "workspace:*",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "apps/api/package.json",
+        "reason": "dependencies.@fixture/shared declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "express",
+      "version": "^4.21.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "apps/api/package.json",
+        "reason": "dependencies.express declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "turbo",
+      "version": "^2.3.3",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.turbo declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.typescript declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@fixture/shared",
+      "version": "workspace:*",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "packages/ui/package.json",
+        "reason": "dependencies.@fixture/shared declared"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-license",
+      "description": "No license file was found at the repository root."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no LICENSE, LICENCE, or COPYING file at the repository root"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-lockfile",
+      "description": "package.json is present without a lockfile, so installs are not reproducible."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "no pnpm-lock.yaml, package-lock.json, yarn.lock, or bun lockfile at the root"
+      }
+    ]
+  }
+]

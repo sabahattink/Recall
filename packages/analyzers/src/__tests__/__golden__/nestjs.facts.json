@@ -1,0 +1,354 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "nestjs-fixture"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "name declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "description",
+      "value": "A representative NestJS project used as a Recall test fixture."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "description declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "TypeScript",
+    "evidence": [
+      {
+        "path": "tsconfig.json",
+        "reason": "tsconfig.json present"
+      }
+    ]
+  },
+  {
+    "category": "framework",
+    "value": "nestjs",
+    "evidence": [
+      {
+        "path": "nest-cli.json",
+        "reason": "nest-cli.json present"
+      },
+      {
+        "path": "package.json",
+        "reason": "dependency \"@nestjs/core\" declared"
+      }
+    ]
+  },
+  {
+    "category": "workspace-layout",
+    "value": [
+      "."
+    ],
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "package.json present, declares no \"workspaces\" field"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "src",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "src/app.module.ts",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/main.ts",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/users/users.controller.ts",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "src",
+      "role": "test"
+    },
+    "evidence": [
+      {
+        "path": "src/users/users.service.spec.ts",
+        "reason": "matches the test file pattern"
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "build",
+      "command": "nest build"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.build declared as \"nest build\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "test",
+      "command": "jest"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.test declared as \"jest\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "start",
+      "command": "nest start"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.start declared as \"nest start\""
+      }
+    ]
+  },
+  {
+    "category": "testing-framework",
+    "value": "jest",
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependency \"jest\" declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/common",
+      "version": "^10.4.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.@nestjs/common declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/core",
+      "version": "^10.4.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.@nestjs/core declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/platform-express",
+      "version": "^10.4.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.@nestjs/platform-express declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/typeorm",
+      "version": "^10.0.2",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.@nestjs/typeorm declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "pg",
+      "version": "^8.13.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.pg declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "reflect-metadata",
+      "version": "^0.2.2",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.reflect-metadata declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "rxjs",
+      "version": "^7.8.1",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.rxjs declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "typeorm",
+      "version": "^0.3.20",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.typeorm declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/cli",
+      "version": "^10.4.0",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.@nestjs/cli declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "@nestjs/testing",
+      "version": "^10.4.0",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.@nestjs/testing declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "jest",
+      "version": "^29.7.0",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.jest declared"
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "typescript",
+      "version": "^5.7.2",
+      "scope": "devDependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "devDependencies.typescript declared"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-license",
+      "description": "No license file was found at the repository root."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no LICENSE, LICENCE, or COPYING file at the repository root"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-lockfile",
+      "description": "package.json is present without a lockfile, so installs are not reproducible."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "no pnpm-lock.yaml, package-lock.json, yarn.lock, or bun lockfile at the root"
+      }
+    ]
+  }
+]

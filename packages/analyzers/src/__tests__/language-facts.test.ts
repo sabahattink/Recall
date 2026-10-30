@@ -114,9 +114,24 @@ describe('detectPackageManagerFacts', () => {
     expect(facts.map((f) => f.value)).toEqual(['pip']);
   });
 
-  it('detects poetry from pyproject.toml', () => {
-    const facts = detectPackageManagerFacts([file('pyproject.toml', '')]);
+  it('detects poetry from poetry.lock', () => {
+    const facts = detectPackageManagerFacts([file('poetry.lock', '')]);
     expect(facts.map((f) => f.value)).toEqual(['poetry']);
+  });
+
+  it('does not treat pyproject.toml alone as evidence of any package manager', () => {
+    expect(detectPackageManagerFacts([file('pyproject.toml', '')])).toEqual([]);
+  });
+
+  it('emits bun once even when both of its lockfile formats are present', () => {
+    const facts = detectPackageManagerFacts([file('bun.lock', ''), file('bun.lockb', '')]);
+    expect(facts).toEqual([
+      {
+        category: 'package-manager',
+        value: 'bun',
+        evidence: [{ path: 'bun.lock', reason: 'bun.lock present' }],
+      },
+    ]);
   });
 
   it('detects go-modules from go.mod', () => {
@@ -148,5 +163,14 @@ describe('detectPackageManagerFacts', () => {
     const result = FactCollectionSchema.safeParse(facts);
     expect(result.success).toBe(true);
     expect(facts.every((f) => f.evidence.length >= 1)).toBe(true);
+  });
+  it('treats pnpm-workspace.yaml as pnpm evidence when there is no lockfile', () => {
+    expect(detectPackageManagerFacts([file('pnpm-workspace.yaml', '.yaml')])).toEqual([
+      {
+        category: 'package-manager',
+        value: 'pnpm',
+        evidence: [{ path: 'pnpm-workspace.yaml', reason: 'pnpm-workspace.yaml present' }],
+      },
+    ]);
   });
 });

@@ -1,4 +1,4 @@
-import type { Fact } from '@recall-ai/schemas';
+import type { FactOf } from '@recall-ai/schemas';
 import type { WalkedFile } from './file-walk.js';
 
 interface LanguageRule {
@@ -33,19 +33,24 @@ const LANGUAGE_RULES: LanguageRule[] = [
 
 interface PackageManagerRule {
   name: string;
-  /** Root-relative lockfile/manifest path whose presence is the evidence. */
-  lockfilePath: string;
+  /** Root-relative lockfile, manifest, or workspace file whose presence is the evidence. */
+  evidencePath: string;
 }
 
 /** Order is the emission order for `detectPackageManagerFacts`, fixed for the same reason as LANGUAGE_RULES. */
 const PACKAGE_MANAGER_RULES: PackageManagerRule[] = [
-  { name: 'pnpm', lockfilePath: 'pnpm-lock.yaml' },
-  { name: 'npm', lockfilePath: 'package-lock.json' },
-  { name: 'yarn', lockfilePath: 'yarn.lock' },
-  { name: 'pip', lockfilePath: 'requirements.txt' },
-  { name: 'poetry', lockfilePath: 'pyproject.toml' },
-  { name: 'go-modules', lockfilePath: 'go.mod' },
-  { name: 'cargo', lockfilePath: 'Cargo.toml' },
+  { name: 'pnpm', evidencePath: 'pnpm-lock.yaml' },
+  { name: 'pnpm', evidencePath: 'pnpm-workspace.yaml' },
+  { name: 'npm', evidencePath: 'package-lock.json' },
+  { name: 'yarn', evidencePath: 'yarn.lock' },
+  { name: 'bun', evidencePath: 'bun.lock' },
+  { name: 'bun', evidencePath: 'bun.lockb' },
+  { name: 'pip', evidencePath: 'requirements.txt' },
+  { name: 'poetry', evidencePath: 'poetry.lock' },
+  { name: 'uv', evidencePath: 'uv.lock' },
+  { name: 'pipenv', evidencePath: 'Pipfile.lock' },
+  { name: 'go-modules', evidencePath: 'go.mod' },
+  { name: 'cargo', evidencePath: 'Cargo.toml' },
 ];
 
 /**
@@ -60,9 +65,9 @@ const PACKAGE_MANAGER_RULES: PackageManagerRule[] = [
  * produces no Fact — absence of evidence is absence of a claim, never a
  * guess (docs/product-specification.md §15).
  */
-export function detectLanguageFacts(files: WalkedFile[]): Fact[] {
+export function detectLanguageFacts(files: WalkedFile[]): FactOf<'language'>[] {
   const filePaths = new Set(files.map((f) => f.path));
-  const facts: Fact[] = [];
+  const facts: FactOf<'language'>[] = [];
 
   for (const rule of LANGUAGE_RULES) {
     const manifestPath = rule.manifestPaths.find((path) => filePaths.has(path));
@@ -92,21 +97,29 @@ export function detectLanguageFacts(files: WalkedFile[]): Fact[] {
 
 /**
  * Detects package managers in use, from the same walked file list as
- * `detectLanguageFacts`. Detection is presence-only (does not parse
+ * `detectLanguageFacts`. `pyproject.toml` alone is deliberately not evidence
+ * of any package manager: setuptools, Poetry, uv, Hatch, and PDM all read
+ * it, so only a manager-specific lockfile is. Detection is presence-only (does not parse
  * `package.json`'s `packageManager` field or any manifest content) —
  * lockfile presence alone is sufficient, directly citable evidence for
  * every ecosystem this task covers.
  */
-export function detectPackageManagerFacts(files: WalkedFile[]): Fact[] {
+export function detectPackageManagerFacts(files: WalkedFile[]): FactOf<'package-manager'>[] {
   const filePaths = new Set(files.map((f) => f.path));
-  const facts: Fact[] = [];
+  const facts: FactOf<'package-manager'>[] = [];
+
+  const emitted = new Set<string>();
 
   for (const rule of PACKAGE_MANAGER_RULES) {
-    if (filePaths.has(rule.lockfilePath)) {
+    // A manager with several evidence files (Bun's two lockfile formats,
+    // pnpm's lockfile and workspace file) is reported once, citing the first.
+    if (emitted.has(rule.name)) continue;
+    if (filePaths.has(rule.evidencePath)) {
+      emitted.add(rule.name);
       facts.push({
         category: 'package-manager',
         value: rule.name,
-        evidence: [{ path: rule.lockfilePath, reason: `${rule.lockfilePath} present` }],
+        evidence: [{ path: rule.evidencePath, reason: `${rule.evidencePath} present` }],
       });
     }
   }

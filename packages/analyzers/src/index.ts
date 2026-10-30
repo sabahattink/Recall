@@ -1,24 +1,16 @@
-export * from './constants.js';
-export * from './file-walk.js';
-export * from './json.js';
-export * from './package-manager.js';
-export * from './workspaces.js';
-export * from './frameworks.js';
-export * from './entry-points.js';
-export * from './entry-point-sources.js';
-export * from './project-profile.js';
-export * from './dependencies.js';
-export * from './import-graph.js';
-export * from './conventions.js';
-export * from './risks.js';
-export * from './ci-docker.js';
-export * from './service-integrations.js';
-export * from './testing.js';
-export * from './file-classification.js';
+export {
+  walkRepository,
+  type WalkedFile,
+  type FileWalkOptions,
+  type FileWalkResult,
+} from './file-walk.js';
+export { DEFAULT_IGNORED_DIRECTORIES, DEFAULT_MAX_FILES } from './constants.js';
+export * from './language-facts.js';
+export * from './framework-facts.js';
+export * from './workspace-layout-facts.js';
 export * from './architecture-hint-facts.js';
 export * from './command-tooling-facts.js';
 export * from './dependency-facts.js';
-export * from './framework-facts.js';
-export * from './language-facts.js';
-export * from './workspace-layout-facts.js';
+export * from './repository-metadata-facts.js';
+export * from './risk-indicator-facts.js';
 export * from './scanner.js';

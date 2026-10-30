@@ -1,6 +1,6 @@
 import fg from 'fast-glob';
 import type { Ignore } from 'ignore';
-import { readFile, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { extname, join, relative } from 'node:path';
 
@@ -13,9 +13,11 @@ const ignoreFactory: (options?: unknown) => Ignore = require('ignore');
 import {
   DEFAULT_IGNORED_DIRECTORIES,
   DEFAULT_MAX_FILES,
-  DEFAULT_MAX_FILE_SIZE_BYTES,
+  RECALL_OUTPUT_DIRECTORY_GLOB,
 } from './constants.js';
+import { compareStrings } from '@recall-ai/schemas';
 import { collectTruncated } from './file-walk-internal.js';
+import { readTextIfExists } from './json.js';
 
 export interface WalkedFile {
   /** Path relative to the repository root, using forward slashes. */
@@ -26,8 +28,6 @@ export interface WalkedFile {
 
 export interface FileWalkOptions {
   maxFiles?: number;
-  maxFileSizeBytes?: number;
-  extraIgnoredDirectories?: string[];
 }
 
 export interface FileWalkResult {
@@ -36,12 +36,8 @@ export interface FileWalkResult {
 }
 
 async function loadGitignore(root: string): Promise<string[]> {
-  try {
-    const contents = await readFile(join(root, '.gitignore'), 'utf8');
-    return contents.split('\n');
-  } catch {
-    return [];
-  }
+  const contents = await readTextIfExists(join(root, '.gitignore'));
+  return contents === null ? [] : contents.split(/\r?\n/);
 }
 
 /**
@@ -64,25 +60,23 @@ async function loadGitignore(root: string): Promise<string[]> {
  * filesystem enumeration order rather than being guaranteed to be the
  * lexicographically-first `maxFiles` paths — the truncated result is still
  * internally sorted for readability, but which files made the cut can vary
- * by filesystem. Callers already treat a truncated scan as incomplete
- * (`recall`'s CLI reports it and exits with the "analysis incomplete" exit
- * code), so this is considered an acceptable trade for bounding the actual
- * filesystem work on huge repositories. See docs/architecture.md.
+ * by filesystem. A truncated scan is never silent: the Scanner turns it
+ * into a `file-limit-reached` risk indicator, so the generated memory says
+ * plainly that it is incomplete. This is considered an acceptable trade for
+ * bounding the actual filesystem work on huge repositories.
  */
 export async function walkRepository(
   root: string,
   options: FileWalkOptions = {},
 ): Promise<FileWalkResult> {
   const maxFiles = options.maxFiles ?? DEFAULT_MAX_FILES;
-  const ignoredDirs = new Set([
-    ...DEFAULT_IGNORED_DIRECTORIES,
-    ...(options.extraIgnoredDirectories ?? []),
-  ]);
-
   const gitignoreLines = await loadGitignore(root);
   const ig = ignoreFactory().add(gitignoreLines);
 
-  const ignorePatterns = [...ignoredDirs].map((dir) => `**/${dir}/**`);
+  const ignorePatterns = [
+    ...DEFAULT_IGNORED_DIRECTORIES.map((dir) => `**/${dir}/**`),
+    RECALL_OUTPUT_DIRECTORY_GLOB,
+  ];
 
   const stream = fg.stream('**/*', {
     cwd: root,
@@ -99,13 +93,15 @@ export async function walkRepository(
     }
   }
 
-  const { matchedEntries, truncated } = await collectTruncated(
+  // Collect one entry beyond the limit: a repository with exactly
+  // `maxFiles` files is complete, not truncated.
+  const collected = await collectTruncated(
     stringEntries(),
     (entry) => ig.ignores(entry),
-    maxFiles,
+    maxFiles + 1,
   );
-
-  matchedEntries.sort((a, b) => a.localeCompare(b));
+  const truncated = collected.matchedEntries.length > maxFiles;
+  const matchedEntries = collected.matchedEntries.slice(0, maxFiles).sort(compareStrings);
 
   const files: WalkedFile[] = [];
   for (const entry of matchedEntries) {
@@ -125,27 +121,4 @@ export async function walkRepository(
   }
 
   return { files, truncated };
-}
-
-export async function readTextFileSafely(
-  path: string,
-  maxSizeBytes = DEFAULT_MAX_FILE_SIZE_BYTES,
-): Promise<string | null> {
-  try {
-    const info = await stat(path);
-    if (!info.isFile() || info.size > maxSizeBytes) return null;
-    const buffer = await readFile(path);
-    if (isLikelyBinary(buffer)) return null;
-    return buffer.toString('utf8');
-  } catch {
-    return null;
-  }
-}
-
-function isLikelyBinary(buffer: Buffer): boolean {
-  const sampleSize = Math.min(buffer.length, 8000);
-  for (let i = 0; i < sampleSize; i++) {
-    if (buffer[i] === 0) return true;
-  }
-  return false;
 }

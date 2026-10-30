@@ -1,0 +1,78 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "github.com/acme/linkcheck"
+    },
+    "evidence": [
+      {
+        "path": "go.mod",
+        "reason": "name declared in go.mod"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "Go",
+    "evidence": [
+      {
+        "path": "go.mod",
+        "reason": "go.mod present"
+      }
+    ]
+  },
+  {
+    "category": "package-manager",
+    "value": "go-modules",
+    "evidence": [
+      {
+        "path": "go.mod",
+        "reason": "go.mod present"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "cmd",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "cmd/linkcheck/main.go",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "internal",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "internal/links/links.go",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "internal/links/links_test.go",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "internal",
+      "role": "test"
+    },
+    "evidence": [
+      {
+        "path": "internal/links/links_test.go",
+        "reason": "matches the test file pattern"
+      }
+    ]
+  }
+]

@@ -1,0 +1,187 @@
+[
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "name",
+      "value": "simple-node-fixture"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "name declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "repository-metadata",
+    "value": {
+      "key": "description",
+      "value": "A minimal generic Node.js project used as a Recall test fixture."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "description declared in package.json"
+      }
+    ]
+  },
+  {
+    "category": "language",
+    "value": "JavaScript",
+    "evidence": [
+      {
+        "path": "src/index.js",
+        "reason": ".js source file present"
+      }
+    ]
+  },
+  {
+    "category": "framework",
+    "value": "express",
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependency \"express\" declared"
+      }
+    ]
+  },
+  {
+    "category": "workspace-layout",
+    "value": [
+      "."
+    ],
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "package.json present, declares no \"workspaces\" field"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "src",
+      "role": "source"
+    },
+    "evidence": [
+      {
+        "path": "src/index.js",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/users/create-user.js",
+        "reason": "matches the source file pattern"
+      },
+      {
+        "path": "src/users/create-user.test.js",
+        "reason": "matches the source file pattern"
+      }
+    ]
+  },
+  {
+    "category": "directory",
+    "value": {
+      "path": "src",
+      "role": "test"
+    },
+    "evidence": [
+      {
+        "path": "src/users/create-user.test.js",
+        "reason": "matches the test file pattern"
+      }
+    ]
+  },
+  {
+    "category": "architecture-hint",
+    "value": {
+      "path": "src/index.js",
+      "kind": "main",
+      "workspace": null
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "\"main\" field declared"
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "test",
+      "command": "node --test"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.test declared as \"node --test\""
+      }
+    ]
+  },
+  {
+    "category": "command",
+    "value": {
+      "name": "start",
+      "command": "node src/index.js"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "scripts.start declared as \"node src/index.js\""
+      }
+    ]
+  },
+  {
+    "category": "dependency",
+    "value": {
+      "name": "express",
+      "version": "^4.21.0",
+      "scope": "dependency"
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "dependencies.express declared"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-ci-configuration",
+      "description": "No continuous integration configuration was found."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket Pipelines, Travis CI, Jenkins, Buildkite, Woodpecker, or Drone configuration present"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-license",
+      "description": "No license file was found at the repository root."
+    },
+    "evidence": [
+      {
+        "path": ".",
+        "reason": "no LICENSE, LICENCE, or COPYING file at the repository root"
+      }
+    ]
+  },
+  {
+    "category": "risk-indicator",
+    "value": {
+      "id": "no-lockfile",
+      "description": "package.json is present without a lockfile, so installs are not reproducible."
+    },
+    "evidence": [
+      {
+        "path": "package.json",
+        "reason": "no pnpm-lock.yaml, package-lock.json, yarn.lock, or bun lockfile at the root"
+      }
+    ]
+  }
+]
