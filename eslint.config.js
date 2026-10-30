@@ -10,7 +10,6 @@ export default tseslint.config(
       '**/coverage/**',
       '**/node_modules/**',
       '**/.turbo/**',
-      'packages/test-fixtures/fixtures/**',
     ],
   },
   js.configs.recommended,

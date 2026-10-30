@@ -1,0 +1,4 @@
+# Recall's output is LF-only on every platform, and golden files are compared
+# byte for byte. Never let a Windows checkout convert them to CRLF.
+* text=auto eol=lf
+**/__golden__/** text eol=lf

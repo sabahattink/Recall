@@ -1,29 +1,42 @@
 #!/usr/bin/env node
-// End-to-end CI verification of the compiled CLI, run against a *copy* of a
-// bundled fixture in a real temporary directory (not the in-repo fixture
-// path), so this never leaves a diff in the repository itself. Written in
-// plain Node so the same steps run identically on ubuntu-latest,
-// macos-latest, and windows-latest without separate bash/PowerShell scripts.
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+// End-to-end CI verification of the compiled CLI against every reference
+// fixture (docs/implementation-blueprint.md REL-01/REL-02 and the §6 release
+// checklist). Written in plain Node so the same steps run identically on
+// ubuntu-latest, macos-latest, and windows-latest.
+//
+// For each fixture, in a throwaway Git repository under the OS temp dir:
+//   1. `recall init` succeeds with exactly the spec §11 stdout and no stderr,
+//      under Node's permission model (file writes allowed only inside the
+//      repository) and a preload that throws on any network call;
+//   2. `.recall/` holds exactly the six files of spec §12;
+//   3. nothing outside `.recall/` changed, byte for byte (`.git/` included);
+//   4. a second run without --force exits 4 and changes nothing;
+//   5. ten consecutive --force runs produce byte-identical output.
+import { createHash } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..');
 const cliEntry = join(repoRoot, 'apps', 'cli', 'dist', 'index.js');
-const fixtureSource = join(repoRoot, 'packages', 'test-fixtures', 'fixtures', 'simple-node');
+const noNetworkPreload = join(here, 'no-network.mjs');
+const fixturesEntry = join(repoRoot, 'packages', 'test-fixtures', 'dist', 'index.js');
 
-const MEMORY_FILES = [
-  'architecture.md',
-  'conventions.md',
-  'decisions.md',
-  'features.md',
-  'glossary.md',
-  'risks.md',
-  'technical-debt.md',
+const EXPECTED_STDOUT =
+  'Scanning repository...\nDetecting architecture...\nGenerating AI memory...\nDone.\n';
+const OUTPUT_CONTRACT = [
+  '.recall/agents/claude.md',
+  '.recall/agents/codex.md',
+  '.recall/agents/cursor.md',
+  '.recall/agents/gemini.md',
+  '.recall/agents/openai.md',
+  '.recall/memory.json',
 ];
+const DETERMINISM_RUNS = 10;
+const EXIT_ALREADY_INITIALIZED = 4;
 
 let failures = 0;
 
@@ -32,161 +45,138 @@ function step(label) {
 }
 
 function assert(condition, message) {
-  if (!condition) {
+  if (condition) {
+    console.log(`ok: ${message}`);
+  } else {
     failures++;
     console.error(`FAIL: ${message}`);
-  } else {
-    console.log(`ok: ${message}`);
   }
 }
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
-    encoding: 'utf8',
-    ...options,
-  });
+  const result = spawnSync(command, args, { encoding: 'utf8', ...options });
   if (result.error) throw result.error;
   return result;
 }
 
-function runCli(args, cwd) {
-  const result = run(process.execPath, [cliEntry, ...args], { cwd });
+/**
+ * Runs the compiled CLI sandboxed: writes only inside `repo`, no network.
+ * Both the given and the real path are allowed, because the CLI writes
+ * through `realpath(root)` and temp directories are often reached through
+ * a symlink (`/var` → `/private/var` on macOS) or a short name on Windows.
+ */
+function runCli(args, repo) {
+  const result = run(process.execPath, [
+    '--experimental-permission',
+    '--allow-fs-read=*',
+    `--allow-fs-write=${repo}`,
+    `--allow-fs-write=${realpathSync(repo)}`,
+    '--allow-child-process',
+    '--no-warnings',
+    '--import',
+    pathToFileURL(noNetworkPreload).href,
+    cliEntry,
+    ...args,
+  ]);
   return { exitCode: result.status ?? -1, stdout: result.stdout, stderr: result.stderr };
 }
 
-/** Joins a POSIX-style relative path (as written in this script) onto `base` correctly on Windows. */
-function resolveRelative(base, posixRelativePath) {
-  return join(base, ...posixRelativePath.split('/'));
-}
-
-if (!existsSync(cliEntry)) {
-  console.error(`Compiled CLI not found at ${cliEntry}. Run "pnpm build" first.`);
-  process.exit(1);
-}
-
-step('Copy fixture into a temporary directory');
-const workDir = mkdtempSync(join(tmpdir(), 'recall-ci-'));
-cpSync(fixtureSource, workDir, { recursive: true });
-console.log(`Working copy: ${workDir}`);
-
-step('Initialize a throwaway Git repository around the copy');
-run('git', ['init', '-q', '-b', 'main', workDir]);
-run('git', ['-C', workDir, 'config', 'user.email', 'ci@example.com']);
-run('git', ['-C', workDir, 'config', 'user.name', 'Recall CI']);
-run('git', ['-C', workDir, 'add', '-A']);
-run('git', ['-C', workDir, 'commit', '-q', '-m', 'chore: initial commit']);
-
-const trackedSourceFiles = ['src/index.js', 'src/users/create-user.js'];
-const originalSourceContents = new Map(
-  trackedSourceFiles.map((relativePath) => [
-    relativePath,
-    readFileSync(resolveRelative(workDir, relativePath), 'utf8'),
-  ]),
-);
-
-step('recall init (no --dry-run)');
-const initResult = runCli(['init', '--path', workDir], workDir);
-assert(
-  initResult.exitCode === 0,
-  `init exits 0 (got ${initResult.exitCode}: ${initResult.stderr})`,
-);
-
-const recallDir = join(workDir, '.recall');
-assert(existsSync(join(recallDir, 'manifest.json')), '.recall/manifest.json exists');
-for (const fileName of MEMORY_FILES) {
-  assert(existsSync(join(recallDir, fileName)), `.recall/${fileName} exists`);
-}
-
-step('recall status (immediately after init, nothing changed yet)');
-const statusResult = runCli(['status', '--path', workDir], workDir);
-assert(
-  statusResult.exitCode === 0,
-  `status exits 0 right after init (got ${statusResult.exitCode}: ${statusResult.stderr})`,
-);
-
-step('recall context --stdout');
-const contextResult = runCli(['context', '--path', workDir, '--stdout'], workDir);
-assert(contextResult.exitCode === 0, `context --stdout exits 0 (got ${contextResult.exitCode})`);
-assert(
-  contextResult.stdout.includes('# Recall Context'),
-  'context --stdout prints the expected header',
-);
-assert(
-  !existsSync(join(recallDir, 'context.md')),
-  'context --stdout does not write .recall/context.md',
-);
-
-step('recall doctor');
-const doctorResult = runCli(['doctor', '--path', workDir], workDir);
-assert(doctorResult.exitCode === 0, `doctor exits 0 (got ${doctorResult.exitCode})`);
-
-step('recall update --check (nothing changed yet: must not be stale)');
-const checkClean = runCli(['update', '--path', workDir, '--check'], workDir);
-assert(
-  checkClean.exitCode === 0,
-  `update --check exits 0 when nothing changed (got ${checkClean.exitCode})`,
-);
-
-step('Add human-authored content to a memory file, outside the generated markers');
-const architecturePath = join(recallDir, 'architecture.md');
-const HUMAN_MARKER = 'THIS LINE WAS WRITTEN BY A HUMAN AND MUST SURVIVE recall update';
-const originalArchitecture = readFileSync(architecturePath, 'utf8');
-assert(
-  originalArchitecture.includes('## Notes'),
-  'architecture.md has a human-editable ## Notes section',
-);
-writeFileSync(
-  architecturePath,
-  originalArchitecture.replace('## Notes', `## Notes\n\n${HUMAN_MARKER}`),
-  'utf8',
-);
-
-step('Modify a tracked source file so the repository has drifted from the snapshot');
-const newFilePath = join(workDir, 'src', 'ci-verify-new-file.js');
-writeFileSync(newFilePath, 'module.exports = { added: true };\n', 'utf8');
-run('git', ['-C', workDir, 'add', '-A']);
-run('git', ['-C', workDir, 'commit', '-q', '-m', 'feat: add file for CI verification']);
-
-const manifestPath = join(recallDir, 'manifest.json');
-const manifestBeforeCheck = readFileSync(manifestPath, 'utf8');
-
-step('recall update --check (repository has drifted: must report stale)');
-const checkStale = runCli(['update', '--path', workDir, '--check'], workDir);
-assert(
-  checkStale.exitCode === 4,
-  `update --check exits 4 once the repository has drifted (got ${checkStale.exitCode})`,
-);
-assert(
-  readFileSync(manifestPath, 'utf8') === manifestBeforeCheck,
-  '--check left manifest.json untouched (no snapshot commit was recorded)',
-);
-
-step('recall update (apply the refresh)');
-const updateResult = runCli(['update', '--path', workDir], workDir);
-assert(
-  updateResult.exitCode === 0,
-  `update exits 0 (got ${updateResult.exitCode}: ${updateResult.stderr})`,
-);
-
-step('Verify human-authored Markdown survived the update');
-const architectureAfterUpdate = readFileSync(architecturePath, 'utf8');
-assert(
-  architectureAfterUpdate.includes(HUMAN_MARKER),
-  'hand-written content outside the generated markers survived recall update',
-);
-
-step('Verify source files were never modified by Recall');
-for (const relativePath of trackedSourceFiles) {
-  const current = readFileSync(resolveRelative(workDir, relativePath), 'utf8');
-  assert(
-    current === originalSourceContents.get(relativePath),
-    `${relativePath} is byte-identical to its pre-init content`,
+/** Every file under `dir` → sha256 of its bytes, keyed by sorted `/`-relative path. */
+function hashTree(dir, prefix = '') {
+  const result = {};
+  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
   );
+  for (const entry of entries) {
+    const path = `${prefix}${entry.name}`;
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) Object.assign(result, hashTree(full, `${path}/`));
+    else result[path] = createHash('sha256').update(readFileSync(full)).digest('hex');
+  }
+  return result;
 }
 
-step('Cleanup');
-rmSync(workDir, { recursive: true, force: true });
-console.log(`Removed ${workDir}`);
+function outside(tree) {
+  return Object.fromEntries(Object.entries(tree).filter(([path]) => !path.startsWith('.recall/')));
+}
+
+function inside(tree) {
+  return Object.fromEntries(Object.entries(tree).filter(([path]) => path.startsWith('.recall/')));
+}
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+for (const required of [cliEntry, fixturesEntry]) {
+  if (!existsSync(required)) {
+    console.error(`Missing ${required}. Run "pnpm build" first.`);
+    process.exit(1);
+  }
+}
+
+const { REFERENCE_FIXTURES } = await import(pathToFileURL(fixturesEntry).href);
+
+for (const fixture of REFERENCE_FIXTURES) {
+  const repo = mkdtempSync(join(tmpdir(), `recall-ci-${fixture.name}-`));
+  try {
+    step(`${fixture.name}: build fixture in a fresh Git repository`);
+    await fixture.build(repo);
+    run('git', ['init', '-q', '-b', 'main', repo]);
+    run('git', ['-C', repo, 'add', '-A']);
+    run('git', [
+      '-C',
+      repo,
+      '-c',
+      'user.name=Recall CI',
+      '-c',
+      'user.email=ci@example.com',
+      'commit',
+      '-q',
+      '-m',
+      'initial',
+    ]);
+    const before = hashTree(repo);
+
+    step(`${fixture.name}: recall init (sandboxed: repo-only writes, no network)`);
+    const first = runCli(['init', repo], repo);
+    assert(
+      first.exitCode === 0,
+      `exit code 0 (got ${first.exitCode}; stderr: ${first.stderr.trim()})`,
+    );
+    assert(first.stdout === EXPECTED_STDOUT, 'stdout is exactly the four lines of spec §11');
+    assert(first.stderr === '', 'stderr is empty');
+
+    const afterFirst = hashTree(repo);
+    assert(
+      same(Object.keys(inside(afterFirst)), OUTPUT_CONTRACT),
+      '.recall/ holds exactly the six contract files',
+    );
+    assert(same(outside(afterFirst), before), 'nothing outside .recall/ changed (including .git/)');
+    const memory = JSON.parse(readFileSync(join(repo, '.recall', 'memory.json'), 'utf8'));
+    assert(
+      /^[0-9a-f]{40}$/.test(memory.metadata?.commit?.value ?? ''),
+      'memory.json records the HEAD commit',
+    );
+
+    step(`${fixture.name}: second run without --force`);
+    const second = runCli(['init', repo], repo);
+    assert(
+      second.exitCode === EXIT_ALREADY_INITIALIZED,
+      `exit code ${EXIT_ALREADY_INITIALIZED} (got ${second.exitCode})`,
+    );
+    assert(second.stdout === '', 'prints no progress');
+    assert(same(hashTree(repo), afterFirst), 'changes nothing on disk');
+
+    step(`${fixture.name}: ${DETERMINISM_RUNS} consecutive --force runs`);
+    let identical = true;
+    for (let i = 0; i < DETERMINISM_RUNS; i++) {
+      const forced = runCli(['init', repo, '--force'], repo);
+      if (forced.exitCode !== 0 || !same(hashTree(repo), afterFirst)) identical = false;
+    }
+    assert(identical, 'every run exits 0 and reproduces the first run byte for byte');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+}
 
 if (failures > 0) {
   console.error(`\n${failures} verification step(s) failed.`);

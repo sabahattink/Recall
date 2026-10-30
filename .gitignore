@@ -13,10 +13,6 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 !.vscode/mcp.json
-.recall/cache/
-
-# Trying the CLI locally against the bundled fixtures should never create a diff.
-packages/test-fixtures/fixtures/*/.recall/
 
 # Copied in by apps/cli's prepack script (from the repo-root README/LICENSE)
 # so `npm pack` can include them; removed again by postpack.
