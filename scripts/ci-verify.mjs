@@ -63,14 +63,16 @@ function run(command, args, options = {}) {
  * Runs the compiled CLI sandboxed: writes only inside `repo`, no network.
  * Both the given and the real path are allowed, because the CLI writes
  * through `realpath(root)` and temp directories are often reached through
- * a symlink (`/var` → `/private/var` on macOS) or a short name on Windows.
+ * a symlink (`/var` → `/private/var` on macOS) or an 8.3 short name on
+ * Windows (`C:\Users\RUNNER~1\...`). Only the native realpath expands a
+ * short name, and it is the one the CLI uses.
  */
 function runCli(args, repo) {
   const result = run(process.execPath, [
     '--experimental-permission',
     '--allow-fs-read=*',
     `--allow-fs-write=${repo}`,
-    `--allow-fs-write=${realpathSync(repo)}`,
+    `--allow-fs-write=${realpathSync.native(repo)}`,
     '--allow-child-process',
     '--no-warnings',
     '--import',
