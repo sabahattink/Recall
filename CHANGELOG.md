@@ -19,7 +19,7 @@ Recall v1 implements [the product specification](docs/product-specification.md):
 - The v0.2 `.recall/` layout (`manifest.json`, `snapshots/`, `architecture.md`, …) is replaced. Run `recall init --force` once to regenerate it.
 - Exit codes: 0 success, 1 unexpected failure, 2 invalid usage, 3 invalid path, 4 already initialized, 5 unsafe output location.
 
-## 0.2.0-alpha.1
+## 0.2.0
 
 ### Highlights
 
@@ -42,9 +42,9 @@ recall context --task "Fix password reset controller" --stdout
 - New snapshot fields are additive and optional.
 - Running `recall update` refreshes older snapshots with richer metadata.
 
-### Alpha note
+### Release note
 
-Ranking weights are heuristic and may change. Generated output and JSON fields may evolve before stable release. Do not make unsupported performance or accuracy claims based on this release.
+Ranking weights are heuristic. Generated output and JSON fields may evolve in future releases; this release makes no unsupported performance or accuracy claims.
 
 ## 0.1.0
 

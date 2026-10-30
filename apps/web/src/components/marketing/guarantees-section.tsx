@@ -54,9 +54,9 @@ const guarantees: Guarantee[] = [
     description: 'Nothing to sign up for, nothing to configure before the first run.',
   },
   {
-    title: 'No telemetry, no LLM calls',
+    title: 'No CLI telemetry, no LLM calls',
     description:
-      'Nothing is reported anywhere and no model is involved. Every fact in the output comes from a file in your repository.',
+      'The CLI reports nothing anywhere and no model is involved. Every fact in the output comes from a file in your repository. This website is a separate application.',
   },
 ];
 

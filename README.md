@@ -23,7 +23,11 @@ Done.
 
 That's it. The repository is initialized.
 
-> The npm package is `recall-context`; the command it installs is `recall`. After `npm install -g recall-context`, the same thing is `recall init`.
+> The npm package is `recall-context`; it installs the `recall` and `recall-context` commands, which invoke the same CLI. After `npm install -g recall-context`, the same thing is `recall init`.
+
+## Requirements
+
+- Node.js 22 or newer.
 
 ## What it creates
 
@@ -70,7 +74,7 @@ Recall complements a hand-written `CLAUDE.md` or `AGENTS.md`, it doesn't replace
 - **All or nothing.** Either the complete `.recall/` is written, or nothing is.
 - **Deterministic.** The same repository state produces byte-identical output, on any machine.
 - **Idempotent.** Running again on an unchanged repository changes nothing.
-- No account, no API key, no telemetry, no LLM calls.
+- No account, no API key, no LLM calls, and the CLI sends no telemetry. The documentation website is a separate application with its own operational analytics.
 
 `recall init` refuses to overwrite an existing `.recall/` (exit code 4, nothing changed). Pass `--force` to regenerate it after your project changes.
 
