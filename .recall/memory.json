@@ -20,7 +20,7 @@
       ]
     },
     "commit": {
-      "value": "c56bfd5f2e227bff9cb3e1c411068b0ca56d741e",
+      "value": "5430091a3fa26246b37bb5cca103a809fb92eb5e",
       "evidence": [
         {
           "path": ".",
@@ -162,6 +162,10 @@
           {
             "path": "apps/cli/package.json",
             "reason": "bin entry \"recall\" declared"
+          },
+          {
+            "path": "apps/cli/package.json",
+            "reason": "bin entry \"recall-context\" declared"
           }
         ]
       },
@@ -331,15 +335,15 @@
             "reason": "matches the config file pattern"
           },
           {
+            "path": "apps/cli/CHANGELOG.md",
+            "reason": "matches the documentation file pattern"
+          },
+          {
             "path": "apps/web/README.md",
             "reason": "matches the documentation file pattern"
           },
           {
             "path": "apps/web/content/docs/commands.mdx",
-            "reason": "matches the documentation file pattern"
-          },
-          {
-            "path": "apps/web/content/docs/getting-started.mdx",
             "reason": "matches the documentation file pattern"
           }
         ]
