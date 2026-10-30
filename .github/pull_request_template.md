@@ -1,6 +1,6 @@
 ## Summary
 
-<!-- What does this change do, and why? -->
+<!-- What does this change do, and why? Which blueprint task or spec section does it implement? -->
 
 ## Related issue
 
@@ -12,11 +12,12 @@
 - [ ] `pnpm typecheck`
 - [ ] `pnpm test`
 - [ ] `pnpm build`
-- [ ] Manually verified against a fixture, if applicable (`node apps/cli/dist/index.js <command> --path packages/test-fixtures/fixtures/<fixture>`)
+- [ ] `pnpm verify:cli` (compiled CLI against every reference fixture)
 
 ## Checklist
 
-- [ ] New/changed findings (risks, conventions, features) carry evidence (`{ path, reason }`)
-- [ ] No source files outside `.recall/`, `.gitignore`, or an explicit output path are written
-- [ ] Human-authored Markdown content outside the generated markers is preserved
+- [ ] Every new or changed Fact carries evidence (`{ path, reason }`); nothing is guessed
+- [ ] Nothing is written outside `.recall/`; no network access; no repository code is executed
+- [ ] Output stays deterministic (no `localeCompare`, timestamps, absolute paths, or machine-specific values)
+- [ ] Golden files changed only deliberately, and the diff is reviewed in this PR
 - [ ] A changeset was added if this should be released (`pnpm changeset`)

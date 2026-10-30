@@ -1,6 +1,10 @@
 # Contributing to Recall
 
-Thanks for your interest in contributing. Recall is a local-first, deterministic-by-default tool, and contributions should preserve those properties.
+Thanks for your interest in contributing. Recall initializes a repository's memory for AI coding assistants — one command, offline, deterministic. Three documents govern all work and win over anything here:
+
+- [docs/product-specification.md](docs/product-specification.md) — what Recall is and will never do
+- [docs/implementation-blueprint.md](docs/implementation-blueprint.md) — the task breakdown and package ownership
+- [docs/engineering-rules.md](docs/engineering-rules.md) — how work is done (no TODOs, no dead code, golden tests for every contract, ...)
 
 ## Getting started
 
@@ -18,9 +22,9 @@ pnpm test
 
 This is a pnpm workspace managed with Turborepo. See [docs/architecture.md](docs/architecture.md) for package boundaries and responsibilities before adding code — in particular:
 
-- Deterministic analysis lives in `packages/analyzers`, not in the CLI or in `packages/core`.
-- `packages/core` never imports terminal-rendering code; `apps/cli` never contains analysis logic.
-- `packages/memory` is the only package that writes to `.recall/`.
+- Detection (Facts) lives only in `packages/analyzers`; normalization and every disk write only in `packages/memory`; rendering only in `packages/templates`.
+- `packages/core` only sequences the stages; `apps/cli` only parses arguments and prints.
+- A new assistant is one template in `packages/templates/src/agents/` plus one registry entry — nothing else changes.
 
 ## Development workflow
 
@@ -34,16 +38,18 @@ pnpm format      # Prettier --write
 
 Run a single package's tests with `pnpm --filter @recall-ai/<package> test`.
 
-To try the CLI locally against a fixture without publishing anything:
+To try the CLI locally against any repository without publishing anything:
 
 ```bash
 pnpm build
-node apps/cli/dist/index.js init --path packages/test-fixtures/fixtures/simple-node
+node apps/cli/dist/index.js init path/to/some/repo
 ```
 
-To run the same end-to-end verification CI runs (copies a fixture to a temp
-directory, runs `init`/`status`/`context`/`doctor`/`update`, and checks that
-human-authored Markdown and source files are untouched):
+To run the same end-to-end verification CI runs (builds every reference
+fixture in a temporary Git repository, runs the compiled CLI sandboxed with
+no network access and writes allowed only inside the repository, and checks
+the exact output, that nothing outside `.recall/` changed, the refusal
+without `--force`, and byte-identical output across ten runs):
 
 ```bash
 pnpm build
@@ -53,9 +59,9 @@ pnpm verify:cli
 ## Making changes
 
 1. Open an issue first for anything larger than a small fix, so design direction can be agreed on before implementation.
-2. Add or update tests for any behavior change. Direct assertions are preferred over snapshot tests except where the golden file itself is the point (e.g. generated Markdown structure).
-3. Every finding Recall reports (a risk, a convention, a feature) must carry evidence (`{ path, reason }`). Do not add inferences without evidence, and do not present a candidate/unconfirmed conclusion as a confirmed fact.
-4. Keep `packages/schemas` as the single source of truth for the manifest and snapshot shapes; update both the Zod schema and the JSON Schema together, and bump `schemaVersion` with a migration if the shape changes in a breaking way.
+2. Add or update tests for any behavior change. Output contracts have golden files (Scanner facts, each template, each reference fixture's full `.recall/`); regenerate them deliberately with `pnpm --filter <package> exec vitest run -u` and review the diff in your PR.
+3. Every Fact carries evidence (`{ path, reason }`). Absence of evidence is absence of a claim — never add a default or a guess.
+4. `packages/schemas` is the single source of truth for the Fact and ProjectMemory shapes. A change to `memory.json` or an agent file is a breaking change to a public contract.
 5. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm build` before opening a PR — this mirrors CI.
 6. Use [Changesets](https://github.com/changesets/changesets) for any change that should be released: `pnpm changeset`.
 7. Write commit messages using [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `chore:`, etc.).
@@ -64,15 +70,15 @@ pnpm verify:cli
 
 These are non-negotiable for any change:
 
-- Recall must never modify a user's source files.
-- Writes are restricted to `.recall/`, `.gitignore`, and an explicit `--output`/`--path` the user passed.
-- Human-authored content outside the `<!-- recall:generated:start/end -->` markers must never be altered or discarded.
-- No command may require network access or an AI provider to produce complete output.
-- Recall must never print the contents of `.env`-style files.
+- Recall writes only `.recall/`, all or nothing, and never through a symlink.
+- No network access, no LLM or AI provider, no telemetry.
+- Recall never executes the repository's code, scripts, or Git hooks/config-defined commands.
+- The same repository state produces byte-identical output on every machine.
+- Recall never reads or prints the contents of `.env`-style files.
 
 ## Reporting bugs and requesting features
 
-Please use the issue templates in `.github/ISSUE_TEMPLATE/`. Include your OS, Node.js version, package manager, and — for bugs — the output of `recall doctor --verbose` if possible.
+Please use the issue templates in `.github/ISSUE_TEMPLATE/`. Include your OS, Node.js version, and `recall --version`; for an unexpected failure, re-run with `RECALL_DEBUG=1` and include the stack trace.
 
 ## Code of Conduct
 

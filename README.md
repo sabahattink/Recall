@@ -1,16 +1,12 @@
 # Recall
 
-**Stop explaining your codebase to AI every new session.**
+**A repository, once initialized, never has to explain itself again.**
 
-Recall scans a repository and generates persistent, evidence-backed context that Claude Code, Codex, Gemini CLI, Cursor, and other coding agents can reuse.
+Recall initializes a repository's memory for AI coding assistants. Run one command, and every assistant — Claude Code, Codex, Cursor, Gemini CLI, ChatGPT — starts each session already knowing your stack, structure, commands, and conventions, instead of asking you again.
 
 [![npm version](https://img.shields.io/npm/v/recall-context.svg)](https://www.npmjs.com/package/recall-context)
-[![npm downloads](https://img.shields.io/npm/dm/recall-context.svg)](https://www.npmjs.com/package/recall-context)
 [![CI](https://github.com/sabahattink/Recall/actions/workflows/ci.yml/badge.svg)](https://github.com/sabahattink/Recall/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/recall-context.svg)](LICENSE)
-[![latest release](https://img.shields.io/github/v/release/sabahattink/Recall?include_prereleases&label=release)](https://github.com/sabahattink/Recall/releases)
-
-> **Alpha.** Recall is an early release. Commands, output format, and internals may still change between versions. See [Current scope](#current-scope) for what's supported today.
 
 ## Quick start
 
@@ -18,118 +14,85 @@ Recall scans a repository and generates persistent, evidence-backed context that
 npx recall-context init
 ```
 
-```bash
-npx recall-context context --stdout
+```
+Scanning repository...
+Detecting architecture...
+Generating AI memory...
+Done.
 ```
 
-Or install it once and use the shorter `recall` command:
+That's it. The repository is initialized.
 
-```bash
-npm install -g recall-context
-recall init
-```
+> The npm package is `recall-context`; the command it installs is `recall`. After `npm install -g recall-context`, the same thing is `recall init`.
 
-The npm package is `recall-context`; the command it installs is `recall`.
-
-## What it generates
+## What it creates
 
 ```
 .recall/
-├── manifest.json       # pointer to the current snapshot + memory files
-├── architecture.md      # detected apps/packages/layers, entry points, dependency direction
-├── conventions.md       # naming, aliases, linting/formatting, scripts
-├── decisions.md         # human-editable decision log
-├── features.md          # features backed by structural evidence (controllers, routes, jobs...)
-├── glossary.md          # recurring domain terms extracted from identifiers
-├── risks.md              # evidence-based risk findings (missing tests, circular deps, etc.)
-├── technical-debt.md    # measurable debt findings with evidence and severity
-└── snapshots/
-    └── latest.json       # the deterministic scan result everything above is derived from
+├── memory.json        # Project Memory: the single source of truth
+└── agents/
+    ├── claude.md      # Claude Code
+    ├── codex.md       # OpenAI Codex (AGENTS.md style)
+    ├── cursor.md      # Cursor (project-rule front matter)
+    ├── gemini.md      # Gemini CLI
+    └── openai.md      # ChatGPT / OpenAI API
 ```
 
-Every generated file wraps Recall's content in markers; anything you write outside them is yours and survives every `recall update`.
+Nothing else, anywhere. `memory.json` holds what Recall found — metadata, technology stack, architecture, structure, commands, conventions, dependencies, and risks — and **every entry cites the file that proves it**:
 
-## Before / after
-
-**Before**, every new AI session:
-
-```
-New session → explain architecture → explain conventions → explain important files → repeat next session
-```
-
-**After**:
-
-```bash
-recall context --stdout
+```json
+{
+  "name": "test",
+  "command": "vitest run",
+  "evidence": [{ "path": "package.json", "reason": "scripts.test declared as \"vitest run\"" }]
+}
 ```
 
-Paste or pipe the output into your coding agent.
+Each file in `agents/` is a mechanical rendering of `memory.json` in the format that assistant reads best. No agent file contains anything `memory.json` doesn't.
 
-## Recall vs CLAUDE.md / AGENTS.md
+## Use it with your assistant
 
-|                     | `CLAUDE.md` / `AGENTS.md`     | Recall                                             |
-| ------------------- | ----------------------------- | -------------------------------------------------- |
-| Authored by         | A human, by hand              | Derived from repository evidence                   |
-| Stays current?      | Can go stale silently         | Detects and reports staleness (`recall status`)    |
-| Shape               | Typically one static document | Snapshot + multiple focused files                  |
-| Scans the repo?     | No                            | Yes — deterministic, local scan                    |
-| Evidence paths      | Not by default                | Every claim traces back to source                  |
-| Works across agents | Depends on the file           | Same output for any agent that reads Markdown/JSON |
+| Assistant        | How it picks up its file                                                            |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Claude Code      | Add `@.recall/agents/claude.md` to your `CLAUDE.md`                                 |
+| Gemini CLI       | Add `@.recall/agents/gemini.md` to your `GEMINI.md`                                 |
+| Codex            | Copy `.recall/agents/codex.md` to `AGENTS.md` (or reference it from there)          |
+| Cursor           | Copy `.recall/agents/cursor.md` to `.cursor/rules/recall.mdc` — it's always applied |
+| ChatGPT / OpenAI | Paste `.recall/agents/openai.md` into a Project's instructions or a system prompt   |
 
-Recall doesn't replace `CLAUDE.md` or `AGENTS.md`. Use `CLAUDE.md`/`AGENTS.md` for human-authored instructions — things only a person should decide. Use Recall for generated repository context and freshness checks — things that can be derived and kept honest automatically. Most projects will want both.
+Recall complements a hand-written `CLAUDE.md` or `AGENTS.md`, it doesn't replace it: keep writing the things only a person can decide there, and let Recall supply what can be read straight off the repository.
 
-## Commands
+## Guarantees
 
-```bash
-recall init                                  # analyze the repository and create .recall/
-recall scan                                   # re-run deterministic analysis, save a snapshot
-recall update                                 # refresh memory from the current repository state
-recall status                                 # check whether memory is initialized and up to date
-recall explain <path>                         # explain a file or directory's role
-recall context                                # generate compact, agent-ready context
-recall context --task "Add password reset"    # focus that context on a specific task
-recall doctor                                 # validate the environment and memory state
-```
+- **No network access.** Everything happens offline, on your machine.
+- **No code execution.** Recall reads files; it never runs your code, tests, or scripts.
+- **Writes only `.recall/`.** No other file in your repository is touched.
+- **All or nothing.** Either the complete `.recall/` is written, or nothing is.
+- **Deterministic.** The same repository state produces byte-identical output, on any machine.
+- **Idempotent.** Running again on an unchanged repository changes nothing.
+- No account, no API key, no telemetry, no LLM calls.
 
-See [docs/cli-reference.md](docs/cli-reference.md) for every flag and exit code.
+`recall init` refuses to overwrite an existing `.recall/` (exit code 4, nothing changed). Pass `--force` to regenerate it after your project changes.
 
-## Safety
+## What it understands today
 
-- Local-first: everything runs on your machine, in your repository.
-- No account, sign-up, or API key required.
-- No telemetry.
-- No AI provider is required or called by default (see [docs/provider-interface.md](docs/provider-interface.md)).
-- Does not execute, import, or evaluate your project's source code or scripts.
-- Managed writes are restricted to `.recall/`, `.gitignore`, and any output path you explicitly pass.
-- Refuses to write through a symlinked `.recall` directory or a symlink escape anywhere in the write path.
-- Generated Markdown preserves human-authored content outside its `<!-- recall:generated:* -->` markers.
+- **Languages:** TypeScript, JavaScript, Python, Go, Rust
+- **Frameworks:** Next.js, NestJS, React, Express, Fastify, Vue, Angular, Nuxt, Svelte, SvelteKit, Astro, Remix, React Native, Electron, Hono, Koa
+- **Package managers:** pnpm, npm, Yarn, Bun, pip, Poetry, uv, Pipenv, Go modules, Cargo
+- **Layouts:** single packages and monorepos (`workspaces`, `pnpm-workspace.yaml`)
+- **Tooling:** lifecycle scripts, Vitest/Jest/Mocha/AVA/Jasmine/Playwright/Cypress, ESLint/Prettier/Biome
+- **Risks:** missing CI, a declared test framework with no tests, no license, no lockfile, unignored `.env` files
 
-## Current scope
-
-**Supported now:** JavaScript, TypeScript, Node.js, NestJS, Next.js, pnpm/npm/Yarn, monorepos, both Git and non-Git repositories.
-
-**Not yet built:** an MCP server, additional language ecosystems, deeper semantic (AST-based) analysis, an optional AI-assisted "why" layer, editor integrations. See [docs/roadmap.md](docs/roadmap.md) for the full list and what's deliberately deferred.
-
-## Demo
-
-A 20–30 second terminal recording is planned but not yet produced — see [docs/demo-script.md](docs/demo-script.md) for the exact script and [docs/assets/](docs/assets/) for where the recording will live once made.
+When the evidence for something is absent, Recall says nothing about it rather than guessing.
 
 ## Learn more
 
-- [CLI reference](docs/cli-reference.md) — every command, flag, and exit code
-- [Memory format](docs/memory-format.md) — the on-disk `.recall/` format
-- [Architecture](docs/architecture.md) — how the monorepo is structured
-- [Roadmap](docs/roadmap.md) — what's in scope, deferred, and planned
-- [Changelog](CHANGELOG.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security policy](SECURITY.md)
-- [npm package](https://www.npmjs.com/package/recall-context)
-- [Releases](https://github.com/sabahattink/Recall/releases)
-- [Issues](https://github.com/sabahattink/Recall/issues)
-
-## A note on the name
-
-Recall's longer-term vision includes tracking _why_ decisions were made, not just what the code currently looks like. That's a future direction, not a current capability — today `decisions.md` records only what's structurally evidenced plus whatever a human writes into it by hand.
+- [CLI reference](docs/cli-reference.md) — the command, the flag, and every exit code
+- [Memory format](docs/memory-format.md) — `memory.json` and the agent files, field by field
+- [Architecture](docs/architecture.md) — how Recall is built
+- [Product specification](docs/product-specification.md) — what Recall is, guarantees, and will never do
+- [Example output](examples/) — Recall's own `.recall/`, generated from this repository
+- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## License
 

@@ -35,8 +35,9 @@ body:
     attributes:
       label: What does this affect?
       options:
-        - CLI (commands, flags, exit codes)
-        - Context output (.recall/ content, recall context)
+        - Detection (what the Scanner finds: languages, frameworks, commands, risks...)
+        - memory.json or an agent file (.recall/agents/*.md)
+        - CLI (recall init, --force, exit codes)
         - Integration with an external agent/tool
         - Something else
     validations:

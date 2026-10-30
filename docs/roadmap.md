@@ -1,35 +1,34 @@
 # Roadmap
 
-This document tracks what is deliberately out of scope for the current release and what's planned next. It is not a commitment to a timeline.
+Recall v1 is deliberately small: one command that initializes a repository's memory for AI coding assistants (see [product-specification.md](product-specification.md)). This page records what v1 contains, its known limits, and what is permanently outside its scope.
 
-## Release status
+## v1
 
-Recall is published to npm as [`recall-context`](https://www.npmjs.com/package/recall-context) and is currently **alpha**: commands, output format, and internals may still change between versions. It is a self-contained bundle — the internal `@recall-ai/*` workspace packages are private and never published — so `npm install recall-context` (or `npm install -g recall-context`) needs nothing beyond what's declared in its own `dependencies`. See the [README's quick start](../README.md#quick-start) for installation.
+- `recall init [path] [--force]` — the entire public surface.
+- `.recall/memory.json` plus five agent files: Claude Code, Codex, Cursor, Gemini CLI, ChatGPT/OpenAI.
+- Detection for TypeScript/JavaScript, Python, Go, and Rust repositories; single packages and `workspaces`/`pnpm-workspace.yaml` monorepos.
+- Deterministic, idempotent, offline, all-or-nothing — verified on Linux, macOS, and Windows in CI.
 
-The repository targets `main` as its permanent default branch: `.github/workflows/ci.yml`, `release.yml`, and `.changeset/config.json` all target `main` only.
+The task breakdown behind v1 is in [implementation-blueprint.md](implementation-blueprint.md). Its Milestones 1–4 are implemented; Milestone 5's publishing steps (npm release, GitHub Release, post-publish smoke test) are a maintainer's release action, not code.
 
-## Current release (MVP)
+## Known limits of v1
 
-Supported: TypeScript/JavaScript repositories, pnpm/npm/Yarn projects, monorepos, Git repositories, NestJS, Next.js, and generic Node.js projects. All seven commands (`init`, `scan`, `update`, `status`, `explain`, `context`, `doctor`) are implemented and tested against fixtures for each supported project shape.
+These are boundaries of the current detectors, not bugs. Each one errs toward saying nothing rather than guessing.
 
-## Deliberately deferred
+- **Commands** are read from the root `package.json` only; per-workspace scripts and non-JavaScript task runners (Makefiles, `justfile`, Poetry scripts, Cargo aliases) are not reported.
+- **Dependencies** are read from `package.json` files only; `pyproject.toml`, `requirements.txt`, `go.mod`, and `Cargo.toml` dependency lists are not extracted yet.
+- **Frameworks** are detected for the JavaScript ecosystem only.
+- **Workspace members** are every `package.json` below a workspace root, not matched against the declared globs; a package deliberately excluded from the globs is still listed.
+- **`.gitignore`** is read from the repository root only; nested `.gitignore` files are not applied.
+- **The walk stops at 20,000 files**; larger repositories get a `file-limit-reached` risk.
+- **`npx recall init`**, as written in the specification, needs the npm name `recall`, which belongs to an unrelated package. v1 ships as `recall-context` (`npx recall-context init`); the installed command is `recall`.
 
-In order of what was deprioritized when scope had to be controlled:
+Closing one of these is a change to what the Scanner observes; it changes `memory.json` and is released and documented as such.
 
-1. **Paid AI-provider integrations.** The `RecallInferenceProvider` interface and `NoopInferenceProvider` are implemented; OpenAI/Anthropic/Ollama adapters are not (see [provider-interface.md](provider-interface.md)).
-2. **Advanced semantic code analysis.** The import graph is built from regular-expression extraction of import/require specifiers, not a full AST/type-checked analysis (e.g. via `ts-morph`). This means resolution of dynamic imports, complex re-export chains, and path-mapped aliases beyond `tsconfig.json`'s `compilerOptions.paths` field is not attempted.
-3. **VS Code and MCP integrations.** Recall is a CLI only in this release; editor extensions and a Model Context Protocol server are not implemented.
-4. **Additional language ecosystems.** The analyzer layer (`packages/analyzers`) is structured so a new language/ecosystem detector can be added without touching `packages/core` or `apps/cli`, but only the Node.js/TypeScript ecosystem is implemented today.
-5. **Snapshot history beyond "latest".** `.recall/snapshots/` currently stores only `latest.json`; there is no historical snapshot archive to diff against arbitrary past points (`recall update --since <ref>` uses Git history for this instead of stored snapshots).
-6. **Backup pruning.** `.recall/backups/` accumulates timestamped backups before every overwrite; there is no automatic pruning or retention policy yet.
-7. **Content-hash-based change detection.** `recall update`'s file-changed detection compares file size between snapshots rather than hashing content, so a same-size edit may not be flagged as "changed" (additions/removals of files are always detected).
+## Never in Recall
 
-## Planned next
+Per spec §8 and §19, these are not deferred features. They are different products that could be built on top of `.recall/`, and none of them belongs inside Recall: cloud sync, accounts, embeddings, vector databases, RAG, background indexing, MCP integration, realtime updates, team collaboration, prompt history, a chat interface, LLM calls or any AI inference, a database, telemetry, analytics, and remote API calls.
 
-- A content-hash option for more precise change detection in `recall update`, opt-in given the added I/O cost.
-- Broader framework detection within the Node.js ecosystem (e.g. Remix, NestJS microservices patterns, tRPC).
-- A documented extension point for additional risk rules without modifying `packages/analyzers` core.
+## Proposing a change
 
-## Contributing to the roadmap
-
-Open an issue to propose a new item or to pick up one of the above. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+Open an issue that answers spec §10's question first: _does this help initialize a repository for AI?_ See [CONTRIBUTING.md](../CONTRIBUTING.md).

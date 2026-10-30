@@ -2,7 +2,7 @@
   "name": "recall-monorepo",
   "private": true,
   "version": "0.1.0",
-  "description": "Persistent, evidence-backed codebase context for AI coding agents.",
+  "description": "Initialize a repository's memory for AI coding assistants.",
   "license": "MIT",
   "type": "module",
   "repository": {

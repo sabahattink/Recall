@@ -5,7 +5,7 @@ Recommended settings for this repository's GitHub "About" panel and repository s
 ## About: description
 
 ```
-Persistent, evidence-backed codebase context for AI coding agents.
+Initialize a repository's memory for AI coding assistants — one command, evidence-backed, offline.
 ```
 
 ## About: topics
@@ -19,7 +19,9 @@ repository-analysis
 codebase-context
 claude-code
 codex
+cursor
 gemini-cli
+chatgpt
 typescript
 local-first
 llm

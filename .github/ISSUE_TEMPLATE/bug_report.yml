@@ -15,7 +15,7 @@ body:
     attributes:
       label: Exact command
       description: The exact `recall` command that triggered this (including flags).
-      placeholder: recall init --path . --max-files 5000
+      placeholder: npx recall-context init . --force
     validations:
       required: true
 
@@ -25,9 +25,9 @@ body:
       label: Steps to reproduce
       description: Ideally against a minimal, sanitized repository (no proprietary code or secrets) — a small public repo, or a fixture you can share.
       placeholder: |
-        1. `recall init` in a repo with...
-        2. `recall status`
-        3. See error
+        1. Create a repo with...
+        2. Run `npx recall-context init`
+        3. See .recall/memory.json / the error
     validations:
       required: true
 
@@ -60,10 +60,10 @@ body:
       required: true
 
   - type: textarea
-    id: doctor
+    id: debug
     attributes:
-      label: '`recall doctor --verbose` output'
-      description: If Recall is initialized, please paste the output.
+      label: Output with RECALL_DEBUG=1
+      description: For an "Unexpected failure" (exit code 1), re-run with RECALL_DEBUG=1 and paste the stack trace.
       render: shell
 
   - type: input

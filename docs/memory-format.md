@@ -1,122 +1,160 @@
 # Memory format
 
-This document describes the on-disk format Recall creates and maintains in a target repository's `.recall/` directory. It is the contract other tools (including future non-Recall tooling) can rely on when reading Recall's output directly instead of through the CLI.
-
-## Directory layout
+The on-disk contract `recall init` produces in a repository (docs/product-specification.md §12, §13, §16). It is stable within a major version: any change to a file name, a `memory.json` field, or its meaning is a breaking change.
 
 ```
 .recall/
-├── manifest.json
-├── architecture.md
-├── conventions.md
-├── decisions.md
-├── features.md
-├── glossary.md
-├── risks.md
-├── technical-debt.md
-├── context.md              (created by `recall context`, not by `recall init`)
-├── schema/
-│   ├── manifest.schema.json
-│   └── snapshot.schema.json
-├── snapshots/
-│   └── latest.json
-├── backups/                 (created on demand before an overwrite; timestamped)
-└── cache/                   (gitignored; safe to delete)
+├── memory.json
+└── agents/
+    ├── claude.md
+    ├── codex.md
+    ├── cursor.md
+    ├── gemini.md
+    └── openai.md
 ```
 
-Everything except `cache/` is intended to be committed to Git.
+There is no cache, no snapshot history, no manifest, no log, and no hidden file. All six files are meant to be committed.
 
-## `manifest.json`
+## `memory.json` — Project Memory
 
-A versioned pointer to the current snapshot and memory files.
+The single source of truth. Every agent file is derived from it and from nothing else.
+
+- UTF-8, LF line endings, two-space indentation, trailing newline.
+- Keys appear in the order documented below; lists are in the order described for each field. The same repository state always produces the same bytes.
+- No timestamps, no absolute paths, no machine-specific values. All paths are relative to the repository root and use `/`.
+
+### Evidence
+
+Every claim carries `evidence`: a non-empty list of the concrete things in the repository that justify it.
+
+```json
+{ "path": "package.json", "reason": "scripts.test declared as \"vitest run\"" }
+```
+
+`path` is a repository-relative file, or `"."` when the evidence is the repository as a whole (an absence, such as "no LICENSE file at the repository root", or a Git fact). A category with no evidence is empty (`[]`) or `null` — Recall never fills a gap with a default or a guess.
+
+### Secrets
+
+Values copied out of manifests are scrubbed before they become part of memory, because agent files travel further than the repository (`openai.md` is meant to be pasted into a chat):
+
+- Credentials embedded in URLs are removed — from the Git remote, dependency specifiers (`git+https://user:token@host/…`), and script bodies.
+- In script bodies, the value of a secret-named assignment (`API_KEY=…`, `GITHUB_TOKEN=…`, `DB_PASSWORD=…`, …) is replaced with `<redacted>`.
+- `.env` files are detected by name only; their contents are never read.
+
+### Top level
+
+| Key             | Type      | Contents                                |
+| --------------- | --------- | --------------------------------------- |
+| `schemaVersion` | `"1.0.0"` | Version of this format                  |
+| `metadata`      | object    | Project identity and Git metadata       |
+| `stack`         | object    | Languages, frameworks, package managers |
+| `architecture`  | object    | Repository layout and entry points      |
+| `structure`     | object    | Roles of top-level directories          |
+| `commands`      | array     | Lifecycle scripts                       |
+| `conventions`   | object    | Testing and lint/format tooling         |
+| `dependencies`  | array     | Direct dependency declarations          |
+| `risks`         | array     | Evidence-based risk indicators          |
+
+### `metadata`
+
+Each field is `{ "value": string, "evidence": [...] }` or `null`.
+
+| Field           | Source                                                                                                                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | First of: `package.json` `name`, `Cargo.toml` `[package].name`, `pyproject.toml` `[project].name` / `[tool.poetry].name`, `go.mod` `module`. Never the directory name. |
+| `description`   | The same manifests' `description`                                                                                                                                      |
+| `commit`        | The full SHA `HEAD` resolves to                                                                                                                                        |
+| `defaultBranch` | The branch `refs/remotes/origin/HEAD` points to — never guessed from the current branch                                                                                |
+| `remoteUrl`     | The `origin` remote URL, with any embedded credentials removed                                                                                                         |
+
+Git values are read with read-only commands; a directory that is not a Git repository simply has `null` for them.
+
+### `stack`
+
+`languages`, `frameworks`, `packageManagers`: arrays of `{ "name": string, "evidence": [...] }`, in Recall's fixed detection order.
+
+- Language names: `TypeScript`, `JavaScript`, `Python`, `Go`, `Rust`.
+- Framework identifiers: `nextjs`, `nestjs`, `angular`, `nuxt`, `svelte`, `astro`, `react`, `express`, `fastify`, `vue`, `sveltekit`, `remix`, `react-native`, `electron`, `hono`, `koa`. A meta-framework suppresses the library it is built on (Next.js → React, Nuxt → Vue, …).
+- Package manager identifiers: `pnpm`, `npm`, `yarn`, `bun`, `pip`, `poetry`, `uv`, `pipenv`, `go-modules`, `cargo`.
+
+### `architecture`
 
 ```json
 {
-  "$schema": "./schema/manifest.schema.json",
-  "schemaVersion": "1.0.0",
-  "toolVersion": "0.2.0-alpha.1",
-  "repository": {
-    "name": "example",
-    "root": ".",
-    "defaultBranch": "main"
+  "layout": {
+    "kind": "monorepo",
+    "workspaces": [".", "apps/web", "packages/core"],
+    "evidence": [...]
   },
-  "generatedAt": "2026-08-03T00:00:00.000Z",
-  "updatedAt": "2026-08-03T00:10:00.000Z",
-  "snapshot": {
-    "commit": "abc123",
-    "branch": "main",
-    "path": "snapshots/latest.json"
-  },
-  "files": {
-    "architecture": "architecture.md",
-    "conventions": "conventions.md",
-    "decisions": "decisions.md",
-    "features": "features.md",
-    "glossary": "glossary.md",
-    "risks": "risks.md",
-    "technicalDebt": "technical-debt.md"
-  }
+  "entryPoints": [
+    { "path": "apps/cli/dist/index.js", "kind": "bin", "workspace": "apps/cli", "evidence": [...] }
+  ]
 }
 ```
 
-`generatedAt` is set once, on first `recall init`, and preserved across subsequent `recall update`/`recall init` runs; `updatedAt` reflects the most recent write. `schemaVersion` follows semantic versioning; `packages/schemas` exposes a `ManifestMigration` interface so a future breaking change can migrate an older manifest forward automatically.
+- `layout` is `null` when there is no root `package.json`. `kind` is `"monorepo"` when there is at least one workspace member besides the root (`"."`, always first), otherwise `"single-package"`.
+- `entryPoints` come only from manifest `bin` and `main` fields, sorted by path then kind. `workspace` is the declaring package's directory, or `null` for the root.
 
-The schema is also published as a standalone JSON Schema at `.recall/schema/manifest.schema.json`, so manifests can be validated without depending on Recall's own packages.
+### `structure`
 
-## `snapshots/latest.json`
+`directories`: one entry per top-level directory that contains classifiable files, sorted by path.
 
-The full, normalized `RepositorySnapshot` produced by the most recent `recall init`/`recall scan`/`recall update`. Its shape is defined by `packages/schemas/src/repository.ts` and published as JSON Schema at `.recall/schema/snapshot.schema.json`. Key fields:
-
-| Field                                            | Description                                                                                                                                                                                                                                   |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `repository`, `git`, `ecosystem`                 | Repository name/root, current Git branch/commit/dirty state, package manager and monorepo status                                                                                                                                              |
-| `workspaces`                                     | Discovered workspace packages, their kind (`app`/`package`/`service`/`library`/`root`), and internal `dependsOn`                                                                                                                              |
-| `files`                                          | Every scanned file with its owning workspace and kind (`source`/`test`/`config`/`documentation`/`generated`/`other`)                                                                                                                          |
-| `entryPoints`                                    | Detected `bin`/`main`/`script`/`framework-convention` entry points, each with evidence, plus an optional `sourcePath` mapping a generated/build entry (e.g. `dist/index.js`) back to its source file (e.g. `src/index.ts`) when one was found |
-| `dependencies`, `internalEdges`                  | Declared dependencies and internal (workspace- and import-level) dependency edges, each optionally carrying a `dependencyType` (`runtime`/`development`/`optional`/`peer`)                                                                    |
-| `frameworks`, `conventions`, `risks`             | Evidence-backed findings, each with a `confidence` or `severity` and an `evidence` array                                                                                                                                                      |
-| `testing`, `ci`, `docker`, `serviceIntegrations` | Detected test frameworks/files, CI configuration, Docker configuration, and service integrations (database/queue/cache/auth/external)                                                                                                         |
-| `generatedFiles`, `ignoredDirectories`           | Files classified as generated, and the directories Recall never scans                                                                                                                                                                         |
-| `projectProfile`                                 | Optional derived summary: `language`, `applicationType` (`cli`/`library`/`web-app`/`api-service`/`unknown`), `repositoryType` (`single-package`/`monorepo`), `frameworks`                                                                     |
-
-Each `FileRecord` in `files` also optionally carries `exportedSymbols`: top-level exported function/class/interface/type/const/enum names, extracted once at scan time and used by `recall context --task`'s symbol-match ranking signal.
-
-`sourcePath`, `dependencyType`, `exportedSymbols`, and `projectProfile` are all optional fields, added without a `schemaVersion` bump — a snapshot from before they existed still parses; `recall update`/`recall init` populate them on the next run.
-
-## Generated-section markers
-
-Every Markdown memory file wraps Recall-authored content in an explicit marker pair:
-
-```markdown
-<!-- recall:generated:start -->
-
-...content Recall regenerates on every `recall update`...
-<!-- recall:generated:end -->
+```json
+{ "path": "src", "roles": ["source", "test"], "evidence": [...] }
 ```
 
-Rules Recall follows, enforced by `packages/memory/src/markers.ts`:
+`roles` ⊆ `source`, `test`, `config`, `documentation`, `generated`, in that order. A role is assigned only because files inside match that role's pattern — never because of the directory's name. Evidence cites up to three matching files per role.
 
-- On `recall init`/`recall update`, only the text **between** the markers is replaced. Everything before the start marker and after the end marker is left byte-for-byte untouched.
-- If a file does not exist yet, Recall scaffolds it from a template: the generated section plus a `## Notes` section inviting human-authored content.
-- If a file exists but has no markers at all (e.g. a human created it by hand), Recall **prepends** the generated section rather than touching the existing content.
-- If a file has malformed markers (missing pair, duplicated pair, or an end marker before a start marker), Recall leaves the file completely untouched and reports it via `recall doctor`/`recall status` rather than guessing how to repair it.
+### `commands`
 
-## The seven memory files
+Root `package.json` scripts named `install`, `build`, `test`, `lint`, `dev`, `start`, `typecheck`, or `format`, in that order:
 
-| File                | Content                                                                                                                                                              | Notes                                                                                                                                                 |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `architecture.md`   | Detected apps/packages/layers, entry points, internal dependency direction, infrastructure boundaries                                                                | Separates a "Detected facts" section from an "Inferred structure" section                                                                             |
-| `conventions.md`    | File/directory naming, import aliases, test naming, linting/formatting, package scripts, error-handling patterns                                                     | Only includes conventions with supporting evidence                                                                                                    |
-| `decisions.md`      | Human-editable ADR log                                                                                                                                               | Recall never fabricates decisions; it may list evidence-backed **unconfirmed candidates** (e.g. "appears to use PostgreSQL"), clearly labeled as such |
-| `features.md`       | Features backed by strong structural evidence: controllers, routes, modules, job processors, event handlers, feature directories                                     | Every entry includes evidence paths                                                                                                                   |
-| `glossary.md`       | Recurring domain terms extracted from identifiers and directory names                                                                                                | Definitions are left as "unresolved" — Recall does not invent meanings                                                                                |
-| `risks.md`          | Evidence-based risk findings (missing tests, circular dependencies, large files, committed `.env` files, missing lockfile, unpinned Docker images, etc.)             | Not a security scanner — see [SECURITY.md](../SECURITY.md)                                                                                            |
-| `technical-debt.md` | A subset of risk findings that represent accumulated debt (large files, deep coupling, duplicate dependency versions, missing tests/lockfile, circular dependencies) | Each entry includes severity and evidence                                                                                                             |
+```json
+{ "name": "test", "command": "vitest run", "evidence": [...] }
+```
 
-## `context.md`
+### `conventions`
 
-Written by `recall context` (unless `--stdout` is passed). Twelve fixed sections: project summary (including the detected `projectProfile`, when available), repository layout, architecture (runtime workspace edges, with a "Development-only workspace dependencies" subsection for `devDependency`-derived edges), important conventions, primary entry points, important commands, known risks, technical debt, relevant decisions, files an agent should read first, files/directories to avoid modifying, and current Git state. See [cli-reference.md](cli-reference.md#recall-context) for `--task`, `--max-tokens`, and truncation behavior, and [architecture.md](architecture.md#task-focused-ranking) for how "files an agent should read first" is ranked.
+`testing` and `linting`: arrays of `{ "name", "evidence" }`.
 
-## Backups
+- Testing: `vitest`, `jest`, `mocha`, `ava`, `jasmine`, `@playwright/test`, `cypress` — from a dependency declaration.
+- Linting and formatting: `eslint`, `prettier`, `biome` — from a dependency or a config file.
 
-Before overwriting an existing Recall-managed file (`manifest.json`, `snapshots/latest.json`, or any of the seven Markdown files, when its content actually changes), Recall copies the previous contents into `.recall/backups/<name>.<ISO-timestamp>.bak`. Backups accumulate; pruning is a manual/future operation (see [roadmap.md](roadmap.md)).
+### `dependencies`
+
+Every direct declaration in every `package.json`, sorted by manifest path, then scope (`dependency`, `devDependency`, `peerDependency`), then name. Lockfiles are never read: only what a manifest declares directly is a dependency.
+
+```json
+{ "name": "zod", "version": "^3.24.1", "scope": "dependency", "manifest": "package.json", "evidence": [...] }
+```
+
+### `risks`
+
+```json
+{ "id": "no-license", "description": "No license file was found at the repository root.", "evidence": [...] }
+```
+
+| `id`                   | Condition                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `file-limit-reached`   | The repository has more than 20,000 files; the memory may be incomplete                                                              |
+| `no-ci-configuration`  | No CI configuration (GitHub Actions, GitLab CI, CircleCI, Azure Pipelines, Bitbucket, Travis, Jenkins, Buildkite, Woodpecker, Drone) |
+| `no-test-files`        | A test framework is declared but no file matches a test naming pattern                                                               |
+| `no-license`           | No `LICENSE`/`LICENCE`/`COPYING`/`UNLICENSE` file (including suffixed forms such as `LICENSE-MIT`) at the root                       |
+| `no-lockfile`          | A root `package.json` without a JavaScript lockfile                                                                                  |
+| `env-file-not-ignored` | A `.env`/`.env.*` file (not `.example`/`.sample`/`.template`) is not ignored by the root `.gitignore`. Its contents are never read.  |
+
+Risks are reported only for a repository with at least one source file, except `file-limit-reached`, which is always reported when it applies.
+
+## `agents/*.md` — Agent files
+
+Each file is rendered from `memory.json` alone by a pure Agent Template. The templates differ in format, headings, ordering, and level of detail — never in what they claim about the repository.
+
+| File        | For              | Shape                                                                                                     |
+| ----------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `claude.md` | Claude Code      | Commands first; evidence paths cited. Import with `@.recall/agents/claude.md` in `CLAUDE.md`.             |
+| `codex.md`  | OpenAI Codex     | `AGENTS.md` conventions (setup, build/test, code style, structure). Copy to `AGENTS.md`.                  |
+| `cursor.md` | Cursor           | Begins with project-rule front matter (`alwaysApply: true`). Copy to `.cursor/rules/recall.mdc`. Compact. |
+| `gemini.md` | Gemini CLI       | `GEMINI.md` headings. Import with `@.recall/agents/gemini.md` in `GEMINI.md`.                             |
+| `openai.md` | ChatGPT / OpenAI | Compact, no file citations, for a Project's instructions or a system prompt.                              |
+
+Repository text (names, descriptions, scripts) is escaped or placed in code spans, so it can never change a file's structure. Each file opens with a note naming its source and how to regenerate it (`npx recall-context init --force`) — don't edit agent files by hand.
