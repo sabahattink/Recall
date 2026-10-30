@@ -118,6 +118,43 @@ describe('normalizeFacts', () => {
       expect(memory.architecture.layout?.kind).toBe('monorepo');
       expect(memory.architecture.entryPoints.map((e) => e.path)).toEqual(['a/bin.js', 'z/main.js']);
     });
+
+    it('merges entry points that share a path, kind, and workspace, keeping all evidence', () => {
+      const memory = normalizeFacts([
+        {
+          category: 'architecture-hint',
+          value: { path: 'dist/index.js', kind: 'bin', workspace: null },
+          evidence: ev('package.json', 'bin entry "tool" declared'),
+        },
+        {
+          category: 'architecture-hint',
+          value: { path: 'dist/index.js', kind: 'bin', workspace: null },
+          evidence: ev('package.json', 'bin entry "tool-alias" declared'),
+        },
+        {
+          category: 'architecture-hint',
+          value: { path: 'dist/index.js', kind: 'main', workspace: null },
+          evidence: ev('package.json', 'main declared'),
+        },
+      ]);
+      expect(memory.architecture.entryPoints).toEqual([
+        {
+          path: 'dist/index.js',
+          kind: 'bin',
+          workspace: null,
+          evidence: [
+            ...ev('package.json', 'bin entry "tool" declared'),
+            ...ev('package.json', 'bin entry "tool-alias" declared'),
+          ],
+        },
+        {
+          path: 'dist/index.js',
+          kind: 'main',
+          workspace: null,
+          evidence: ev('package.json', 'main declared'),
+        },
+      ]);
+    });
   });
 
   describe('structure', () => {

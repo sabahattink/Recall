@@ -93,7 +93,7 @@ Git values are read with read-only commands; a directory that is not a Git repos
 ```
 
 - `layout` is `null` when there is no root `package.json`. `kind` is `"monorepo"` when there is at least one workspace member besides the root (`"."`, always first), otherwise `"single-package"`.
-- `entryPoints` come only from manifest `bin` and `main` fields, sorted by path then kind. `workspace` is the declaring package's directory, or `null` for the root.
+- `entryPoints` come only from manifest `bin` and `main` fields, sorted by path then kind. `workspace` is the declaring package's directory, or `null` for the root. Several `bin` names pointing at the same file are one entry point whose `evidence` lists every declaration.
 
 ### `structure`
 

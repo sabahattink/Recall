@@ -143,7 +143,9 @@ describe('npm packaging (packed tarball, clean consumer install)', () => {
     await buildSimpleNodeFixture(fixtureDir);
     await initGitRepo(fixtureDir);
     await commitAll(fixtureDir, 'chore: initial commit');
-  }, 180_000);
+    // prepack rebuilds and bundles the CLI; alongside the rest of `pnpm test`
+    // on a Windows runner, pack plus install alone can take over three minutes.
+  }, 300_000);
 
   afterAll(async () => {
     if (tarballPath && existsSync(tarballPath)) rmSync(tarballPath);

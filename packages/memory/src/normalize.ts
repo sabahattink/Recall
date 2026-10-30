@@ -68,10 +68,26 @@ function normalizeLayout(facts: FactCollection): ProjectMemory['architecture']['
   };
 }
 
+/**
+ * One entry per (path, kind, workspace): several `bin` names aliasing the
+ * same file are one entry point, with the evidence of every declaration.
+ */
 function normalizeEntryPoints(facts: FactCollection): EntryPoint[] {
-  return factsOf(facts, 'architecture-hint')
-    .map((fact) => ({ ...fact.value, evidence: fact.evidence }))
-    .sort((a, b) => compareStrings(a.path, b.path) || compareStrings(a.kind, b.kind));
+  const byKey = new Map<string, EntryPoint>();
+  for (const fact of factsOf(facts, 'architecture-hint')) {
+    const key = JSON.stringify([fact.value.path, fact.value.kind, fact.value.workspace]);
+    const existing = byKey.get(key);
+    byKey.set(key, {
+      ...fact.value,
+      evidence: [...(existing?.evidence ?? []), ...fact.evidence],
+    });
+  }
+  return [...byKey.values()].sort(
+    (a, b) =>
+      compareStrings(a.path, b.path) ||
+      compareStrings(a.kind, b.kind) ||
+      compareStrings(a.workspace ?? '', b.workspace ?? ''),
+  );
 }
 
 /** Directory facts are one per (path, role); memory holds one entry per path with all its roles. */
