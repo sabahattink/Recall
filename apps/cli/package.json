@@ -1,6 +1,6 @@
 {
   "name": "recall-context",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Initialize a repository's memory for AI coding assistants: one command writes evidence-backed context for Claude Code, Codex, Cursor, Gemini CLI, and ChatGPT.",
   "license": "MIT",
   "type": "module",
